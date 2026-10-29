@@ -13,6 +13,8 @@
     "build:hello": "pnpm --filter @folio/hello tauri build",
     "dev:pdf": "pnpm --filter @folio/pdf tauri dev",
     "build:pdf": "pnpm --filter @folio/pdf tauri build",
+    "dev:sheets": "pnpm --filter @folio/sheets tauri dev",
+    "build:sheets": "pnpm --filter @folio/sheets tauri build",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",

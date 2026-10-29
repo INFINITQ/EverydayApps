@@ -5,7 +5,7 @@ Private, offline apps for PDF, Word, Excel and PowerPoint files on Windows 11.
 | App | Opens | Status |
 |---|---|---|
 | Folio PDF | `.pdf` | ready |
-| Folio Sheets | `.xlsx`, `.csv` (old `.xls` read-only) | planned |
+| Folio Sheets | `.xlsx`, `.xlsm`, `.csv` (old `.xls` read-only) | in progress |
 | Folio Docs | `.docx` (old `.doc` read-only) | planned |
 | Folio Slides | `.pptx` (old `.ppt` read-only) | planned |
 
@@ -32,6 +32,19 @@ Measured on a 100-page PDF: the installer is 3.4 MB; the window paints in about 
 first page shows in under 0.9 s; memory is about 225 MB with the file open (Task Manager's
 measure, WebView2 included). Reading all 100 pages raises it to about 430 MB, mostly
 WebView2's caches, and minimizing the window asks WebView2 to give memory back.
+
+## Folio Sheets
+
+- **Open, edit and save** `.xlsx`, `.xlsm` and `.csv`: values, formulas (Univer's engine, about
+  500 functions), fonts, fills, borders, alignment, wrapping, merged cells, column widths, row
+  heights, number formats, frozen panes, several sheets (add, rename, delete, move), find and
+  replace, sort and filter. A formula bar, sheet tabs, a Fluent toolbar, and the sum, average and
+  count of the selection in the status bar.
+- **Your file stays your file:** saving patches only what you changed into the original package.
+  Pivot tables, charts, pictures, macros, external links and anything Folio doesn't show yet are
+  kept byte for byte. Macros never run; links to other workbooks are never followed.
+- Built on [Univer](https://github.com/dream-num/univer) (Apache-2.0), bundled and offline. See
+  [ADR 0009](docs/adr/0009-sheets-xlsx-bridge.md).
 
 ## Privacy
 
@@ -66,6 +79,7 @@ Node 24+, pnpm 11.
 pnpm install          # dependency install scripts are blocked unless reviewed
 pnpm dev:pdf          # run Folio PDF in development mode
 pnpm build:pdf        # build the release installer
+pnpm dev:sheets       # run Folio Sheets in development mode (build:sheets for the installer)
 pnpm test             # unit tests (Vitest)
 pnpm e2e              # end-to-end tests (Playwright, uses your installed Edge)
 cargo test --workspace
