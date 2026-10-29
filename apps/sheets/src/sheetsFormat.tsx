@@ -111,6 +111,7 @@ export function createSheetsDocument(bytes: Uint8Array, name: string, host: DocH
     { id: 'format.lessDecimals', title: 'Fewer decimals', group: 'Format', run: run(CMD.lessDecimals) },
     { id: 'format.conditional', title: 'Conditional formatting…', group: 'Format', run: run(CMD.conditionalPanel) },
     { id: 'data.validation', title: 'Data validation…', group: 'Data', run: run(CMD.validationPanel) },
+    { id: 'data.refreshPivots', title: 'Refresh pivot tables', group: 'Data', keys: 'Alt+F5', enabled: () => session.pivots.length > 0, run: () => session.refreshPivots() },
     { id: 'data.sortAscending', title: 'Sort A to Z', group: 'Data', run: run(CMD.sortAscending) },
     { id: 'data.sortDescending', title: 'Sort Z to A', group: 'Data', run: run(CMD.sortDescending) },
     { id: 'data.sortCustom', title: 'Custom sort…', group: 'Data', run: run(CMD.sortCustom) },

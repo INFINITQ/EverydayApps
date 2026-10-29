@@ -25,6 +25,7 @@ import { type Region, affected, protectedRegions, structuralChange } from './gua
 import { type ChartModel, type ChartType, chartFromRange, defaultGrouping } from './charts/model';
 import { CHART_COMPONENT } from './charts/FolioChart';
 import { IDrawingManagerService } from '@univerjs/drawing';
+import { type Pivot, readPivots, refreshPivot } from './pivots';
 import { CMD } from './sheetCommands';
 import { BLANK_WORKBOOK, readWorkbook, type SourceBook } from './xlsx/read';
 import { writeWorkbook } from './xlsx/write';
@@ -82,6 +83,8 @@ export class SheetsSession {
   /** Places Folio can't update when rows and columns move (pivot tables, tables, charts). */
   private readonly regions: Region[];
   private readonly accepted = new Set<Region>();
+  readonly pivots: Pivot[];
+  private readonly refreshedCaches = new Set<string>();
   private allowOnce = false;
 
   constructor(
@@ -96,6 +99,7 @@ export class SheetsSession {
     this.baseline = this.snapshot();
 
     this.regions = opened.book ? protectedRegions(opened.book) : [];
+    this.pivots = opened.book ? readPivots(opened.book) : [];
     const commands = this.engine.injector.get(ICommandService);
     this.disposables.push(
       commands.beforeCommandExecuted((info) => this.guard(info.id, info.params as Record<string, unknown> | undefined)),
@@ -236,7 +240,7 @@ export class SheetsSession {
   save(ext: string): Uint8Array {
     const current = this.snapshot();
     if (ext === 'csv') return writeCsv(this.opened.csv ?? null, this.opened.kind === 'csv' ? this.baseline : null, current);
-    if (this.opened.book) return writeWorkbook(this.opened.book, this.baseline, current);
+    if (this.opened.book) return writeWorkbook(this.opened.book, this.baseline, current, { refreshCaches: [...this.refreshedCaches] });
     // CSV and old .xls files become new workbooks.
     const blank = readWorkbook(BLANK_WORKBOOK(), this.name, current.sheetOrder.slice(0, 1));
     return writeWorkbook(blank.book, blank.data, current);
@@ -247,6 +251,31 @@ export class SheetsSession {
     const range = this.engine.injector.get(SheetsSelectionsService).getCurrentLastSelection()?.range;
     const count = range ? (kind === 'row' ? range.endRow - range.startRow + 1 : range.endColumn - range.startColumn + 1) : 1;
     return this.run(`sheet.command.insert-${kind}-${where}`, { value: Math.max(1, Math.min(count, 1000)) });
+  }
+
+  /** Recomputes the pivot tables Folio can (one row field; sum, count, average, min, max). */
+  async refreshPivots(): Promise<void> {
+    if (this.pivots.length === 0) {
+      this.host.notify('This workbook has no pivot tables.', 'info');
+      return;
+    }
+    const data = this.snapshot();
+    let refreshed = 0;
+    const skipped: string[] = [];
+    for (const pivot of this.pivots) {
+      const result = refreshPivot(pivot, data);
+      if (!result) {
+        skipped.push(`${pivot.name} (${pivot.unsupported ?? "its source data can't be read"})`);
+        continue;
+      }
+      const done = await this.run('sheet.command.set-range-values', { unitId: this.unitId, subUnitId: pivot.sheetId, range: result.range, value: result.values });
+      if (done) {
+        refreshed += 1;
+        this.refreshedCaches.add(pivot.cachePart);
+      }
+    }
+    if (refreshed) this.host.notify(`Refreshed ${refreshed} pivot ${refreshed === 1 ? 'table' : 'tables'}. Excel refreshes ${refreshed === 1 ? 'it' : 'them'} again when it opens the file.`, 'success');
+    if (skipped.length) this.host.notify(`Not refreshed: ${skipped.join('; ')}. Folio shows ${skipped.length === 1 ? 'it' : 'them'} as last saved.`, 'warning');
   }
 
   /** A new chart of the selected cells, placed to their right (undoable like any edit). */

@@ -193,7 +193,12 @@ type Context = {
 };
 
 /** The workbook's bytes with `current`'s changes patched into the original package. */
-export function writeWorkbook(book: SourceBook, baseline: IWorkbookData, current: IWorkbookData): Uint8Array {
+export type WriteOptions = {
+  /** Pivot caches Folio refreshed: Excel refreshes them again when it opens the file. */
+  refreshCaches?: string[];
+};
+
+export function writeWorkbook(book: SourceBook, baseline: IWorkbookData, current: IWorkbookData, options: WriteOptions = {}): Uint8Array {
   const contentOf = (data: IWorkbookData) => ({
     order: data.sheetOrder,
     sheets: data.sheetOrder.map((id) => sheetContent(data.sheets[id], data.styles)),
@@ -240,6 +245,14 @@ export function writeWorkbook(book: SourceBook, baseline: IWorkbookData, current
   }
   if (ctx.strings.added.length) writeStrings(ctx);
   if (ctx.formulas) dropCalcChain(ctx);
+  for (const part of options.refreshCaches ?? []) {
+    const text = pkg.text(part);
+    if (!text) continue;
+    const root = parseXml(text);
+    const open = text.slice(root.start, root.innerStart === root.end ? root.end : root.innerStart);
+    const next = /\srefreshOnLoad="[^"]*"/.test(open) ? open.replace(/\srefreshOnLoad="[^"]*"/, ' refreshOnLoad="1"') : open.replace(/(\/?>)$/, ' refreshOnLoad="1"$1');
+    if (next !== open) pkg.set(part, text.slice(0, root.start) + next + text.slice(root.start + open.length));
+  }
   if (removed.length) pkg.collectGarbage();
   return pkg.toBytes();
 }

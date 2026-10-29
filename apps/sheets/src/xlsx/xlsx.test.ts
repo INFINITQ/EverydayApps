@@ -425,3 +425,30 @@ describe('charts', () => {
     expect(text(out, 'xl/charts/chart1.xml')).toBe(text(makeXlsx(), 'xl/charts/chart1.xml'));
   });
 });
+
+describe('pivot tables', () => {
+  it('refreshes a simple pivot from its source and marks its cache for Excel', async () => {
+    const { readPivots, refreshPivot } = await import('../pivots');
+    const { book, data, edited, sheet } = open();
+    const [pivot] = readPivots(book);
+    expect(pivot).toMatchObject({ name: 'PivotTable1', sheetId: 's2', rowField: 'Region', dataFields: [{ field: 'Sales', aggregate: 'sum' }], source: { sheet: 'Data' } });
+    expect(pivot!.unsupported).toBeUndefined();
+    sheet('Data').cellData![2]![1] = { v: 1000, t: CellValueType.NUMBER, s: 'x2' };
+    const result = refreshPivot(pivot!, edited)!;
+    const value = (r: number, c: number) => result.values[r]?.[c]?.v;
+    expect([value(3, 0), value(3, 1)]).toEqual(['North', 1200.5]);
+    expect([value(4, 0), value(4, 1)]).toEqual(['South', 1000]);
+    expect([value(7, 0), value(7, 1)]).toEqual(['Grand Total', 4000.75]);
+    // Apply it as the app would, then save.
+    for (const [r, row] of Object.entries(result.values)) {
+      for (const [c, cell] of Object.entries(row)) {
+        const cells = (edited.sheets.s2!.cellData ??= {});
+        (cells[Number(r)] ??= {})[Number(c)] = cell ?? {};
+      }
+    }
+    const out = writeWorkbook(book, data, edited, { refreshCaches: [pivot!.cachePart] });
+    expect(text(out, 'xl/pivotCache/pivotCacheDefinition1.xml')).toContain('refreshOnLoad="1"');
+    expect(text(out, 'xl/pivotTables/pivotTable1.xml')).toBe(text(makeXlsx(), 'xl/pivotTables/pivotTable1.xml'));
+    expect(sheetJs(out).Sheets.Report!.B8!.v).toBe(4000.75);
+  });
+});
