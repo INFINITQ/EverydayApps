@@ -19,7 +19,7 @@ import {
   Text,
 } from '@fluentui/react-components';
 import { ChevronDownRegular, ChevronUpRegular, DismissRegular, EditRegular, LinkDismissRegular, OpenRegular } from '@fluentui/react-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { DocsSession, DocsState, Stats } from './docsFormat';
 
 /** Only these open, after the user agrees (Rust checks again). */
@@ -41,8 +41,11 @@ export function FindPanel({ session, state }: { session: DocsSession; state: Doc
   const search = useDocumentSearch();
   const [replacement, setReplacement] = useState('');
   const editing = state.mode === 'edit';
-  // The query is searched as it's typed; the engine highlights the matches.
-  useEffect(() => () => search.clear(), [search]);
+  // The query is searched as it's typed; the engine highlights the matches. Closing the panel
+  // clears the highlights.
+  const clear = useRef(search.clear);
+  clear.current = search.clear;
+  useEffect(() => () => clear.current(), []);
   const replaceOne = () => {
     const match = search.activeMatch;
     if (!match || !session.editor) return;
@@ -78,7 +81,7 @@ export function FindPanel({ session, state }: { session: DocsSession; state: Doc
       </Field>
       <div className="docs-find-row">
         <Text size={200} aria-live="polite">
-          {search.query ? (total ? `${search.activeIndex + 1} of ${total}${search.truncated ? '+' : ''}` : 'No matches') : ' '}
+          {search.query ? (total ? (search.activeIndex >= 0 ? `${search.activeIndex + 1} of ${total}${search.truncated ? '+' : ''}` : `${total}${search.truncated ? '+' : ''} ${total === 1 ? 'match' : 'matches'}`) : 'No matches') : ' '}
         </Text>
         <span className="folio-spacer" />
         <Button aria-label="Previous match" size="small" appearance="subtle" icon={<ChevronUpRegular />} disabled={!total} onClick={search.previous} />

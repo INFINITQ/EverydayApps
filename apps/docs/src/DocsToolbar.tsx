@@ -37,8 +37,6 @@ import {
   TextItalicRegular,
   TextNumberListLtrRegular,
   TextStrikethroughRegular,
-  TextSubscriptRegular,
-  TextSuperscriptRegular,
   TextUnderlineRegular,
   ZoomInRegular,
   ZoomOutRegular,
@@ -90,6 +88,7 @@ function StylePicker({ session }: { session: DocsSession }) {
     <Combobox
       aria-label="Paragraph style"
       className="docs-style"
+      style={{ minWidth: 0, width: 140 }}
       size="small"
       readOnly
       disabled={!style.isEnabled || session.ui.mode === 'view'}
@@ -113,6 +112,7 @@ function FontPicker({ session }: { session: DocsSession }) {
     <Combobox
       aria-label="Font"
       className="docs-font"
+      style={{ minWidth: 0, width: 140 }}
       size="small"
       freeform
       disabled={!session.slot('font.family').enabled}
@@ -139,6 +139,7 @@ function SizePicker({ session }: { session: DocsSession }) {
     <Combobox
       aria-label="Font size"
       className="docs-size"
+      style={{ minWidth: 0, width: 64 }}
       size="small"
       freeform
       disabled={!session.slot('font.size').enabled}
@@ -160,31 +161,30 @@ function SizePicker({ session }: { session: DocsSession }) {
 function ZoomControls() {
   const zoom = useZoom();
   return (
-    <>
-      <Tip label="Zoom out">
-        <ToolbarButton aria-label="Zoom out" icon={<ZoomOutRegular />} appearance="subtle" disabled={!zoom.canZoomOut} onClick={zoom.zoomOut} />
-      </Tip>
-      <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <ToolbarButton aria-label="Zoom level" appearance="subtle" className="docs-zoom">
-            {`${Math.round(zoom.zoom * 100)}%`}
-          </ToolbarButton>
-        </MenuTrigger>
-        <MenuPopover>
-          <MenuList>
-            <MenuItem onClick={zoom.auto}>Fit to window</MenuItem>
-            <MenuItem onClick={zoom.fitToWidth}>Page width</MenuItem>
-            <MenuDivider />
-            {[0.5, 0.75, 1, 1.25, 1.5, 2].map((level) => (
-              <MenuItem key={level} onClick={() => zoom.setZoom(level)}>{`${level * 100}%`}</MenuItem>
-            ))}
-          </MenuList>
-        </MenuPopover>
-      </Menu>
-      <Tip label="Zoom in">
-        <ToolbarButton aria-label="Zoom in" icon={<ZoomInRegular />} appearance="subtle" disabled={!zoom.canZoomIn} onClick={zoom.zoomIn} />
-      </Tip>
-    </>
+    <Menu>
+      <MenuTrigger disableButtonEnhancement>
+        <ToolbarButton aria-label="Zoom" appearance="subtle" className="docs-zoom" icon={<ZoomInRegular />}>
+          {`${Math.round(zoom.zoom * 100)}%`}
+        </ToolbarButton>
+      </MenuTrigger>
+      <MenuPopover>
+        <MenuList>
+          <MenuItem icon={<ZoomInRegular />} disabled={!zoom.canZoomIn} onClick={zoom.zoomIn}>
+            Zoom in
+          </MenuItem>
+          <MenuItem icon={<ZoomOutRegular />} disabled={!zoom.canZoomOut} onClick={zoom.zoomOut}>
+            Zoom out
+          </MenuItem>
+          <MenuDivider />
+          <MenuItem onClick={zoom.auto}>Fit to window</MenuItem>
+          <MenuItem onClick={zoom.fitToWidth}>Page width</MenuItem>
+          <MenuDivider />
+          {[0.5, 0.75, 1, 1.25, 1.5, 2].map((level) => (
+            <MenuItem key={level} onClick={() => zoom.setZoom(level)}>{`${level * 100}%`}</MenuItem>
+          ))}
+        </MenuList>
+      </MenuPopover>
+    </Menu>
   );
 }
 
@@ -205,8 +205,6 @@ export function DocsToolbar({ session, state }: { session: DocsSession; state: D
       <SlotButton session={session} slot="text.italic" label="Italic (Ctrl+I)" icon={<TextItalicRegular />} toggle />
       <SlotButton session={session} slot="text.underline" label="Underline (Ctrl+U)" icon={<TextUnderlineRegular />} toggle />
       <SlotButton session={session} slot="text.strike" label="Strikethrough" icon={<TextStrikethroughRegular />} toggle />
-      <SlotButton session={session} slot="script.super" label="Superscript" icon={<TextSuperscriptRegular />} toggle />
-      <SlotButton session={session} slot="script.sub" label="Subscript" icon={<TextSubscriptRegular />} toggle />
       <SlotButton session={session} slot="format.clear" label="Clear formatting" icon={<TextClearFormattingRegular />} />
       <ToolbarDivider />
       <SlotButton session={session} slot="alignment.left" label="Align left (Ctrl+L)" icon={<TextAlignLeftRegular />} toggle />
@@ -266,9 +264,7 @@ export function DocsToolbar({ session, state }: { session: DocsSession; state: D
       </Menu>
       <Menu>
         <MenuTrigger disableButtonEnhancement>
-          <ToolbarButton icon={<DocumentOnePageRegular />} appearance="subtle" disabled={!editing}>
-            Layout
-          </ToolbarButton>
+          <ToolbarButton aria-label="Layout" title="Layout: page setup, header and footer" icon={<DocumentOnePageRegular />} appearance="subtle" disabled={!editing} />
         </MenuTrigger>
         <MenuPopover>
           <MenuList>
@@ -324,6 +320,13 @@ export function DocsToolbar({ session, state }: { session: DocsSession; state: D
             <MenuItem disabled={!state.ready} onClick={() => session.update({ dialog: 'wordCount' })} secondaryContent="Ctrl+Shift+G">
               Word count
             </MenuItem>
+            <MenuItem disabled={!enabled('script.super')} onClick={() => session.run('script.super')} secondaryContent="Ctrl+Shift++">
+              Superscript
+            </MenuItem>
+            <MenuItem disabled={!enabled('script.sub')} onClick={() => session.run('script.sub')} secondaryContent="Ctrl+=">
+              Subscript
+            </MenuItem>
+            <MenuDivider />
             <MenuItem disabled={!enabled('review.paragraphMarks')} onClick={() => session.run('review.paragraphMarks')}>
               Show formatting marks
             </MenuItem>
