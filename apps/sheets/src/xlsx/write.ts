@@ -12,6 +12,7 @@
 //   is copied as it is.
 
 import { BooleanNumber, CellValueType, type ICellData, type IStyleData, type IWorkbookData, type IWorksheetData } from '@univerjs/core';
+import { type DrawingData, type ThreadComment, writeComments, writePictures } from './annotations';
 import { type AutoFilter, type CfRule, type DvRule, RESOURCE, autoFilterXml, conditionalFormattingXml, dataValidationsXml } from './features';
 import { formulaToFile, shiftFormula } from './formula';
 import { CONTENT, Package, REL } from './opc';
@@ -138,13 +139,15 @@ function resource<T>(data: IWorkbookData, name: string): Record<string, T> {
 }
 
 /** A sheet's conditional formatting, validation and filter. */
-type SheetFeatures = { cf: CfRule[]; dv: DvRule[]; filter: AutoFilter | null };
+type SheetFeatures = { cf: CfRule[]; dv: DvRule[]; filter: AutoFilter | null; comments: ThreadComment[]; drawings: DrawingData | null };
 
 function featuresOf(data: IWorkbookData, id: string): SheetFeatures {
   return {
     cf: resource<CfRule[]>(data, RESOURCE.cf)[id] ?? [],
     dv: resource<DvRule[]>(data, RESOURCE.dv)[id] ?? [],
     filter: resource<AutoFilter>(data, RESOURCE.filter)[id] ?? null,
+    comments: resource<ThreadComment[]>(data, RESOURCE.comments)[id] ?? [],
+    drawings: resource<DrawingData>(data, RESOURCE.drawings)[id] ?? null,
   };
 }
 
@@ -217,7 +220,7 @@ export function writeWorkbook(book: SourceBook, baseline: IWorkbookData, current
     } else {
       const part = freePart(pkg, 'xl/worksheets/sheet', '.xml');
       source = blankSheet(id, sheet.name ?? 'Sheet', part);
-      pkg.set(part, patchSheet(ctx, source, {}, cur, { base: { cf: [], dv: [], filter: null }, cur: features.cur }), CONTENT.worksheet);
+      pkg.set(part, patchSheet(ctx, source, {}, cur, { base: { cf: [], dv: [], filter: null, comments: [], drawings: null }, cur: features.cur }), CONTENT.worksheet);
       const relId = pkg.addRel(book.workbookPart, REL.worksheet, part);
       placed.push({ id, source: undefined, part, relId });
     }
@@ -254,6 +257,7 @@ function blankSheet(id: string, name: string, part: string): SourceSheet {
   return {
     id, name, part, relId: '', entry: root, text, root, sheetData: root.child('sheetData')!, rows: new Map(), cells: new Map(), cols: [],
     defaultRowHeight: 20, defaultColumnWidth: 64, digitWidth: 7, sharedFormulas: new Map(), cf: new Map(), dv: new Map(), filter: null,
+    comments: { threaded: false }, pictures: { anchors: new Map() },
   };
 }
 
@@ -317,6 +321,18 @@ function patchSheet(
   if (!same(features.base.dv, features.cur.dv)) put('dataValidations', dataValidationsXml(p, features.cur.dv, features.base.dv, source.dv, root.child('dataValidations')));
   const filterKey = (f: AutoFilter | null) => (f ? { ...f, cachedFilteredOut: undefined } : null);
   if (!same(filterKey(features.base.filter), filterKey(features.cur.filter))) put('autoFilter', autoFilterXml(p, features.cur.filter, source.filter));
+
+  // Comments and pictures live in parts of their own; the sheet only points at them.
+  const commentKey = (list: ThreadComment[]) => list.map((c) => [c.ref, c.text?.dataStream, c.authorName, (c.children ?? []).map((r) => r.text?.dataStream)]);
+  if (!same(commentKey(features.base.comments), commentKey(features.cur.comments))) {
+    const element = writeComments(ctx.pkg, source.part, cur, features.cur.comments, source.comments, p, root.child('legacyDrawing'));
+    if (element !== undefined) put('legacyDrawing', element);
+  }
+  const drawingKey = (d: DrawingData | null) => (d ? d.order.map((id) => [id, d.data[id]?.sheetTransform?.from, d.data[id]?.sheetTransform?.to, d.data[id]?.source.length]) : []);
+  if (!same(drawingKey(features.base.drawings), drawingKey(features.cur.drawings))) {
+    const element = writePictures(ctx.pkg, source.part, features.base.drawings, features.cur.drawings, source.pictures, p);
+    if (element) put('drawing', element);
+  }
 
   if ((base.tabColor || '') !== (cur.tabColor || '')) {
     const sheetPr = root.child('sheetPr');

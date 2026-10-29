@@ -16,6 +16,7 @@ import {
 import { CONTENT, Package, REL } from './opc';
 import { writeZip } from './zip';
 import { MAX_COLUMNS, MAX_ROWS, type Range, cellName, parseCell, parseRange } from './refs';
+import { type CommentSource, type PictureSource, readComments, readPictures } from './annotations';
 import { type AutoFilter, type CfSource, type DvSource, RESOURCE, readConditionalFormatting, readDataValidation, readFilter } from './features';
 import { StyleSheet } from './styles';
 import { type XmlElement, decodeOfficeText, parseAttrs, parseXml, scanTags, unescapeXml } from './xml';
@@ -72,6 +73,8 @@ export type SourceSheet = {
   cf: CfSource;
   dv: DvSource;
   filter: { xml: string; filter: string } | null;
+  comments: CommentSource;
+  pictures: PictureSource;
 };
 
 /** Things in the file Folio shows or keeps without editing them. */
@@ -167,7 +170,7 @@ export function readWorkbook(bytes: Uint8Array, name: string, sheetIds?: string[
   for (let i = 0; i < styles.count; i++) data.styles[`x${i}`] = styles.style(i);
 
   const sheets: SourceSheet[] = [];
-  const resources = { cf: {} as Record<string, unknown>, dv: {} as Record<string, unknown>, filter: {} as Record<string, AutoFilter> };
+  const resources = { cf: {} as Record<string, unknown>, dv: {} as Record<string, unknown>, filter: {} as Record<string, AutoFilter>, comments: {} as Record<string, unknown>, drawings: {} as Record<string, unknown> };
   const entries = workbook.child('sheets')?.elements('sheet') ?? [];
   let worksheets = 0;
   entries.forEach((entry, index) => {
@@ -193,6 +196,12 @@ export function readWorkbook(bytes: Uint8Array, name: string, sheetIds?: string[
     const dv = readDataValidation(source.id, source.root, source.text);
     source.dv = dv.source;
     if (dv.rules.length) resources.dv[source.id] = dv.rules;
+    const notes = readComments(pkg, part, source.id, data.id);
+    source.comments = notes.source;
+    if (notes.comments.length) resources.comments[source.id] = notes.comments;
+    const pictures = readPictures(pkg, part, source.id, data.id, sheet);
+    source.pictures = pictures.source;
+    if (pictures.drawing) resources.drawings[source.id] = pictures.drawing;
     const hidden = new Set(Object.entries(sheet.rowData ?? {}).filter(([, row]) => row?.hd).map(([r]) => Number(r)));
     const filter = readFilter(source.root, hidden);
     if (filter) {
@@ -204,6 +213,8 @@ export function readWorkbook(bytes: Uint8Array, name: string, sheetIds?: string[
     }
   });
   data.resources = [
+    { name: RESOURCE.comments, data: JSON.stringify(resources.comments) },
+    { name: RESOURCE.drawings, data: JSON.stringify(resources.drawings) },
     { name: RESOURCE.cf, data: JSON.stringify(resources.cf) },
     { name: RESOURCE.dv, data: JSON.stringify(resources.dv) },
     { name: RESOURCE.filter, data: JSON.stringify(resources.filter) },
@@ -354,6 +365,8 @@ function readSheet(pkg: Package, part: string, id: string, name: string, relId: 
     cf: new Map(),
     dv: new Map(),
     filter: null,
+    comments: { threaded: false },
+    pictures: { anchors: new Map() },
   };
 }
 

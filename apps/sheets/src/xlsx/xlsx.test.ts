@@ -308,3 +308,69 @@ describe('conditional formatting, validation and filters', () => {
     expect(wb.Sheets.Notes!.A2!.v).toBe(5);
   });
 });
+
+describe('comments and pictures', () => {
+  const resourceOf = (data: IWorkbookData, name: string) => JSON.parse(data.resources!.find((r) => r.name === name)!.data);
+  const setResource = (data: IWorkbookData, name: string, value: unknown) => {
+    data.resources!.find((r) => r.name === name)!.data = JSON.stringify(value);
+  };
+
+  it('reads notes as comment threads and pictures as images', () => {
+    const { data } = open();
+    const [note] = resourceOf(data, RESOURCE.comments).s1;
+    expect(note).toMatchObject({ ref: 'B1', authorName: 'Sam Sample', text: { dataStream: 'Sam Sample:\rCheck this number\r\n' } });
+    const drawing = resourceOf(data, RESOURCE.drawings).s2;
+    expect(drawing.order).toHaveLength(1);
+    const image = drawing.data[drawing.order[0]];
+    expect(image.source).toMatch(/^data:image\/png;base64,/);
+    expect(image.sheetTransform.from).toEqual({ column: 0, columnOffset: 0, row: 8, rowOffset: 0 });
+    expect(image.transform).toMatchObject({ width: 40, height: 40 });
+  });
+
+  it('saves changed notes with the VML that shows them', () => {
+    const { bytes, edited, save } = open();
+    const comments = resourceOf(edited, RESOURCE.comments);
+    comments.s1[0].text.dataStream = 'Checked\r\n';
+    comments.s0 = [{ id: 'n1', threadId: 'n1', ref: 'C2', dT: '', personId: 'Me', authorName: 'Me', text: { dataStream: 'Doubled\rvalue\r\n' }, unitId: edited.id, subUnitId: 's0', children: [] }];
+    setResource(edited, RESOURCE.comments, comments);
+    const out = save();
+    const changed = changedParts(bytes, out);
+    expect(changed).toEqual(expect.arrayContaining(['xl/comments1.xml', 'xl/comments2.xml', 'xl/drawings/vmlDrawing1.vml', 'xl/drawings/vmlDrawing2.vml', 'xl/worksheets/sheet1.xml']));
+    expect(changed).not.toContain('xl/worksheets/sheet2.xml');
+    expect(text(out, 'xl/comments1.xml')).toContain('<comment ref="B1" authorId="0"><text><r><t>Checked</t></r></text></comment>');
+    expect(text(out, 'xl/comments2.xml')).toContain('<author>Me</author>');
+    expect(text(out, 'xl/drawings/vmlDrawing2.vml')).toContain('<x:Row>1</x:Row><x:Column>2</x:Column>');
+    expect(text(out, 'xl/worksheets/sheet1.xml')).toMatch(/<legacyDrawing r:id="rId\d+"\/><extLst>/);
+    expect(text(out, '[Content_Types].xml')).toContain('/xl/comments2.xml');
+    const wb = sheetJs(out);
+    expect((wb.Sheets.Data!.C2 as { c?: { t: string }[] }).c?.[0]?.t).toBe('Doubled\nvalue');
+    expect((wb.Sheets.Notes!.B1 as { c?: { t: string }[] }).c?.[0]?.t).toBe('Checked');
+  });
+
+  it('moves, deletes and adds pictures, keeping the chart in the same drawing as written', () => {
+    const { bytes, edited, save } = open();
+    const drawings = resourceOf(edited, RESOURCE.drawings);
+    const id = drawings.s2.order[0];
+    drawings.s2.data[id].sheetTransform.from = { column: 1, columnOffset: 5, row: 9, rowOffset: 0 };
+    drawings.s2.data[id].sheetTransform.to = { column: 2, columnOffset: 0, row: 11, rowOffset: 0 };
+    const png = drawings.s2.data[id].source;
+    drawings.s0 = { order: ['new'], data: { new: { ...drawings.s2.data[id], drawingId: 'new', subUnitId: 's0', source: png } } };
+    setResource(edited, RESOURCE.drawings, drawings);
+    const out = save();
+    const drawing = text(out, 'xl/drawings/drawing1.xml');
+    expect(drawing).toContain('<xdr:from><xdr:col>1</xdr:col><xdr:colOff>47625</xdr:colOff><xdr:row>9</xdr:row>');
+    const chartAnchor = /<xdr:twoCellAnchor><xdr:from><xdr:col>3[\s\S]*?<\/xdr:twoCellAnchor>/.exec(text(bytes, 'xl/drawings/drawing1.xml'))![0];
+    expect(drawing).toContain(chartAnchor);
+    expect(text(out, 'xl/worksheets/sheet1.xml')).toMatch(/<drawing r:id="rId\d+"\/>/);
+    expect(Object.keys(parts(out))).toEqual(expect.arrayContaining(['xl/drawings/drawing2.xml', 'xl/media/image2.png']));
+
+    // Deleting the picture removes its anchor only.
+    const again = open();
+    const d = resourceOf(again.edited, RESOURCE.drawings);
+    d.s2 = { order: [], data: {} };
+    setResource(again.edited, RESOURCE.drawings, d);
+    const deleted = text(again.save(), 'xl/drawings/drawing1.xml');
+    expect(deleted).not.toContain('<xdr:pic>');
+    expect(deleted).toContain(chartAnchor);
+  });
+});
