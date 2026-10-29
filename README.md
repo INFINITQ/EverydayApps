@@ -46,6 +46,9 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
 - **Charts:** the workbook's charts are drawn from the current values (ECharts, ADR 0011); insert
   column, bar, line, area, pie, doughnut and scatter charts from the selected cells, move, resize,
   delete or change their type. They're saved as real Excel charts.
+- **Pivot tables** show as last refreshed and are kept as they are; simple ones (one row field,
+  sum/count/average/min/max) refresh from their data with Alt+F5, and Excel refreshes them again
+  when it opens the file.
 - **Old `.xls` files** open read-only; Save makes a new `.xlsx` (ADR 0010).
 - **Your file stays your file:** saving patches only what you changed into the original package.
   Pivot tables, charts, pictures, macros, external links and anything Folio doesn't show yet are
