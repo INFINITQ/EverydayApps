@@ -16,3 +16,6 @@ round-trip tests. Apache POI is licensed under the Apache License 2.0.
 | TestTableCellAlign.docx | table cell alignment |
 | ExternalEntityInText.docx | declares an external XML entity; must be refused |
 | bug53475-password-is-pass.docx | password-protected (encrypted); must be refused with a clear message |
+| Lists.doc, HeaderFooterUnicode.doc, footnote.doc, hyperlink.doc, table-merges.doc | old Word 97-2003 files: lists, headers and footers, a footnote, a link, merged cells |
+| Word6.doc | an even older Word 6 file |
+| PasswordProtected.doc | a password-protected Word 97-2003 file; must be refused with a clear message |

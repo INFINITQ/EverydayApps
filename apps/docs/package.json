@@ -20,6 +20,7 @@
     "@folio/ui": "workspace:*",
     "@tauri-apps/api": "2.12.4",
     "fflate": "0.8.2",
+    "office-oxide-wasm": "0.1.8",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

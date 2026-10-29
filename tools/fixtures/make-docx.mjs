@@ -8,7 +8,7 @@
 // unknown namespace, and a picture linked from the web (which must never be fetched).
 // Used by the unit and end-to-end tests.
 //
-// Usage: node tools/fixtures/make-docx.mjs <out.docx|out.docm> [--plain] [--paragraphs=N]
+// Usage: node tools/fixtures/make-docx.mjs <out.docx|out.docm> [--plain] [--paragraphs=N] [--no-remote]
 import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -231,7 +231,7 @@ const FOOTER = `${XML}<w:ftr xmlns:w="${NS.w}" xmlns:r="${NS.r}">${para(
 const CORE = `${XML}<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${MARKERS.title}</dc:title><dc:creator>Folio fixtures</dc:creator><cp:lastModifiedBy>Folio fixtures</cp:lastModifiedBy><cp:revision>1</cp:revision><dcterms:created xsi:type="dcterms:W3CDTF">2026-01-01T00:00:00Z</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">2026-01-01T00:00:00Z</dcterms:modified></cp:coreProperties>`;
 const APP = `${XML}<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Folio fixtures</Application></Properties>`;
 
-function documentXml({ plain, paragraphs }) {
+function documentXml({ plain, paragraphs, remote }) {
   const roots = Object.entries(NS)
     .map(([prefix, uri]) => `xmlns:${prefix}="${uri}"`)
     .join(' ');
@@ -266,7 +266,7 @@ function documentXml({ plain, paragraphs }) {
     para(run('Picture'), { style: 'Heading1' }),
     para(picture('rIdImage1', 1, 'Green square', 914400, 914400)),
     // Linked, not embedded: must never be fetched.
-    para(picture('rIdRemote1', 2, 'Remote picture', 914400, 914400, { link: true })),
+    remote ? para(picture('rIdRemote1', 2, 'Remote picture', 914400, 914400, { link: true })) : '',
     para(run('Links and notes'), { style: 'Heading2' }),
     para(
       run('Visit ') +
@@ -297,9 +297,10 @@ function documentXml({ plain, paragraphs }) {
 
 /**
  * A .docx (or, with `macros`, a .docm whose `word/vbaProject.bin` is a stand-in: Folio never
- * runs macros, it only has to keep them). `plain` makes a minimal document without the extras.
+ * runs macros, it only has to keep them). `plain` makes a minimal document without the extras;
+ * `remote: false` leaves out the picture linked from the web (for tools that would fetch it).
  */
-export function makeDocx({ plain = false, macros = false, paragraphs = 0 } = {}) {
+export function makeDocx({ plain = false, macros = false, paragraphs = 0, remote = true } = {}) {
   const overrides = [
     ['/word/document.xml', macros ? 'application/vnd.ms-word.document.macroEnabled.main+xml' : `${CT}.wordprocessingml.document.main+xml`],
     ['/word/styles.xml', `${CT}.wordprocessingml.styles+xml`],
@@ -337,7 +338,7 @@ export function makeDocx({ plain = false, macros = false, paragraphs = 0 } = {})
       ['rIdHeader1', `${REL}/header`, 'header1.xml'],
       ['rIdFooter1', `${REL}/footer`, 'footer1.xml'],
       ['rIdImage1', `${REL}/image`, 'media/image1.png'],
-      ['rIdRemote1', `${REL}/image`, REMOTE_PICTURE, 'External'],
+      ...(remote ? [['rIdRemote1', `${REL}/image`, REMOTE_PICTURE, 'External']] : []),
       ['rIdLink1', `${REL}/hyperlink`, WEB_LINK, 'External'],
       ['rIdUnknown1', UNKNOWN.relType, 'folio-unknown.xml'],
       ['rIdCustomXml1', `${REL}/customXml`, '../customXml/item1.xml'],
@@ -387,7 +388,7 @@ export function makeDocx({ plain = false, macros = false, paragraphs = 0 } = {})
   return makeZip([
     { name: '[Content_Types].xml', data: contentTypes },
     { name: '_rels/.rels', data: packageRels },
-    { name: 'word/document.xml', data: documentXml({ plain, paragraphs }) },
+    { name: 'word/document.xml', data: documentXml({ plain, paragraphs, remote }) },
     { name: 'word/_rels/document.xml.rels', data: documentRels },
     ...parts,
   ]);
@@ -400,6 +401,6 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
     process.exit(1);
   }
   const paragraphs = Number(flags.find((f) => f.startsWith('--paragraphs='))?.split('=')[1] ?? 0);
-  writeFileSync(out, makeDocx({ plain: flags.includes('--plain'), macros: out.endsWith('.docm'), paragraphs }));
+  writeFileSync(out, makeDocx({ plain: flags.includes('--plain'), macros: out.endsWith('.docm'), paragraphs, remote: !flags.includes('--no-remote') }));
   console.log(`Wrote ${out}`);
 }

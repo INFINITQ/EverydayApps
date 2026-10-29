@@ -7,7 +7,7 @@
 // Usage (from apps/docs): node test/ui.mjs   (FOLIO_BROWSER=msedge on Windows uses Edge)
 // Screenshots go to test/out/.
 import { spawn, spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { strFromU8, unzipSync } from 'fflate';
@@ -149,6 +149,21 @@ try {
   const pdfPages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
   check('the printed PDF has one sheet per page', pdfPages === total, `${pdfPages} sheets for ${total} pages`);
   await page.emulateMedia({ media: 'screen' });
+
+  // ---- An old .doc opens read-only; Save makes a new .docx and leaves the .doc alone ------------
+  const doc = readFileSync(join(here, '../../../fixtures/generated/kitchen.doc'));
+  await page.evaluate(([p, data]) => window.harness.put(p, data), ['C:\\docs\\old.doc', b64(doc)]);
+  await page.evaluate((p) => window.harness.open(p), 'C:\\docs\\old.doc');
+  await page.getByText('opened read-only. Folio never changes it').waitFor({ timeout: 30_000 });
+  await page.locator('.docs-loading').waitFor({ state: 'detached', timeout: 30_000 });
+  check('a .doc opens read-only, with its text', (await status.textContent()).includes('Read-only') && (await page.getByText('Cell B2').count()) > 0);
+  await page.screenshot({ path: join(out, 'legacy.png') });
+  await page.evaluate(() => window.harness.nextSave('C:\\docs\\old.docx'));
+  await page.keyboard.press('Control+s');
+  await page.getByRole('tab', { name: /old\.docx/ }).waitFor({ timeout: 15_000 }).catch(() => undefined);
+  const converted = await page.evaluate(() => window.harness.file('C:\\docs\\old.docx'));
+  check('Save makes a new .docx with the text', converted !== null && strFromU8(parts(converted)['word/document.xml']).includes('Cell B2'));
+  check('the .doc itself is untouched', (await page.evaluate(() => window.harness.file('C:\\docs\\old.doc'))) === b64(doc));
 
   // ---- Privacy ---------------------------------------------------------------------------------
   const violations = await page.evaluate(() => window.__violations);
