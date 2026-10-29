@@ -203,6 +203,7 @@ function Rail({ session, options }: { session: SlidesSession; options: RenderOpt
   const [drop, setDrop] = useState<number | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
   const list = useRef<HTMLDivElement>(null);
+  const press = useRef<{ index: number; x: number; y: number; pointer: number; dragging: boolean } | null>(null);
   const height = Math.round((THUMB_WIDTH * deck.presentation.height) / deck.presentation.width);
 
   // Keep the current slide in view.
@@ -224,9 +225,55 @@ function Rail({ session, options }: { session: SlidesSession; options: RenderOpt
     event.preventDefault();
   };
 
-  const dropIndex = (event: React.DragEvent, index: number) => {
-    const box = (event.currentTarget as HTMLElement).getBoundingClientRect();
-    return event.clientY < box.top + box.height / 2 ? index : index + 1;
+  /** Where a drop at this height would land: before the slide with that index. */
+  const gapAt = (y: number) => {
+    const thumbs = [...(list.current?.querySelectorAll<HTMLElement>('.slides-thumb') ?? [])];
+    const index = thumbs.findIndex((thumb) => {
+      const box = thumb.getBoundingClientRect();
+      return y < box.top + box.height / 2;
+    });
+    return index < 0 ? thumbs.length : index;
+  };
+
+  // Dragging uses pointer events: on Windows the native file-drop handler (files dropped on
+  // the window) turns off HTML5 drag and drop inside the page.
+  const onPointerDown = (index: number, event: React.PointerEvent) => {
+    if (event.button !== 0) return;
+    const part = slides[index]!.part;
+    if (event.shiftKey) session.select(index, 'range');
+    else if (event.ctrlKey) session.select(index, 'toggle');
+    else if (!selected.includes(part)) session.select(index);
+    press.current = { index, x: event.clientX, y: event.clientY, pointer: event.pointerId, dragging: false };
+  };
+
+  const onPointerMove = (event: React.PointerEvent) => {
+    const start = press.current;
+    if (!start || state.converted) return;
+    if (!start.dragging) {
+      if (Math.hypot(event.clientX - start.x, event.clientY - start.y) < 6) return;
+      start.dragging = true;
+      list.current?.setPointerCapture(start.pointer);
+    }
+    const box = list.current!.getBoundingClientRect();
+    if (event.clientY < box.top + 32) list.current!.scrollBy(0, -12);
+    else if (event.clientY > box.bottom - 32) list.current!.scrollBy(0, 12);
+    setDrop(gapAt(event.clientY));
+  };
+
+  const onPointerUp = (event: React.PointerEvent) => {
+    const start = press.current;
+    press.current = null;
+    if (list.current?.hasPointerCapture(event.pointerId)) list.current.releasePointerCapture(event.pointerId);
+    if (start?.dragging) {
+      const at = drop ?? gapAt(event.clientY);
+      setDrop(null);
+      // Count only the slides that stay where they are.
+      const moving = new Set(session.selection().map((s) => s.part));
+      session.moveTo(slides.slice(0, at).filter((s) => !moving.has(s.part)).length);
+    } else if (start && !event.ctrlKey && !event.shiftKey) {
+      // A plain click on a slide that was part of a selection selects just that slide.
+      session.select(start.index);
+    }
   };
 
   return (
@@ -238,8 +285,11 @@ function Rail({ session, options }: { session: SlidesSession; options: RenderOpt
       aria-multiselectable="true"
       tabIndex={0}
       onKeyDown={onKeyDown}
-      onDragLeave={(event) => {
-        if (!list.current?.contains(event.relatedTarget as Node)) setDrop(null);
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerCancel={() => {
+        press.current = null;
+        setDrop(null);
       }}
     >
       {slides.map((slide, index) => (
@@ -251,34 +301,13 @@ function Rail({ session, options }: { session: SlidesSession; options: RenderOpt
           aria-label={`Slide ${index + 1}${slide.hidden ? ', hidden' : ''}`}
           data-current={index === current}
           data-hidden={slide.hidden || undefined}
-          data-drop={drop === index ? 'before' : drop === index + 1 && index === slides.length - 1 ? 'after' : undefined}
-          draggable={!state.converted}
-          onClick={(event) => session.select(index, event.shiftKey ? 'range' : event.ctrlKey ? 'toggle' : 'one')}
+          data-drop={drop === index ? 'before' : drop === slides.length && index === slides.length - 1 ? 'after' : undefined}
+          onPointerDown={(event) => onPointerDown(index, event)}
           onContextMenu={(event) => {
             event.preventDefault();
             if (!selected.includes(slide.part)) session.select(index);
             setMenu({ x: event.clientX, y: event.clientY });
           }}
-          onDragStart={(event) => {
-            if (!selected.includes(slide.part)) session.select(index);
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.setData('application/x-folio-slides', 'move');
-          }}
-          onDragOver={(event) => {
-            if (!event.dataTransfer.types.includes('application/x-folio-slides')) return;
-            event.preventDefault();
-            setDrop(dropIndex(event, index));
-          }}
-          onDrop={(event) => {
-            event.preventDefault();
-            const at = dropIndex(event, index);
-            setDrop(null);
-            // Dropping between slides: count only the slides that stay where they are.
-            const moving = new Set(session.selection().map((s) => s.part));
-            const before = slides.slice(0, at).filter((s) => !moving.has(s.part)).length;
-            session.moveTo(before);
-          }}
-          onDragEnd={() => setDrop(null)}
         >
           <span className="slides-thumb-number">{index + 1}</span>
           <div className="slides-thumb-image">
