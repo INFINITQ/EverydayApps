@@ -84,8 +84,7 @@ describe('package', () => {
         return { name: entry.name, data: new TextEncoder().encode(bomb) };
       }),
     );
-    const pkg = await openPackage(await writeZip(items));
-    expect(() => slidesOf(pkg)).toThrow(/DTD/);
+    await expect(openPackage(await writeZip(items))).rejects.toThrow(/DTD/);
   });
 
   it('refuses password-protected (OLE) files with a clear message', async () => {

@@ -75,8 +75,14 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
     let { x, y, w, h: height } = b;
     if (h.includes('e')) w = b.w + dx;
     if (h.includes('s')) height = b.h + dy;
-    if (h.includes('w')) (x = b.x + dx), (w = b.w - dx);
-    if (h.includes('n')) (y = b.y + dy), (height = b.h - dy);
+    if (h.includes('w')) {
+      x = b.x + dx;
+      w = b.w - dx;
+    }
+    if (h.includes('n')) {
+      y = b.y + dy;
+      height = b.h - dy;
+    }
     // Pictures keep their proportions from a corner (Shift does it for any shape).
     if (h.length === 2 && (event.shiftKey || selected?.nodeType === 'picture') && b.w > 0 && b.h > 0) {
       const ratio = Math.max(w / b.w, height / b.h);

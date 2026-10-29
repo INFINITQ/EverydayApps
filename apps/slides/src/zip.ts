@@ -114,8 +114,14 @@ export function readZip(bytes: Uint8Array, limits: ZipLimits = ZIP_LIMITS): ZipA
         const length = u16(extra + 2);
         if (id === 0x0001) {
           let field = extra + 4;
-          if (size === 0xffffffff) (size = u64(field)), (field += 8);
-          if (compressedSize === 0xffffffff) (compressedSize = u64(field)), (field += 8);
+          if (size === 0xffffffff) {
+            size = u64(field);
+            field += 8;
+          }
+          if (compressedSize === 0xffffffff) {
+            compressedSize = u64(field);
+            field += 8;
+          }
           if (localOffset === 0xffffffff) localOffset = u64(field);
           break;
         }

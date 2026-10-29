@@ -3,7 +3,7 @@
 // just keeping the old map, and saving can tell exactly which parts changed: an untouched
 // part is still the very object read from the file, and goes back out byte for byte.
 
-import { NS, REL, children, create, parseXml, serializeXml } from './xml';
+import { NS, REL, children, create, isSafeXml, parseXml, serializeXml } from './xml';
 import { type ZipEntry, ZipError, inflateEntry, readZip, writeZip } from './zip';
 
 /** A part as read from the file (inflated on first use) or as written by an edit. */
@@ -39,7 +39,14 @@ export async function openPackage(bytes: Uint8Array): Promise<Package> {
     [...parts.values()].filter((part) => part.entry && isXmlName(part.entry.name)).map((part) => load(part)),
   );
   if (!parts.has('[Content_Types].xml')) throw new ZipError("This isn't a PowerPoint file.");
-  return { parts, comment: archive.comment };
+  const pkg = { parts, comment: archive.comment };
+  // Office never writes DTDs; a part with one is refused before anything parses it.
+  for (const name of parts.keys()) {
+    if (isXmlName(name) && !isSafeXml(textOf(pkg, name) ?? '')) {
+      throw new ZipError(`${name} contains a DTD, which Folio refuses for safety.`);
+    }
+  }
+  return pkg;
 }
 
 async function load(part: Part): Promise<Uint8Array> {
