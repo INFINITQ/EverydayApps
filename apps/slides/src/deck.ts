@@ -61,7 +61,7 @@ export function slidesOf(pkg: Package): SlideInfo[] {
 
 /** Reads `show="0"` from the slide's root tag without parsing the whole slide. */
 function isHidden(xml: string): boolean {
-  const root = /<(?:[\w.-]+:)?sld\b[^>]*>/.exec(xml.slice(0, 4096))?.[0] ?? '';
+  const root = /<(?:[\w.-]+:)?sld\b[^>]*>/.exec(xml.slice(0, 16384))?.[0] ?? '';
   return /\sshow\s*=\s*["'](0|false)["']/.test(root);
 }
 
