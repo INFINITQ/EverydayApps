@@ -137,10 +137,26 @@ export class DocsSession implements DocumentSession {
       this.fingerprints.set(fingerprint(first), 0);
       this.update({ ready: true, stats: statsOf(first) });
       this.resolveOpened();
+      this.applyView();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'The document couldn’t be opened.';
       this.update({ failure: message });
       this.rejectOpened(new Error(message));
+    }
+  }
+
+  /** Where the reader was when the document last closed (page, zoom), applied once it's open. */
+  private pendingView: { page?: number; zoom?: number | null } | null = null;
+
+  private applyView() {
+    const view = this.pendingView;
+    const editor = this.editor as (Editor & { surface?: { revealPage(page: number): boolean } | null; setZoom?(zoom: number): unknown }) | null;
+    if (!view || !editor || !this.state.ready) return;
+    this.pendingView = null;
+    if (typeof view.zoom === 'number' && view.zoom >= 0.1 && view.zoom <= 5) editor.setZoom?.(view.zoom);
+    if (typeof view.page === 'number' && view.page > 1) {
+      // Pages are laid out a moment after opening; reveal once they're there.
+      requestAnimationFrame(() => editor.surface?.revealPage(view.page! - 1));
     }
   }
 
@@ -277,6 +293,25 @@ export class DocsSession implements DocumentSession {
   async snapshot(): Promise<Uint8Array> {
     await this.opened;
     return patchPackage(this.original, this.baseline, new Uint8Array(await this.editor!.save())).bytes;
+  }
+
+  viewState(): unknown {
+    const editor = this.editor;
+    if (!editor || !this.state.ready) return null;
+    const snapshot = (editor as unknown as { snapshot(): { page?: { current: number }; zoom?: number; zoomMode?: unknown } }).snapshot();
+    const surface = (editor as unknown as { surface?: { currentPage(mode?: 'viewport' | 'caret'): number } | null }).surface;
+    // A fitted zoom follows the window, so only a zoom the user picked is remembered.
+    const fitted = typeof snapshot.zoomMode === 'object' && snapshot.zoomMode !== null && (snapshot.zoomMode as { type?: string }).type !== 'fixed';
+    // currentPage() counts from 1; revealPage() takes an index from 0.
+    const page = surface ? surface.currentPage('viewport') : (snapshot.page?.current ?? 1);
+    return { page, zoom: fitted ? null : (snapshot.zoom ?? null) };
+  }
+
+  restoreViewState(state: unknown): void {
+    if (!state || typeof state !== 'object') return;
+    const { page, zoom } = state as { page?: unknown; zoom?: unknown };
+    this.pendingView = { ...(typeof page === 'number' ? { page } : {}), zoom: typeof zoom === 'number' ? zoom : null };
+    this.applyView();
   }
 
   async print(): Promise<void> {

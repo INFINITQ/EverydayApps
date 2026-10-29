@@ -213,6 +213,29 @@ try {
   check('the printed PDF has one sheet per page', pdfPages === total, `${pdfPages} sheets for ${total} pages`);
   await page.emulateMedia({ media: 'screen' });
 
+  // ---- Reopening returns to the page the reader was on -----------------------------------------
+  const view = await page.evaluate(async () => {
+    const shell = window.harness.shell;
+    const session = shell.session(shell.state.activeId);
+    session.editor.surface.revealPage(4);
+    await new Promise((resolve) => setTimeout(resolve, 600));
+    return session.viewState();
+  });
+  check('the view state remembers the page', view?.page === 5, JSON.stringify(view));
+  await page.evaluate(([p, data]) => window.harness.put(p, data), ['C:\\docs\\long-again.docx', b64(long)]);
+  await page.evaluate(async ([p, v]) => {
+    await window.harness.open(p);
+    const shell = window.harness.shell;
+    shell.session(shell.state.activeId).restoreViewState(v);
+  }, ['C:\\docs\\long-again.docx', view]);
+  await page.locator('.folio-document:not([hidden]) .docs-loading').waitFor({ state: 'detached', timeout: 30_000 });
+  await page.waitForTimeout(800);
+  const shown = await page.evaluate(() => {
+    const shell = window.harness.shell;
+    return shell.session(shell.state.activeId).editor.surface.currentPage('viewport');
+  });
+  check('reopening shows that page again', shown === 5, `page ${shown}`);
+
   // ---- An old .doc opens read-only; Save makes a new .docx and leaves the .doc alone ------------
   const doc = readFileSync(join(here, '../../../fixtures/generated/kitchen.doc'));
   await page.evaluate(([p, data]) => window.harness.put(p, data), ['C:\\docs\\old.doc', b64(doc)]);
