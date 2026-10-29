@@ -20,6 +20,7 @@ export function fakeBackend(initial: Record<string, string> = {}, readOnly: stri
   let folderTarget: string | null = null;
   const folders = new Map<string, string>();
   let saveFailure: FolioError | null = null;
+  let secondScreen = false;
 
   const grant = (path: string): FileRef => {
     const token = `t${++counter}`;
@@ -99,6 +100,10 @@ export function fakeBackend(initial: Record<string, string> = {}, readOnly: stri
     setFullscreen: async (on) => {
       calls.push(`fullscreen:${on}`);
     },
+    presenterScreen: async (open) => {
+      calls.push(`presenterScreen:${open}`);
+      return open && secondScreen;
+    },
     openLink: async (url) => {
       calls.push(`openLink:${url}`);
     },
@@ -167,5 +172,7 @@ export function fakeBackend(initial: Record<string, string> = {}, readOnly: stri
     nextSave: (path: string | null) => void (saveTarget = path),
     nextFolder: (path: string | null) => void (folderTarget = path),
     failNextSave: (error: FolioError) => void (saveFailure = error),
+    /** Whether a second monitor is connected (for a slideshow's audience window). */
+    setSecondScreen: (connected: boolean) => void (secondScreen = connected),
   };
 }

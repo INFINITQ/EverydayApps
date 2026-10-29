@@ -47,6 +47,12 @@ export interface DocHost {
   toggleFullscreen(): void;
   /** Whether the window is full screen now (a slideshow leaves it as it found it). */
   isFullscreen?(): boolean;
+  /**
+   * Opens (or closes) a full-screen window on a second monitor for a slideshow's audience.
+   * Resolves false when there's no second monitor. The window shows the app's page with
+   * `#audience` and has no access to anything: send it what to show over a BroadcastChannel.
+   */
+  presenterScreen?(open: boolean): Promise<boolean>;
   /** Small encrypted items (saved signatures), protected with Windows DPAPI. */
   secure: {
     put(key: string, bytes: Uint8Array): Promise<void>;

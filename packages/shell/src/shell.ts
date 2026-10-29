@@ -315,6 +315,7 @@ export class Shell {
       openLink: (url) => this.backend.openLink(url),
       toggleFullscreen: () => void this.setFullscreen(!this.state.fullscreen),
       isFullscreen: () => this.state.fullscreen,
+      presenterScreen: (open) => this.backend.presenterScreen(open).catch(() => false),
       secure: {
         put: (key, bytes) => this.backend.securePut(key, bytes),
         get: (key) => this.backend.secureGet(key),
