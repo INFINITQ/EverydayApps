@@ -319,6 +319,13 @@ export function createSlidesSession(pkg: Package, host: DocHost, options: { conv
     },
 
     save: () => savePackage(state.pkg),
+    /** The deck was saved as `ext`: a converted old deck saved as .pptx can now be edited. */
+    saved(ext: string) {
+      if (state.converted && ext === 'pptx') {
+        set({ converted: false });
+        host.notify('Saved as a .pptx: you can edit it now.', 'success');
+      }
+    },
     dispose() {
       listeners.clear();
     },

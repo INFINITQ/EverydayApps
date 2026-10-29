@@ -1,0 +1,4 @@
+# Old decks can nest deeply: give the converter an 8 MiB stack (the default is 1 MiB).
+# A hostile file can't make it take more than 1 GiB of memory: past that, it stops.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=-zstack-size=8388608", "-C", "link-arg=--max-memory=1073741824"]

@@ -201,6 +201,7 @@ export async function openDeck(pkg: Package, name: string, host: DocHost, conver
     lossy: () => [],
     commands,
     save: async (ext) => savePackage(forExtension(session.state.pkg, ext)),
+    saved: (ext) => session.saved(ext),
     viewState: () => ({ slide: session.state.current }),
     restoreViewState: (value) => {
       const slide = (value as { slide?: unknown } | null)?.slide;
