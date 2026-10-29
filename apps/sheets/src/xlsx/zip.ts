@@ -88,8 +88,14 @@ export function readZip(bytes: Uint8Array): ZipEntry[] {
       const length = u16(bytes, extra + 2);
       if (id === 0x0001) {
         let field = extra + 4;
-        if (size === 0xffffffff) (size = u64(bytes, field)), (field += 8);
-        if (compressed === 0xffffffff) (compressed = u64(bytes, field)), (field += 8);
+        if (size === 0xffffffff) {
+          size = u64(bytes, field);
+          field += 8;
+        }
+        if (compressed === 0xffffffff) {
+          compressed = u64(bytes, field);
+          field += 8;
+        }
         if (local === 0xffffffff) local = u64(bytes, field);
       }
       extra += 4 + length;
@@ -178,8 +184,8 @@ export function writeZip(parts: ZipOut[]): Uint8Array {
       crc = crc32(part.bytes);
       const deflated = deflateSync(part.bytes, { level: 6 });
       // Tiny parts can come out larger compressed; store those.
-      if (deflated.length < size) (method = 8), (data = deflated);
-      else (method = 0), (data = part.bytes);
+      method = deflated.length < size ? 8 : 0;
+      data = method === 8 ? deflated : part.bytes;
     }
     const utf8 = /[^\x20-\x7e]/.test(part.name);
     const header = new Uint8Array(30);

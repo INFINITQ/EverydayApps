@@ -14,6 +14,7 @@ import {
   LocaleType,
 } from '@univerjs/core';
 import { CONTENT, Package, REL } from './opc';
+import { writeZip } from './zip';
 import { MAX_COLUMNS, MAX_ROWS, type Range, cellName, parseCell, parseRange } from './refs';
 import { StyleSheet } from './styles';
 import { type XmlElement, decodeOfficeText, parseAttrs, parseXml, scanTags, unescapeXml } from './xml';
@@ -519,3 +520,23 @@ function collectFeatures(pkg: Package, sheet: SourceSheet, features: Features) {
 
 /** "A1" of a cell, for messages. */
 export const where = (cell: { row: number; column: number }) => cellName(cell.row, cell.column);
+
+/** An empty workbook to patch into when saving a CSV or an old .xls as .xlsx. */
+export function BLANK_WORKBOOK(): Uint8Array {
+  const xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+  const main = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+  const r = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+  const rels = (list: [string, string, string][]) =>
+    `${xml}<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${list.map(([id, type, target]) => `<Relationship Id="${id}" Type="${r}/${type}" Target="${target}"/>`).join('')}</Relationships>`;
+  const files: Record<string, string> = {
+    '[Content_Types].xml':
+      `${xml}<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>` +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
+    '_rels/.rels': rels([['rId1', 'officeDocument', 'xl/workbook.xml']]),
+    'xl/workbook.xml': `${xml}<workbook xmlns="${main}" xmlns:r="${r}"><bookViews><workbookView activeTab="0"/></bookViews><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets><calcPr calcId="191029"/></workbook>`,
+    'xl/_rels/workbook.xml.rels': rels([['rId1', 'worksheet', 'worksheets/sheet1.xml']]),
+    'xl/worksheets/sheet1.xml': `${xml}<worksheet xmlns="${main}" xmlns:r="${r}"><dimension ref="A1"/><sheetViews><sheetView workbookViewId="0"/></sheetViews><sheetFormatPr defaultRowHeight="15"/><sheetData/><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/></worksheet>`,
+  };
+  return writeZip(Object.entries(files).map(([name, text]) => ({ name, bytes: new TextEncoder().encode(text) })));
+}

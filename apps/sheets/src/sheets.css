@@ -11,3 +11,94 @@
   flex: 1;
   min-height: 0;
 }
+
+.sheets-grid-holder {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.sheets-grid-holder > .sheets-grid {
+  position: absolute;
+  inset: 0;
+}
+
+.sheets-toolbar {
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--colorNeutralStroke2);
+}
+
+.sheets-toolbar-spacer {
+  flex: 1;
+}
+
+.sheets-note {
+  margin: 4px 8px 0;
+}
+
+.sheets-note-close {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.sheets-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 24px);
+  gap: 6px;
+  padding: 8px;
+}
+
+.sheets-swatch {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--colorNeutralStroke1);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sheets-swatch-none {
+  grid-column: span 4;
+  border: 1px solid var(--colorNeutralStroke1);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.sheets-print {
+  display: none;
+}
+
+@media print {
+  .sheets-printing body > *:not(.sheets-print) {
+    display: none !important;
+  }
+
+  .sheets-printing .sheets-print {
+    display: block;
+    font: 10pt 'Segoe UI', sans-serif;
+  }
+
+  .sheets-print h1 {
+    font-size: 12pt;
+  }
+
+  .sheets-print table {
+    border-collapse: collapse;
+  }
+
+  .sheets-print td {
+    border: 1px solid #ccc;
+    padding: 2px 6px;
+  }
+
+  .sheets-print td.number {
+    text-align: right;
+  }
+}

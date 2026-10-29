@@ -115,7 +115,7 @@ export function createEngine(container: HTMLElement, data: IWorkbookData, option
   });
   univer.registerPlugin(UniverRenderEnginePlugin);
   univer.registerPlugin(UniverFormulaEnginePlugin);
-  univer.registerPlugin(UniverUIPlugin, { container, header: false, toolbar: false, footer: true, contextMenu: true });
+  univer.registerPlugin(UniverUIPlugin, { container, header: true, toolbar: false, footer: true, contextMenu: true });
   univer.registerPlugin(UniverDocsPlugin);
   univer.registerPlugin(UniverDocsUIPlugin);
   univer.registerPlugin(UniverSheetsPlugin);

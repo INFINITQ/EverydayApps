@@ -520,12 +520,16 @@ function cellXml(
     } else if (typeof value === 'number' || (cell.t === CellValueType.NUMBER && value !== '' && Number.isFinite(Number(value)))) {
       const n = Number(value);
       if (Number.isFinite(n)) v = numberText(n);
-      else (t = 'e'), (v = '#NUM!');
+      else {
+        t = 'e';
+        v = '#NUM!';
+      }
     } else {
       const textValue = String(value);
-      if (EXCEL_ERRORS.has(textValue)) (t = 'e'), (v = textValue);
-      else if (hasFormula) (t = 'str'), (v = textValue);
-      else (t = 's'), (v = String(ctx.strings.indexOf(textValue)));
+      if (EXCEL_ERRORS.has(textValue)) t = 'e';
+      else if (hasFormula) t = 'str';
+      else t = 's';
+      v = t === 's' ? String(ctx.strings.indexOf(textValue)) : textValue;
     }
   }
   if (t) attrs.splice(s > 0 ? 2 : 1, 0, ['t', t]);
