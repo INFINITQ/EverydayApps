@@ -1,37 +1,43 @@
 # Third-party licenses
 
 Made by `node tools/license-report.mjs` on 2026-10-29. It lists what the apps ship:
-172 npm packages installed for production (some are only partly bundled, or not at all) and
-227 Rust crates compiled into the apps. Build tools and test-only packages are left out.
+193 npm packages installed for production (some are only partly bundled, or not at all) and
+242 Rust crates compiled into the apps. Build tools and test-only packages are left out.
 
 `pdfium.wasm` (from `@embedpdf/pdfium`, MIT) is Google PDFium compiled to WebAssembly. PDFium is
 BSD-3-Clause, and its notice ships in that package as `LICENSE.pdfium`.
+
+Folio Slides' `ppt.wasm` is `apps/slides/ppt-wasm` (office_oxide and its crates, listed below) compiled
+to WebAssembly.
 
 ## Summary
 
 | License | npm | Rust |
 | --- | ---: | ---: |
-| MIT | 156 | 38 |
-| MIT OR Apache-2.0 | 0 | 115 |
-| Apache-2.0 OR MIT | 1 | 21 |
+| MIT | 168 | 39 |
+| MIT OR Apache-2.0 | 0 | 126 |
+| Apache-2.0 OR MIT | 1 | 22 |
 | Unicode-3.0 | 0 | 18 |
+| Apache-2.0 | 7 | 2 |
 | Unlicense OR MIT | 0 | 8 |
 | OFL-1.1 | 7 | 0 |
-| Apache-2.0 | 4 | 1 |
-| MPL-2.0 | 0 | 5 |
+| MPL-2.0 | 1 | 5 |
+| BSD-3-Clause | 2 | 2 |
 | MIT/Apache-2.0 | 0 | 4 |
-| BSD-3-Clause | 1 | 2 |
+| ISC | 2 | 0 |
+| 0BSD | 2 | 0 |
 | Zlib | 0 | 2 |
 | MIT OR Zlib OR Apache-2.0 | 0 | 2 |
 | Unlicense/MIT | 0 | 2 |
 | BSD-2-Clause | 1 | 0 |
-| ISC | 1 | 0 |
-| 0BSD | 1 | 0 |
+| (MIT OR GPL-3.0-or-later) | 1 | 0 |
+| (MIT AND Zlib) | 1 | 0 |
 | 0BSD OR MIT OR Apache-2.0 | 0 | 1 |
 | BSD-3-Clause AND MIT | 0 | 1 |
 | BSD-3-Clause/MIT | 0 | 1 |
 | Apache-2.0 AND MIT | 0 | 1 |
 | CC0-1.0 OR MIT-0 OR Apache-2.0 | 0 | 1 |
+| (Apache-2.0 OR MIT) AND BSD-3-Clause | 0 | 1 |
 | Apache-2.0 / MIT | 0 | 1 |
 | MIT OR Apache-2.0 OR Zlib | 0 | 1 |
 | Zlib OR Apache-2.0 OR MIT | 0 | 1 |
@@ -41,6 +47,8 @@ BSD-3-Clause, and its notice ships in that package as `LICENSE.pdfium`.
 
 These ask that changes to them be shared when the app is given to others (personal use is unaffected):
 
+- jszip 3.10.2: (MIT OR GPL-3.0-or-later)
+- mtx-decompressor 1.8.0: MPL-2.0
 - cssparser 0.37.0: MPL-2.0
 - cssparser-macros 0.7.1: MPL-2.0
 - dtoa-short 0.3.5: MPL-2.0
@@ -51,10 +59,11 @@ These ask that changes to them be shared when the app is given to others (person
 
 | Package | Version | License | Apps |
 | --- | --- | --- | --- |
+| @aiden0z/pptx-renderer | 1.4.0 | Apache-2.0 | slides |
 | @babel/helper-string-parser | 7.29.11 | MIT | pdf |
 | @babel/helper-validator-identifier | 7.29.7 | MIT | pdf |
 | @babel/parser | 7.29.11 | MIT | pdf |
-| @babel/runtime | 7.29.10 | MIT | hello, pdf |
+| @babel/runtime | 7.29.10 | MIT | hello, pdf, slides |
 | @babel/types | 7.29.11 | MIT | pdf |
 | @embedpdf/core | 2.15.1 | MIT | pdf |
 | @embedpdf/engines | 2.15.1 | MIT | pdf |
@@ -93,92 +102,94 @@ These ask that changes to them be shared when the app is given to others (person
 | @embedpdf/plugin-viewport | 2.15.1 | MIT | pdf |
 | @embedpdf/plugin-zoom | 2.15.1 | MIT | pdf |
 | @embedpdf/utils | 2.15.1 | MIT | pdf |
-| @emotion/hash | 0.9.2 | MIT | hello, pdf |
-| @floating-ui/core | 1.8.0 | MIT | hello, pdf |
-| @floating-ui/devtools | 0.2.3 | MIT | hello, pdf |
-| @floating-ui/dom | 1.8.0 | MIT | hello, pdf |
-| @floating-ui/utils | 0.2.12 | MIT | hello, pdf |
-| @fluentui/keyboard-keys | 9.0.9 | MIT | hello, pdf |
-| @fluentui/priority-overflow | 9.4.3 | MIT | hello, pdf |
-| @fluentui/react-accordion | 9.12.5 | MIT | hello, pdf |
-| @fluentui/react-alert | 9.0.2-beta.1 | MIT | hello, pdf |
-| @fluentui/react-aria | 9.17.16 | MIT | hello, pdf |
-| @fluentui/react-avatar | 9.11.9 | MIT | hello, pdf |
-| @fluentui/react-badge | 9.5.7 | MIT | hello, pdf |
-| @fluentui/react-breadcrumb | 9.4.8 | MIT | hello, pdf |
-| @fluentui/react-button | 9.11.3 | MIT | hello, pdf |
-| @fluentui/react-card | 9.7.4 | MIT | hello, pdf |
-| @fluentui/react-carousel | 9.9.16 | MIT | hello, pdf |
-| @fluentui/react-checkbox | 9.6.6 | MIT | hello, pdf |
-| @fluentui/react-color-picker | 9.3.3 | MIT | hello, pdf |
-| @fluentui/react-combobox | 9.17.8 | MIT | hello, pdf |
-| @fluentui/react-components | 9.74.11 | MIT | hello, pdf |
-| @fluentui/react-context-selector | 9.2.21 | MIT | hello, pdf |
-| @fluentui/react-dialog | 9.18.6 | MIT | hello, pdf |
-| @fluentui/react-divider | 9.7.6 | MIT | hello, pdf |
-| @fluentui/react-drawer | 9.13.5 | MIT | hello, pdf |
-| @fluentui/react-field | 9.5.6 | MIT | hello, pdf |
-| @fluentui/react-icons | 2.0.344 | MIT | hello, pdf |
-| @fluentui/react-image | 9.4.6 | MIT | hello, pdf |
-| @fluentui/react-infobutton | 9.0.1-beta.1 | MIT | hello, pdf |
-| @fluentui/react-infolabel | 9.4.28 | MIT | hello, pdf |
-| @fluentui/react-input | 9.8.8 | MIT | hello, pdf |
-| @fluentui/react-jsx-runtime | 9.4.7 | MIT | hello, pdf |
-| @fluentui/react-label | 9.4.6 | MIT | hello, pdf |
-| @fluentui/react-link | 9.8.6 | MIT | hello, pdf |
-| @fluentui/react-list | 9.7.0 | MIT | hello, pdf |
-| @fluentui/react-menu | 9.25.7 | MIT | hello, pdf |
-| @fluentui/react-message-bar | 9.7.9 | MIT | hello, pdf |
-| @fluentui/react-motion | 9.16.5 | MIT | hello, pdf |
-| @fluentui/react-motion-components-preview | 0.15.10 | MIT | hello, pdf |
-| @fluentui/react-nav | 9.4.9 | MIT | hello, pdf |
-| @fluentui/react-overflow | 9.9.5 | MIT | hello, pdf |
-| @fluentui/react-persona | 9.7.11 | MIT | hello, pdf |
-| @fluentui/react-popover | 9.14.10 | MIT | hello, pdf |
-| @fluentui/react-portal | 9.8.17 | MIT | hello, pdf |
-| @fluentui/react-positioning | 9.23.4 | MIT | hello, pdf |
-| @fluentui/react-progress | 9.5.7 | MIT | hello, pdf |
-| @fluentui/react-provider | 9.22.22 | MIT | hello, pdf |
-| @fluentui/react-radio | 9.6.7 | MIT | hello, pdf |
-| @fluentui/react-rating | 9.4.7 | MIT | hello, pdf |
-| @fluentui/react-search | 9.4.8 | MIT | hello, pdf |
-| @fluentui/react-select | 9.5.7 | MIT | hello, pdf |
-| @fluentui/react-shared-contexts | 9.26.4 | MIT | hello, pdf |
-| @fluentui/react-skeleton | 9.7.7 | MIT | hello, pdf |
-| @fluentui/react-slider | 9.6.8 | MIT | hello, pdf |
-| @fluentui/react-spinbutton | 9.6.8 | MIT | hello, pdf |
-| @fluentui/react-spinner | 9.8.7 | MIT | hello, pdf |
-| @fluentui/react-swatch-picker | 9.6.3 | MIT | hello, pdf |
-| @fluentui/react-switch | 9.7.7 | MIT | hello, pdf |
-| @fluentui/react-table | 9.19.23 | MIT | hello, pdf |
-| @fluentui/react-tabs | 9.12.6 | MIT | hello, pdf |
-| @fluentui/react-tabster | 9.26.19 | MIT | hello, pdf |
-| @fluentui/react-tag-picker | 9.10.6 | MIT | hello, pdf |
-| @fluentui/react-tags | 9.9.8 | MIT | hello, pdf |
-| @fluentui/react-teaching-popover | 9.7.9 | MIT | hello, pdf |
-| @fluentui/react-text | 9.6.21 | MIT | hello, pdf |
-| @fluentui/react-textarea | 9.7.8 | MIT | hello, pdf |
-| @fluentui/react-theme | 9.2.2 | MIT | hello, pdf |
-| @fluentui/react-toast | 9.8.5 | MIT | hello, pdf |
-| @fluentui/react-toolbar | 9.8.7 | MIT | hello, pdf |
-| @fluentui/react-tooltip | 9.10.8 | MIT | hello, pdf |
-| @fluentui/react-tree | 9.16.10 | MIT | hello, pdf |
-| @fluentui/react-utilities | 9.27.0 | MIT | hello, pdf |
-| @fluentui/react-virtualizer | 9.0.0-alpha.116 | MIT | hello, pdf |
-| @fluentui/tokens | 1.0.0-alpha.24 | MIT | hello, pdf |
-| @griffel/core | 1.21.4 | MIT | hello, pdf |
-| @griffel/react | 1.7.8 | MIT | hello, pdf |
-| @griffel/style-types | 1.4.3 | MIT | hello, pdf |
+| @emotion/hash | 0.9.2 | MIT | hello, pdf, slides |
+| @floating-ui/core | 1.8.0 | MIT | hello, pdf, slides |
+| @floating-ui/devtools | 0.2.3 | MIT | hello, pdf, slides |
+| @floating-ui/dom | 1.8.0 | MIT | hello, pdf, slides |
+| @floating-ui/utils | 0.2.12 | MIT | hello, pdf, slides |
+| @fluentui/keyboard-keys | 9.0.9 | MIT | hello, pdf, slides |
+| @fluentui/priority-overflow | 9.4.3 | MIT | hello, pdf, slides |
+| @fluentui/react-accordion | 9.12.5 | MIT | hello, pdf, slides |
+| @fluentui/react-alert | 9.0.2-beta.1 | MIT | hello, pdf, slides |
+| @fluentui/react-aria | 9.17.16 | MIT | hello, pdf, slides |
+| @fluentui/react-avatar | 9.11.9 | MIT | hello, pdf, slides |
+| @fluentui/react-badge | 9.5.7 | MIT | hello, pdf, slides |
+| @fluentui/react-breadcrumb | 9.4.8 | MIT | hello, pdf, slides |
+| @fluentui/react-button | 9.11.3 | MIT | hello, pdf, slides |
+| @fluentui/react-card | 9.7.4 | MIT | hello, pdf, slides |
+| @fluentui/react-carousel | 9.9.16 | MIT | hello, pdf, slides |
+| @fluentui/react-checkbox | 9.6.6 | MIT | hello, pdf, slides |
+| @fluentui/react-color-picker | 9.3.3 | MIT | hello, pdf, slides |
+| @fluentui/react-combobox | 9.17.8 | MIT | hello, pdf, slides |
+| @fluentui/react-components | 9.74.11 | MIT | hello, pdf, slides |
+| @fluentui/react-context-selector | 9.2.21 | MIT | hello, pdf, slides |
+| @fluentui/react-dialog | 9.18.6 | MIT | hello, pdf, slides |
+| @fluentui/react-divider | 9.7.6 | MIT | hello, pdf, slides |
+| @fluentui/react-drawer | 9.13.5 | MIT | hello, pdf, slides |
+| @fluentui/react-field | 9.5.6 | MIT | hello, pdf, slides |
+| @fluentui/react-icons | 2.0.344 | MIT | hello, pdf, slides |
+| @fluentui/react-image | 9.4.6 | MIT | hello, pdf, slides |
+| @fluentui/react-infobutton | 9.0.1-beta.1 | MIT | hello, pdf, slides |
+| @fluentui/react-infolabel | 9.4.28 | MIT | hello, pdf, slides |
+| @fluentui/react-input | 9.8.8 | MIT | hello, pdf, slides |
+| @fluentui/react-jsx-runtime | 9.4.7 | MIT | hello, pdf, slides |
+| @fluentui/react-label | 9.4.6 | MIT | hello, pdf, slides |
+| @fluentui/react-link | 9.8.6 | MIT | hello, pdf, slides |
+| @fluentui/react-list | 9.7.0 | MIT | hello, pdf, slides |
+| @fluentui/react-menu | 9.25.7 | MIT | hello, pdf, slides |
+| @fluentui/react-message-bar | 9.7.9 | MIT | hello, pdf, slides |
+| @fluentui/react-motion | 9.16.5 | MIT | hello, pdf, slides |
+| @fluentui/react-motion-components-preview | 0.15.10 | MIT | hello, pdf, slides |
+| @fluentui/react-nav | 9.4.9 | MIT | hello, pdf, slides |
+| @fluentui/react-overflow | 9.9.5 | MIT | hello, pdf, slides |
+| @fluentui/react-persona | 9.7.11 | MIT | hello, pdf, slides |
+| @fluentui/react-popover | 9.14.10 | MIT | hello, pdf, slides |
+| @fluentui/react-portal | 9.8.17 | MIT | hello, pdf, slides |
+| @fluentui/react-positioning | 9.23.4 | MIT | hello, pdf, slides |
+| @fluentui/react-progress | 9.5.7 | MIT | hello, pdf, slides |
+| @fluentui/react-provider | 9.22.22 | MIT | hello, pdf, slides |
+| @fluentui/react-radio | 9.6.7 | MIT | hello, pdf, slides |
+| @fluentui/react-rating | 9.4.7 | MIT | hello, pdf, slides |
+| @fluentui/react-search | 9.4.8 | MIT | hello, pdf, slides |
+| @fluentui/react-select | 9.5.7 | MIT | hello, pdf, slides |
+| @fluentui/react-shared-contexts | 9.26.4 | MIT | hello, pdf, slides |
+| @fluentui/react-skeleton | 9.7.7 | MIT | hello, pdf, slides |
+| @fluentui/react-slider | 9.6.8 | MIT | hello, pdf, slides |
+| @fluentui/react-spinbutton | 9.6.8 | MIT | hello, pdf, slides |
+| @fluentui/react-spinner | 9.8.7 | MIT | hello, pdf, slides |
+| @fluentui/react-swatch-picker | 9.6.3 | MIT | hello, pdf, slides |
+| @fluentui/react-switch | 9.7.7 | MIT | hello, pdf, slides |
+| @fluentui/react-table | 9.19.23 | MIT | hello, pdf, slides |
+| @fluentui/react-tabs | 9.12.6 | MIT | hello, pdf, slides |
+| @fluentui/react-tabster | 9.26.19 | MIT | hello, pdf, slides |
+| @fluentui/react-tag-picker | 9.10.6 | MIT | hello, pdf, slides |
+| @fluentui/react-tags | 9.9.8 | MIT | hello, pdf, slides |
+| @fluentui/react-teaching-popover | 9.7.9 | MIT | hello, pdf, slides |
+| @fluentui/react-text | 9.6.21 | MIT | hello, pdf, slides |
+| @fluentui/react-textarea | 9.7.8 | MIT | hello, pdf, slides |
+| @fluentui/react-theme | 9.2.2 | MIT | hello, pdf, slides |
+| @fluentui/react-toast | 9.8.5 | MIT | hello, pdf, slides |
+| @fluentui/react-toolbar | 9.8.7 | MIT | hello, pdf, slides |
+| @fluentui/react-tooltip | 9.10.8 | MIT | hello, pdf, slides |
+| @fluentui/react-tree | 9.16.10 | MIT | hello, pdf, slides |
+| @fluentui/react-utilities | 9.27.0 | MIT | hello, pdf, slides |
+| @fluentui/react-virtualizer | 9.0.0-alpha.116 | MIT | hello, pdf, slides |
+| @fluentui/tokens | 1.0.0-alpha.24 | MIT | hello, pdf, slides |
+| @griffel/core | 1.21.4 | MIT | hello, pdf, slides |
+| @griffel/react | 1.7.8 | MIT | hello, pdf, slides |
+| @griffel/style-types | 1.4.3 | MIT | hello, pdf, slides |
 | @jridgewell/gen-mapping | 0.3.13 | MIT | pdf |
 | @jridgewell/remapping | 2.3.5 | MIT | pdf |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | pdf |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT | pdf |
 | @jridgewell/trace-mapping | 0.3.31 | MIT | pdf |
+| @napi-rs/canvas | 1.0.13 | MIT | slides |
+| @napi-rs/canvas-linux-x64-gnu | 1.0.13 | MIT | slides |
 | @sveltejs/acorn-typescript | 1.0.13 | MIT | pdf |
-| @swc/helpers | 0.5.23 | Apache-2.0 | hello, pdf |
-| @tauri-apps/api | 2.12.4 | Apache-2.0 OR MIT | hello, pdf |
+| @swc/helpers | 0.5.23 | Apache-2.0 | hello, pdf, slides |
+| @tauri-apps/api | 2.12.4 | Apache-2.0 OR MIT | hello, pdf, slides |
 | @types/estree | 1.0.9 | MIT | pdf |
-| @types/react | 19.3.0 | MIT | hello, pdf |
+| @types/react | 19.3.0 | MIT | hello, pdf, slides |
 | @typescript-eslint/types | 8.72.0 | MIT | pdf |
 | @vue/compiler-core | 3.5.44 | MIT | pdf |
 | @vue/compiler-dom | 3.5.44 | MIT | pdf |
@@ -193,36 +204,54 @@ These ask that changes to them be shared when the app is given to others (person
 | aria-query | 5.3.1 | Apache-2.0 | pdf |
 | axobject-query | 4.1.0 | Apache-2.0 | pdf |
 | clsx | 2.1.1 | MIT | pdf |
-| csstype | 3.2.3 | MIT | hello, pdf |
+| core-util-is | 1.0.3 | MIT | slides |
+| csstype | 3.2.3 | MIT | hello, pdf, slides |
 | devalue | 5.9.4 | MIT | pdf |
-| embla-carousel | 8.6.0 | MIT | hello, pdf |
-| embla-carousel-autoplay | 8.6.0 | MIT | hello, pdf |
-| embla-carousel-fade | 8.6.0 | MIT | hello, pdf |
+| echarts | 6.1.0 | Apache-2.0 | slides |
+| embla-carousel | 8.6.0 | MIT | hello, pdf, slides |
+| embla-carousel-autoplay | 8.6.0 | MIT | hello, pdf, slides |
+| embla-carousel-fade | 8.6.0 | MIT | hello, pdf, slides |
 | entities | 7.0.1 | BSD-2-Clause | pdf |
 | esm-env | 1.2.2 | MIT | pdf |
 | esrap | 2.4.0 | MIT | pdf |
 | estree-walker | 2.0.2 | MIT | pdf |
+| immediate | 3.0.6 | MIT | slides |
+| inherits | 2.0.4 | ISC | slides |
 | is-reference | 3.0.3 | MIT | pdf |
-| keyborg | 3.498.0 | MIT | hello, pdf |
+| isarray | 1.0.0 | MIT | slides |
+| jszip | 3.10.2 | (MIT OR GPL-3.0-or-later) | slides |
+| keyborg | 3.498.0 | MIT | hello, pdf, slides |
+| lie | 3.3.0 | MIT | slides |
 | locate-character | 3.0.0 | MIT | pdf |
 | magic-string | 0.30.21 | MIT | pdf |
+| mtx-decompressor | 1.8.0 | MPL-2.0 | slides |
 | nanoid | 3.3.20 | MIT | pdf |
+| pako | 1.0.11 | (MIT AND Zlib) | slides |
+| pdfjs-dist | 6.4.299 | Apache-2.0 | slides |
 | picocolors | 1.1.1 | ISC | pdf |
 | postcss | 8.5.31 | MIT | pdf |
 | preact | 10.29.8 | MIT | pdf |
-| react | 19.3.1 | MIT | hello, pdf |
-| react-dom | 19.3.1 | MIT | hello, pdf |
-| rtl-css-js | 1.16.1 | MIT | hello, pdf |
-| scheduler | 0.28.0 | MIT | hello, pdf |
+| process-nextick-args | 2.0.1 | MIT | slides |
+| react | 19.3.1 | MIT | hello, pdf, slides |
+| react-dom | 19.3.1 | MIT | hello, pdf, slides |
+| readable-stream | 2.3.8 | MIT | slides |
+| rtl-css-js | 1.16.1 | MIT | hello, pdf, slides |
+| safe-buffer | 5.1.2 | MIT | slides |
+| scheduler | 0.28.0 | MIT | hello, pdf, slides |
+| setimmediate | 1.0.5 | MIT | slides |
 | source-map-js | 1.2.2 | BSD-3-Clause | pdf |
-| stylis | 4.4.0 | MIT | hello, pdf |
+| string_decoder | 1.1.1 | MIT | slides |
+| stylis | 4.4.0 | MIT | hello, pdf, slides |
 | svelte | 5.57.2 | MIT | pdf |
-| tabster | 8.8.1 | MIT | hello, pdf |
-| tslib | 2.8.1 | 0BSD | hello, pdf |
+| tabster | 8.8.1 | MIT | hello, pdf, slides |
+| tslib | 2.3.0 | 0BSD | slides |
+| tslib | 2.8.1 | 0BSD | hello, pdf, slides |
 | typescript | 6.0.3 | Apache-2.0 | pdf |
-| use-sync-external-store | 1.7.0 | MIT | hello, pdf |
+| use-sync-external-store | 1.7.0 | MIT | hello, pdf, slides |
+| util-deprecate | 1.0.2 | MIT | slides |
 | vue | 3.5.44 | MIT | pdf |
 | zimmerframe | 1.1.5 | MIT | pdf |
+| zrender | 6.1.0 | BSD-3-Clause | slides |
 
 ## Rust crates
 
@@ -233,6 +262,7 @@ These ask that changes to them be shared when the app is given to others (person
 | alloc-no-stdlib | 3.0.0 | BSD-3-Clause |
 | alloc-stdlib | 0.3.0 | BSD-3-Clause |
 | anyhow | 1.0.104 | MIT OR Apache-2.0 |
+| atoi_simd | 0.18.1 | MIT OR Apache-2.0 |
 | base64 | 0.23.1 | MIT OR Apache-2.0 |
 | bit-set | 0.8.0 | Apache-2.0 OR MIT |
 | bit-vec | 0.8.0 | Apache-2.0 OR MIT |
@@ -242,6 +272,7 @@ These ask that changes to them be shared when the app is given to others (person
 | brotli | 9.1.1 | BSD-3-Clause AND MIT |
 | brotli-decompressor | 6.2.0 | BSD-3-Clause/MIT |
 | bs58 | 0.5.1 | MIT/Apache-2.0 |
+| bumpalo | 3.20.3 | MIT OR Apache-2.0 |
 | byteorder | 1.5.0 | Unlicense OR MIT |
 | bytes | 1.12.1 | MIT |
 | camino | 1.2.6 | MIT OR Apache-2.0 |
@@ -262,6 +293,7 @@ These ask that changes to them be shared when the app is given to others (person
 | darling | 0.24.1 | MIT |
 | darling_core | 0.24.1 | MIT |
 | darling_macro | 0.24.1 | MIT |
+| debug_unsafe | 0.1.4 | MIT OR Apache-2.0 |
 | defmt | 1.2.0 | MIT OR Apache-2.0 |
 | defmt-macros | 1.2.0 | MIT OR Apache-2.0 |
 | defmt-parser | 1.1.0 | MIT OR Apache-2.0 |
@@ -278,8 +310,10 @@ These ask that changes to them be shared when the app is given to others (person
 | dtoa-short | 0.3.5 | MPL-2.0 |
 | dunce | 1.0.5 | CC0-1.0 OR MIT-0 OR Apache-2.0 |
 | dyn-clone | 1.0.20 | MIT OR Apache-2.0 |
+| encoding_rs | 0.8.42 | (Apache-2.0 OR MIT) AND BSD-3-Clause |
 | equivalent | 1.0.3 | Apache-2.0 OR MIT |
 | erased-serde | 0.4.11 | MIT OR Apache-2.0 |
+| fast-float2 | 0.2.4 | MIT OR Apache-2.0 |
 | fastrand | 2.5.0 | Apache-2.0 OR MIT |
 | fdeflate | 0.3.7 | MIT OR Apache-2.0 |
 | flate2 | 1.1.10 | MIT OR Apache-2.0 |
@@ -329,9 +363,11 @@ These ask that changes to them be shared when the app is given to others (person
 | miniz_oxide | 0.9.1 | MIT OR Zlib OR Apache-2.0 |
 | mio | 1.2.4 | MIT |
 | muda | 0.20.0 | Apache-2.0 OR MIT |
+| multiversion_no_op | 1.0.0 | Apache-2.0 OR MIT |
 | new_debug_unreachable | 1.0.6 | MIT |
 | num-conv | 0.2.2 | MIT OR Apache-2.0 |
 | num-traits | 0.2.19 | MIT OR Apache-2.0 |
+| office_oxide | 0.1.15 | MIT OR Apache-2.0 |
 | once_cell | 1.21.4 | MIT OR Apache-2.0 |
 | option-ext | 0.2.0 | MPL-2.0 |
 | parking_lot | 0.12.5 | MIT OR Apache-2.0 |
@@ -358,6 +394,7 @@ These ask that changes to them be shared when the app is given to others (person
 | regex-syntax | 0.8.11 | MIT OR Apache-2.0 |
 | rfd | 0.17.2 | MIT |
 | rustc-hash | 2.1.3 | Apache-2.0 OR MIT |
+| rustversion | 1.0.23 | MIT OR Apache-2.0 |
 | same-file | 1.0.6 | Unlicense/MIT |
 | schemars | 0.8.22 | MIT |
 | schemars | 0.9.0 | MIT |
@@ -414,6 +451,7 @@ These ask that changes to them be shared when the app is given to others (person
 | tracing | 0.1.44 | MIT |
 | tracing-core | 0.1.36 | MIT |
 | tray-icon | 0.25.1 | MIT OR Apache-2.0 |
+| typed-path | 0.13.0 | MIT OR Apache-2.0 |
 | typeid | 1.0.3 | MIT OR Apache-2.0 |
 | typenum | 1.20.1 | MIT OR Apache-2.0 |
 | unicode-ident | 1.0.27 | (MIT OR Apache-2.0) AND Unicode-3.0 |
@@ -423,6 +461,10 @@ These ask that changes to them be shared when the app is given to others (person
 | utf8_iter | 1.0.4 | Apache-2.0 OR MIT |
 | uuid | 1.29.0 | Apache-2.0 OR MIT |
 | walkdir | 2.5.0 | Unlicense/MIT |
+| wasm-bindgen | 0.2.129 | MIT OR Apache-2.0 |
+| wasm-bindgen-macro | 0.2.129 | MIT OR Apache-2.0 |
+| wasm-bindgen-macro-support | 0.2.129 | MIT OR Apache-2.0 |
+| wasm-bindgen-shared | 0.2.129 | MIT OR Apache-2.0 |
 | web_atoms | 0.2.6 | MIT OR Apache-2.0 |
 | web-time | 1.1.0 | MIT OR Apache-2.0 |
 | webview2-com | 0.39.1 | MIT |
@@ -453,5 +495,7 @@ These ask that changes to them be shared when the app is given to others (person
 | zerotrie | 0.2.5 | Unicode-3.0 |
 | zerovec | 0.11.9 | Unicode-3.0 |
 | zerovec-derive | 0.11.7 | Unicode-3.0 |
+| zip | 9.1.3 | MIT |
 | zlib-rs | 0.6.8 | Zlib |
 | zmij | 1.0.23 | MIT |
+| zopfli | 0.8.4 | Apache-2.0 |
