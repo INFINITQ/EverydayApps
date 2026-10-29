@@ -7,7 +7,7 @@ import type { SlideNode } from '@aiden0z/pptx-renderer';
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { nodesOf } from './render';
 import type { SlidesSession } from './session';
-import { EMU_PER_PX, setBounds } from './shapes';
+import { EMU_PER_PX, groupTextShapes, setBounds } from './shapes';
 import type { SlideActions } from './SlidesView';
 import { TableEditor } from './TableEditor';
 import { LINE_BREAK, emptyPlaceholders, setShapeText, setTableText, shapeText, tableText } from './text';
@@ -29,7 +29,14 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
   const [table, setTable] = useState<{ id: string; cells: (string | null)[][] } | null>(null);
   const nodes = nodesOf(deck, current).filter((n) => !n.hidden);
   const selected = nodes.find((n) => n.id === state.shape) ?? null;
-  const editing = state.editing ? nodes.find((n) => n.id === state.editing) ?? null : null;
+  /** A text box inside a group being edited (top-level shapes come from `nodes`). */
+  const [inner, setInner] = useState<{ id: string; box: Box } | null>(null);
+  const top = state.editing ? nodes.find((n) => n.id === state.editing) : undefined;
+  const editing: { id: string; box: Box } | null = top
+    ? { id: top.id, box: boxOf(top) }
+    : state.editing && inner?.id === state.editing
+      ? inner
+      : null;
 
   useEffect(() => setPreview(null), [state.revision]);
 
@@ -108,9 +115,20 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
 
   const onDoubleClick = (event: React.MouseEvent) => {
     const target = hit(toSlide(event));
+    const point = toSlide(event);
     if (target?.nodeType === 'shape') session.setEditing(target.id);
     else if (target?.nodeType === 'table' && part) setTable({ id: target.id, cells: tableText(state.pkg, part, target.id) ?? [] });
-    else if (target) actions.cantEditText(target.nodeType);
+    else if (target?.nodeType === 'group' && part) {
+      // The text box under the pointer inside the group (the last drawn wins).
+      const found = groupTextShapes(state.pkg, part, target.id)
+        .map((s) => ({ id: s.id, box: { x: s.box.x / EMU_PER_PX, y: s.box.y / EMU_PER_PX, w: s.box.w / EMU_PER_PX, h: s.box.h / EMU_PER_PX } }))
+        .reverse()
+        .find((s) => point.x >= s.box.x && point.x <= s.box.x + s.box.w && point.y >= s.box.y && point.y <= s.box.y + s.box.h);
+      if (found) {
+        setInner(found);
+        session.setEditing(found.id);
+      } else actions.cantEditText('group');
+    } else if (target) actions.cantEditText(target.nodeType);
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {
@@ -195,7 +213,8 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
         <TextEditor
           key={`${editing.id}-${state.revision}`}
           session={session}
-          node={editing}
+          id={editing.id}
+          box={editing.box}
           scale={scale}
           onDone={(paragraphs) => {
             session.setEditing(null);
@@ -212,18 +231,20 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
 
 function TextEditor({
   session,
-  node,
+  id,
+  box: b,
   scale,
   onDone,
 }: {
   session: SlidesSession;
-  node: SlideNode;
+  id: string;
+  box: Box;
   scale: number;
   onDone(paragraphs: string[] | null): void;
 }) {
   const { pkg, slides, current } = session.state;
   const part = slides[current]!.part;
-  const initial = (shapeText(pkg, part, node.id) ?? []).join('\n');
+  const initial = (shapeText(pkg, part, id) ?? []).join('\n');
   const [value, setValue] = useState(initial);
   const ref = useRef<HTMLTextAreaElement>(null);
   const done = useRef(false);
@@ -238,7 +259,6 @@ function TextEditor({
     done.current = true;
     onDone(keep && value !== initial ? value.split('\n') : null);
   };
-  const b = boxOf(node);
   return (
     <textarea
       ref={ref}

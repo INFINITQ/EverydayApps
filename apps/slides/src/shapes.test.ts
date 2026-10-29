@@ -72,6 +72,19 @@ describe('shapes', () => {
     expect(presentation.slides).toHaveLength(4);
   });
 
+  it('finds the text boxes inside a group where the group draws them', async () => {
+    const { groupTextShapes } = await import('./shapes');
+    const { setShapeText, shapeText } = await import('./text');
+    const pkg = await openPackage(await makePptx({ slides: [{ title: 'Grouped', group: true }] }));
+    expect(groupTextShapes(pkg, 'ppt/slides/slide1.xml', '10')).toEqual([
+      { id: '11', box: { x: 1000000, y: 4000000, w: 2000000, h: 1000000 } },
+      { id: '12', box: { x: 3000000, y: 4000000, w: 2000000, h: 1000000 } },
+    ]);
+    const next = setShapeText(pkg, 'ppt/slides/slide1.xml', '12', ['Right side']);
+    expect(shapeText(next, 'ppt/slides/slide1.xml', '12')).toEqual(['Right side']);
+    expect(shapeText(next, 'ppt/slides/slide1.xml', '11')).toEqual(['Left note']);
+  });
+
   it('fits keep proportions', () => {
     expect(fit({ x: 0, y: 0, w: 100, h: 100 }, 50, 100)).toEqual({ x: 25, y: 0, w: 50, h: 100 });
   });

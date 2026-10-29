@@ -270,3 +270,40 @@ export function insertPicture(
 export function externalLinks(pkg: Package, part: string) {
   return relationships(pkg, part).filter((rel) => rel.external);
 }
+
+/**
+ * The text shapes inside a group, with where they are on the slide (EMU): the group's
+ * transform (and any nested group's) maps its children's coordinates onto the slide.
+ */
+export function groupTextShapes(pkg: Package, slidePart: string, groupId: string): { id: string; box: Bounds }[] {
+  const doc = xmlOf(pkg, slidePart);
+  const group = doc && findShape(doc, groupId);
+  if (!group || group.localName !== 'grpSp') return [];
+  const out: { id: string; box: Bounds }[] = [];
+  type Map_ = (b: Bounds) => Bounds;
+  const walk = (container: Element, map: Map_) => {
+    const xfrm = child(child(container, NS.p, 'grpSpPr'), NS.a, 'xfrm');
+    const n = (element: Element | null, a: string) => Number(element?.getAttribute(a) ?? 0);
+    const off = child(xfrm, NS.a, 'off');
+    const ext = child(xfrm, NS.a, 'ext');
+    const chOff = child(xfrm, NS.a, 'chOff');
+    const chExt = child(xfrm, NS.a, 'chExt');
+    const sx = n(chExt, 'cx') ? n(ext, 'cx') / n(chExt, 'cx') : 1;
+    const sy = n(chExt, 'cy') ? n(ext, 'cy') / n(chExt, 'cy') : 1;
+    const inner: Map_ = (b) =>
+      map({ x: n(off, 'x') + (b.x - n(chOff, 'x')) * sx, y: n(off, 'y') + (b.y - n(chOff, 'y')) * sy, w: b.w * sx, h: b.h * sy });
+    for (let item = container.firstElementChild; item; item = item.nextElementSibling) {
+      if (item.namespaceURI !== NS.p) continue;
+      if (item.localName === 'grpSp') walk(item, inner);
+      if (item.localName !== 'sp' || !child(item, NS.p, 'txBody')) continue;
+      const own = child(child(item, NS.p, 'spPr'), NS.a, 'xfrm');
+      const at = child(own, NS.a, 'off');
+      const size = child(own, NS.a, 'ext');
+      const id = path(item, NS.p, 'nvSpPr', 'cNvPr')?.getAttribute('id');
+      if (!at || !size || !id) continue;
+      out.push({ id, box: inner({ x: n(at, 'x'), y: n(at, 'y'), w: n(size, 'cx'), h: n(size, 'cy') }) });
+    }
+  };
+  walk(group, (b) => b);
+  return out;
+}

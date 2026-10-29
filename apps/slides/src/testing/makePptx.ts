@@ -18,6 +18,8 @@ export type SlideSpec = {
   link?: string;
   /** A tag part (unknown to Folio) related to the slide. */
   tag?: boolean;
+  /** A group of two text boxes, its children drawn at half their own size. */
+  group?: boolean;
 };
 
 export type DeckSpec = { slides: SlideSpec[]; macros?: boolean; wide?: boolean };
@@ -153,6 +155,19 @@ function slideXml(spec: SlideSpec): string {
         )
         .join('') +
       '</a:tbl></a:graphicData></a:graphic></p:graphicFrame>';
+  }
+  if (spec.group) {
+    const box = (id: number, name: string, x: number, text: string) =>
+      `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="${name}"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>` +
+      `<p:spPr><a:xfrm><a:off x="${x}" y="0"/><a:ext cx="4000000" cy="2000000"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr>` +
+      `<p:txBody><a:bodyPr wrap="square"/><a:lstStyle/><a:p>${runs(text)}</a:p></p:txBody></p:sp>`;
+    // Children live in an 8000000 x 2000000 space, drawn at half size from (1000000, 4000000).
+    shapes +=
+      '<p:grpSp><p:nvGrpSpPr><p:cNvPr id="10" name="Group 9"/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+      '<p:grpSpPr><a:xfrm><a:off x="1000000" y="4000000"/><a:ext cx="4000000" cy="1000000"/><a:chOff x="0" y="0"/><a:chExt cx="8000000" cy="2000000"/></a:xfrm></p:grpSpPr>' +
+      box(11, 'Left box', 0, 'Left **note**') +
+      box(12, 'Right box', 4000000, 'Right note') +
+      '</p:grpSp>';
   }
   const transition = spec.animated ? '<p:transition spd="med"><p:fade/></p:transition>' : '';
   const timing = spec.animated

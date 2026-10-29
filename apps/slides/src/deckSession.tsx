@@ -151,7 +151,7 @@ export async function openDeck(pkg: Package, name: string, host: DocHost, conver
       }
     },
     cantEditText: (kind) => {
-      const what = { chart: 'charts', group: 'grouped shapes' }[kind] ?? 'this kind of shape';
+      const what = { chart: 'charts', group: 'this part of the group' }[kind] ?? 'this kind of shape';
       host.notify(
         kind === 'picture'
           ? 'To change this picture, use Replace picture.'
