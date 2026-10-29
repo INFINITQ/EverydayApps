@@ -305,3 +305,26 @@ export function canEditNotes(pkg: Package, slide: SlideInfo): boolean {
 }
 
 export const placeholderType = (shape: Element) => path(shape, NS.p, 'nvSpPr', 'nvPr', 'ph')?.getAttribute('type') ?? null;
+
+/** Text placeholders on a slide with no text yet, and the hint each shows (by cNvPr id). */
+export function emptyPlaceholders(pkg: Package, slidePart: string): Map<string, string> {
+  const hints = new Map<string, string>();
+  const doc = xmlOf(pkg, slidePart);
+  if (!doc) return hints;
+  for (const sp of descendants(doc, NS.p, 'sp')) {
+    const ph = path(sp, NS.p, 'nvSpPr', 'nvPr', 'ph');
+    const id = path(sp, NS.p, 'nvSpPr', 'cNvPr')?.getAttribute('id');
+    if (!ph || !id || !child(sp, NS.p, 'txBody') || paragraphsOf(sp).some((p) => p.length > 0)) continue;
+    const type = ph.getAttribute('type') ?? 'body';
+    if (['dt', 'ftr', 'sldNum', 'hdr'].includes(type)) continue;
+    hints.set(
+      id,
+      type === 'title' || type === 'ctrTitle'
+        ? 'Double-click to add a title'
+        : type === 'subTitle'
+          ? 'Double-click to add a subtitle'
+          : 'Double-click to add text',
+    );
+  }
+  return hints;
+}

@@ -36,6 +36,7 @@ import {
   NotepadRegular,
   PlayRegular,
   PresenterRegular,
+  SlideAddRegular,
 } from '@fluentui/react-icons';
 import { type ReactElement, type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { EditLayer } from './EditLayer';
@@ -138,6 +139,9 @@ function SlidesToolbar({
         <ToolbarButton aria-label="Redo" icon={<ArrowRedoRegular />} disabled={!session.canRedo()} onClick={session.redo} />
       </Tip>
       <ToolbarDivider />
+      <Tip label="New slide (Ctrl+M)">
+        <ToolbarButton aria-label="New slide" icon={<SlideAddRegular />} disabled={readOnly} onClick={() => session.addSlide()} />
+      </Tip>
       <Tip label="Duplicate slide (Ctrl+D)">
         <ToolbarButton aria-label="Duplicate slide" icon={<CopyRegular />} disabled={readOnly} onClick={() => session.duplicate()} />
       </Tip>
@@ -306,6 +310,9 @@ function Rail({ session, options }: { session: SlidesSession; options: RenderOpt
               Present from this slide
             </MenuItem>
             <MenuDivider />
+            <MenuItem icon={<SlideAddRegular />} disabled={state.converted} onClick={() => session.addSlide()}>
+              New slide
+            </MenuItem>
             <MenuItem icon={<CopyRegular />} disabled={state.converted} onClick={() => session.duplicate()}>
               Duplicate
             </MenuItem>

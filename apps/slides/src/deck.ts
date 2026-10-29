@@ -393,3 +393,77 @@ export function duplicateSlide(pkg: Package, part: string): { pkg: Package; part
 }
 
 const randomId = () => crypto.getRandomValues(new Uint32Array(1))[0]! & 0x7fffffff;
+
+// ---- New slide ----------------------------------------------------------------------------
+
+/** Placeholders PowerPoint leaves off a new slide (date, footer, slide number). */
+const SKIPPED_PLACEHOLDERS = new Set(['dt', 'ftr', 'sldNum']);
+
+/**
+ * Adds a slide after `after`, on the same layout, with that layout's placeholders (empty, so
+ * they show the layout's look until text is typed in).
+ */
+export function insertSlide(pkg: Package, after: string): { pkg: Package; part: string } {
+  const main = mainPart(pkg);
+  const slide = slidesOf(pkg).find((s) => s.part === after);
+  if (!slide) throw new Error('No such slide');
+  const layout = related(pkg, after, REL.slideLayout)[0]?.part;
+  if (!layout || !has(pkg, layout)) throw new Error("This slide has no layout to make a new slide from.");
+  const layoutDoc = xmlOf(pkg, layout)!;
+  let id = 1;
+  const shapes: string[] = [];
+  for (const sp of descendants(layoutDoc, NS.p, 'sp')) {
+    const ph = path(sp, NS.p, 'nvSpPr', 'nvPr', 'ph');
+    if (!ph || SKIPPED_PLACEHOLDERS.has(ph.getAttribute('type') ?? '')) continue;
+    const name = (path(sp, NS.p, 'nvSpPr', 'cNvPr')?.getAttribute('name') ?? 'Placeholder').replace(/[<>&"]/g, '');
+    const attributes = ['type', 'orient', 'sz', 'idx']
+      .filter((a) => ph.hasAttribute(a))
+      .map((a) => ` ${a}="${ph.getAttribute(a)!.replace(/[<>&"]/g, '')}"`)
+      .join('');
+    const pictureLike = ['pic', 'chart', 'tbl', 'dgm', 'media', 'clipArt'].includes(ph.getAttribute('type') ?? '');
+    id += 1;
+    shapes.push(
+      `<p:sp><p:nvSpPr><p:cNvPr id="${id}" name="${name}"/><p:cNvSpPr><a:spLocks noGrp="1"/></p:cNvSpPr><p:nvPr><p:ph${attributes}/></p:nvPr></p:nvSpPr><p:spPr/>` +
+        (pictureLike ? '' : '<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang="en-US"/></a:p></p:txBody>') +
+        '</p:sp>',
+    );
+  }
+  const part = freeName(pkg, 'ppt/slides', 'slide', 'xml');
+  const xml =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n' +
+    `<p:sld xmlns:a="${NS.a}" xmlns:r="${NS.r}" xmlns:p="${NS.p}"><p:cSld><p:spTree>` +
+    '<p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>' +
+    '<p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>' +
+    `${shapes.join('')}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sld>`;
+  const slideRels = emptyRels();
+  addRelationship(slideRels, REL.slideLayout, relativeTarget(part, layout), 'rId1');
+
+  const doc = xmlOf(pkg, main)!;
+  const presRels = xmlOf(pkg, relsNameOf(main))!;
+  const relId = addRelationship(presRels, REL.slide, relativeTarget(main, part));
+  const list = path(doc.documentElement, NS.p, 'sldIdLst')!;
+  const newId = Math.max(255, ...children(list, NS.p, 'sldId').map((e) => Number(e.getAttribute('id')))) + 1;
+  const entry = create(doc, NS.p, 'sldId', 'p');
+  entry.setAttribute('id', String(newId));
+  entry.setAttributeNS(NS.r, `${doc.documentElement.lookupPrefix(NS.r) ?? 'r'}:id`, relId);
+  children(list, NS.p, 'sldId').find((e) => e.getAttributeNS(NS.r, 'id') === slide.relId)!.after(entry);
+  for (const section of sectionsOf(doc)) {
+    const at = children(section.list, NS.p14, 'sldId').find((e) => Number(e.getAttribute('id')) === slide.id);
+    if (!at) continue;
+    const added = create(doc, NS.p14, 'sldId', 'p14');
+    added.setAttribute('id', String(newId));
+    at.after(added);
+  }
+  const types = xmlOf(pkg, '[Content_Types].xml')!;
+  editContentTypes(types, { add: { [part]: 'application/vnd.openxmlformats-officedocument.presentationml.slide+xml' } });
+  return {
+    pkg: withParts(pkg, {
+      [part]: xml,
+      [relsNameOf(part)]: slideRels,
+      [main]: doc,
+      [relsNameOf(main)]: presRels,
+      '[Content_Types].xml': types,
+    }),
+    part,
+  };
+}

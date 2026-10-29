@@ -198,6 +198,20 @@ describe('deck', () => {
     expect(files.slides.get('ppt/slides/slide5.xml')).toContain('Revenue up');
   });
 
+  it('adds a new slide on the current slide’s layout, with its placeholders', async () => {
+    const { insertSlide } = await import('./deck');
+    const pkg = await openPackage(await sample());
+    const { pkg: next, part } = insertSlide(pkg, 'ppt/slides/slide2.xml');
+    expect(slidesOf(next).map((s) => s.part)).toEqual([1, 2, 5, 3, 4].map((n) => `ppt/slides/slide${n}.xml`));
+    const xml = textOf(next, part)!;
+    expect(xml).toContain('<p:ph type="title"/>');
+    expect(xml).toContain('<p:ph idx="1"/>');
+    expect(related(next, part).map((r) => r.part)).toEqual(['ppt/slideLayouts/slideLayout1.xml']);
+    expect(danglingRelationships(next)).toEqual([]);
+    const { presentation } = await independently(await savePackage(next));
+    expect(presentation.slides).toHaveLength(5);
+  });
+
   it('keeps unreachable parts and collects only what an edit orphaned', async () => {
     const pkg = await openPackage(await sample());
     const before = reachable(pkg);

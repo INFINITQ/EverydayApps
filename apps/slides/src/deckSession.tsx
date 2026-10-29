@@ -176,6 +176,7 @@ export async function openDeck(pkg: Package, name: string, host: DocHost, conver
     { id: 'slides.presenter', title: 'Presenter view', group: 'Slideshow', keys: 'Alt+F5', run: () => !session.state.show && session.startShow('current', true) },
     { id: 'edit.undo', title: 'Undo', group: 'Edit', keys: 'Ctrl+Z', enabled: session.canUndo, run: session.undo },
     { id: 'edit.redo', title: 'Redo', group: 'Edit', keys: 'Ctrl+Y', enabled: session.canRedo, run: session.redo },
+    { id: 'slides.new', title: 'New slide', group: 'Slides', keys: 'Ctrl+M', enabled: editable, run: () => session.addSlide() },
     { id: 'slides.duplicate', title: 'Duplicate slide', group: 'Slides', keys: 'Ctrl+D', enabled: editable, run: () => session.duplicate() },
     { id: 'slides.delete', title: 'Delete slide', group: 'Slides', enabled: () => editable() && session.state.slides.length > session.selection().length, run: () => session.remove() },
     { id: 'slides.hide', title: 'Hide or show slide', group: 'Slides', enabled: editable, run: () => session.toggleHidden() },

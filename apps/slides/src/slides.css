@@ -202,6 +202,17 @@
 .slides-handle[data-pos='sw'] { left: 0; top: 100%; cursor: nesw-resize; }
 .slides-handle[data-pos='w'] { left: 0; top: 50%; cursor: ew-resize; }
 
+.slides-placeholder-hint {
+  position: absolute;
+  box-sizing: border-box;
+  display: grid;
+  place-items: center;
+  border: 1px dashed rgb(0 0 0 / 35%);
+  color: rgb(0 0 0 / 45%);
+  font-family: var(--folio-font);
+  pointer-events: none;
+}
+
 .slides-text-editor {
   position: absolute;
   box-sizing: border-box;

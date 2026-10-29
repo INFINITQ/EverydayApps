@@ -4,12 +4,12 @@
 // the slide's XML when the gesture ends.
 
 import type { SlideNode } from '@aiden0z/pptx-renderer';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { nodesOf } from './render';
 import type { SlidesSession } from './session';
 import { EMU_PER_PX, setBounds } from './shapes';
 import type { SlideActions } from './SlidesView';
-import { LINE_BREAK, setShapeText, shapeText } from './text';
+import { LINE_BREAK, emptyPlaceholders, setShapeText, shapeText } from './text';
 
 type Box = { x: number; y: number; w: number; h: number };
 type Drag = { kind: 'move' | 'resize'; handle?: string; start: { x: number; y: number }; box: Box; moved: boolean };
@@ -131,6 +131,15 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
     event.stopPropagation();
   };
 
+  // Empty text placeholders (a new slide's title and body) get a hint, as in PowerPoint.
+  const slidePart = part ? state.pkg.parts.get(part) : undefined;
+  const hints = useMemo(() => {
+    if (!part || !slidePart) return new Map<string, string>();
+    return emptyPlaceholders(state.pkg, part);
+    // The slide's own part decides (it is replaced on every edit of this slide).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slidePart, part]);
+
   const shown = preview ?? (selected ? boxOf(selected) : null);
   return (
     <div
@@ -144,6 +153,20 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
       onDoubleClick={onDoubleClick}
       onKeyDown={onKeyDown}
     >
+      {nodes
+        .filter((n) => hints.has(n.id) && n.id !== editing?.id)
+        .map((n) => {
+          const b = boxOf(n);
+          return (
+            <div
+              key={n.id}
+              className="slides-placeholder-hint"
+              style={{ left: b.x * scale, top: b.y * scale, width: b.w * scale, height: b.h * scale, fontSize: Math.max(11, Math.min(28, b.h * scale * 0.25)) }}
+            >
+              {hints.get(n.id)}
+            </div>
+          );
+        })}
       {shown && !editing && (
         <div
           className="slides-selection"

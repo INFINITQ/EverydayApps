@@ -7,6 +7,7 @@ import {
   deleteSlides,
   duplicateSlide,
   hasMacros,
+  insertSlide,
   notesOf,
   reorderSlides,
   setHidden,
@@ -208,6 +209,15 @@ export function createSlidesSession(pkg: Package, host: DocHost, options: { conv
           if (!last) last = result.part;
         }
         return { pkg: next, current: last };
+      });
+    },
+    /** A new slide after the current one, on its layout. */
+    addSlide() {
+      const slide = state.slides[state.current];
+      if (!slide) return;
+      apply('New slide', (pkg) => {
+        const added = insertSlide(pkg, slide.part);
+        return { pkg: added.pkg, current: added.part };
       });
     },
     remove() {
