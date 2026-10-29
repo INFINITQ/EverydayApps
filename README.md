@@ -41,8 +41,9 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
   a slide number and Enter jumps, Esc ends. Hidden slides are skipped. Presenter view
   (Alt+F5) shows the current and next slide, your notes and a timer.
 - **Edit in place:** click a shape to select it, drag to move, drag a handle to resize,
-  double-click to edit its text where it is (formatting is kept), Delete removes it. Replace
-  or insert pictures. Edit speaker notes under the slide.
+  double-click to edit its text where it is (formatting is kept), Delete removes it. Edit
+  the text of tables. Replace or insert pictures. Edit speaker notes under the slide.
+- **New slides** (Ctrl+M) on the current slide's layout, with its title and text boxes ready.
 - **Organize:** drag thumbnails to reorder (several at once), duplicate (Ctrl+D), delete,
   hide from the slideshow. Undo and redo everything.
 - **Your file stays yours:** saving rewrites only the parts you changed. Animations,
