@@ -20,7 +20,7 @@ import {
 } from '@fluentui/react-components';
 import { ChevronDownRegular, ChevronUpRegular, DismissRegular, EditRegular, LinkDismissRegular, OpenRegular } from '@fluentui/react-icons';
 import { useEffect, useRef, useState } from 'react';
-import type { DocsSession, DocsState, Stats } from './docsFormat';
+import type { DocsSession, DocsState, Stats } from './session';
 
 /** Only these open, after the user agrees (Rust checks again). */
 export const OPENABLE = /^(https?:|mailto:)/i;

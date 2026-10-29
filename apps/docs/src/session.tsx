@@ -1,11 +1,11 @@
-// Folio Docs' format module. Each open document gets a session: the original package (kept for
-// patching saves, see patch.ts), the docx-editor.dev engine that lays it out and edits it, and
-// Folio's own toolbar, panels and dialogs around it.
+// One open Word document: the original package (kept for patching saves, see patch.ts), the
+// docx-editor.dev engine that lays it out and edits it, and Folio's own toolbar, panels and
+// dialogs around it. Loaded on first open (docsFormat.ts), so the window paints without it.
 
 import type { DocumentChange, Editor } from '@docx-editor.dev/core';
 import { runToolbarCommand, toolbarCommandState } from '@docx-editor.dev/core';
 import { DocxEditor, useDocxEditor, useEditorSnapshot } from '@docx-editor.dev/react';
-import type { Command, DocHost, DocumentSession, FormatModule } from '@folio/shell';
+import type { Command, DocHost, DocumentSession } from '@folio/shell';
 import { Button, MessageBar, MessageBarActions, MessageBarBody, Spinner } from '@fluentui/react-components';
 import { DismissRegular } from '@fluentui/react-icons';
 import { unzipSync } from 'fflate';
@@ -19,16 +19,6 @@ import { printPages } from './print';
 import { isCompoundFile } from './zip';
 import { CommentsPanel, FindPanel, InsertTableDialog, LinkBar, LinkDialog, OutlinePanel, PageSetupDialog, WordCountDialog } from './panels';
 import { type SlotId, pictureFile, textStats } from './text';
-
-export const docsFormat: FormatModule = {
-  id: 'docs',
-  fileTypes: [
-    { ext: 'docx', label: 'Word document', canSave: true },
-    { ext: 'docm', label: 'Word macro-enabled document', canSave: true },
-    { ext: 'doc', label: 'Word 97-2003 document', canSave: false },
-  ],
-  open: (file, host) => openDocument(file, host),
-};
 
 const extensionOf = (name: string) => (name.includes('.') ? name.slice(name.lastIndexOf('.') + 1).toLowerCase() : '');
 

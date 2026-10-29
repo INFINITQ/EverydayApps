@@ -42,7 +42,7 @@ import {
   ZoomOutRegular,
 } from '@fluentui/react-icons';
 import type { ReactElement } from 'react';
-import type { DocsSession, DocsState } from './docsFormat';
+import type { DocsSession, DocsState } from './session';
 import type { SlotId } from './text';
 
 const SIZES = [8, 9, 10, 10.5, 11, 12, 14, 16, 18, 20, 22, 24, 28, 36, 48, 72];
