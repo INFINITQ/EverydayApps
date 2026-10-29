@@ -43,6 +43,9 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
 - **Also kept and editable:** conditional formatting, data validation (with drop-down lists),
   filters, comments (notes; threaded comments are shown and kept), and pictures. Inserting or
   deleting rows under a pivot table, a table or a chart's data asks first.
+- **Charts:** the workbook's charts are drawn from the current values (ECharts, ADR 0011); insert
+  column, bar, line, area, pie, doughnut and scatter charts from the selected cells, move, resize,
+  delete or change their type. They're saved as real Excel charts.
 - **Old `.xls` files** open read-only; Save makes a new `.xlsx` (ADR 0010).
 - **Your file stays your file:** saving patches only what you changed into the original package.
   Pivot tables, charts, pictures, macros, external links and anything Folio doesn't show yet are
