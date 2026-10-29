@@ -449,6 +449,7 @@ export class Shell {
       }
       if (target === 'new' && doc.file && doc.file.token !== file.token) await this.backend.release(doc.file.token);
       this.updateDoc(doc.id, { file, title: file.name, ext: type.ext, savedStateId: savedState });
+      session.saved?.(type.ext);
       this.snapshots.delete(doc.id);
       await this.backend.recoveryDrop(doc.id).catch(() => undefined);
       void this.refreshRecent();

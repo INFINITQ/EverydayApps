@@ -86,6 +86,11 @@ export interface DocumentSession {
   settle?(): Promise<void>;
   /** The file's bytes in format `ext` (one of the format's `fileTypes` with `canSave`). */
   save(ext: string): Promise<Uint8Array>;
+  /**
+   * The bytes from `save(ext)` are now the document's file (not called for a copy). An old
+   * format opened read-only becomes editable once it's saved in the new one.
+   */
+  saved?(ext: string): void;
   /** A cheaper serialization for crash recovery, if the format has one. */
   snapshot?(): Promise<Uint8Array>;
   viewState?(): unknown;
