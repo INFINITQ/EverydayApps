@@ -25,6 +25,3 @@ vendor/**/*.tgz
 .env
 .env.*
 *.log
-
-# Folio Docs UI test screenshots
-apps/docs/test/out/
