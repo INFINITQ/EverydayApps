@@ -9,7 +9,8 @@ import { nodesOf } from './render';
 import type { SlidesSession } from './session';
 import { EMU_PER_PX, setBounds } from './shapes';
 import type { SlideActions } from './SlidesView';
-import { LINE_BREAK, emptyPlaceholders, setShapeText, shapeText } from './text';
+import { TableEditor } from './TableEditor';
+import { LINE_BREAK, emptyPlaceholders, setShapeText, setTableText, shapeText, tableText } from './text';
 
 type Box = { x: number; y: number; w: number; h: number };
 type Drag = { kind: 'move' | 'resize'; handle?: string; start: { x: number; y: number }; box: Box; moved: boolean };
@@ -25,6 +26,7 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
   const layer = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [preview, setPreview] = useState<Box | null>(null);
+  const [table, setTable] = useState<{ id: string; cells: (string | null)[][] } | null>(null);
   const nodes = nodesOf(deck, current).filter((n) => !n.hidden);
   const selected = nodes.find((n) => n.id === state.shape) ?? null;
   const editing = state.editing ? nodes.find((n) => n.id === state.editing) ?? null : null;
@@ -107,6 +109,7 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
   const onDoubleClick = (event: React.MouseEvent) => {
     const target = hit(toSlide(event));
     if (target?.nodeType === 'shape') session.setEditing(target.id);
+    else if (target?.nodeType === 'table' && part) setTable({ id: target.id, cells: tableText(state.pkg, part, target.id) ?? [] });
     else if (target) actions.cantEditText(target.nodeType);
   };
 
@@ -177,6 +180,16 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
             <span key={h} className="slides-handle" data-handle={h} data-pos={h} />
           ))}
         </div>
+      )}
+      {table && (
+        <TableEditor
+          cells={table.cells}
+          onDone={(cells) => {
+            const id = table.id;
+            setTable(null);
+            if (cells && part) session.apply('Edit table', (pkg) => setTableText(pkg, part, id, cells), { keepShape: true });
+          }}
+        />
       )}
       {editing && (
         <TextEditor

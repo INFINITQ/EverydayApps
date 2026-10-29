@@ -105,6 +105,17 @@ describe('editing a deck', () => {
     expect(textOf(one, 'ppt/slides/slide1.xml')).toContain('<p:transition');
   });
 
+  it('edits table cells, keeping each cell’s formatting', async () => {
+    const pkg = await openPackage(await makePptx(SAMPLE));
+    const { setTableText, tableText } = await import('./text');
+    expect(tableText(pkg, 'ppt/slides/slide3.xml', '5')).toEqual([['Region', 'Sales'], ['North', '120'], ['South', '95']]);
+    const next = setTableText(pkg, 'ppt/slides/slide3.xml', '5', [[null, null], ['North', '125'], ['South\nEast', '95']]);
+    expect(tableText(next, 'ppt/slides/slide3.xml', '5')).toEqual([['Region', 'Sales'], ['North', '125'], ['South\nEast', '95']]);
+    const presentation = buildPresentation(await parseZip((await savePackage(next)).slice().buffer));
+    materializeAllSlideNodes(presentation);
+    expect(JSON.stringify(serializePresentation(presentation).slides[2])).toContain('125');
+  });
+
   it('edits notes, and creates a notes page for a slide without one', async () => {
     const pkg = await openPackage(await makePptx(SAMPLE));
     const [first, , , last] = slidesOf(pkg);

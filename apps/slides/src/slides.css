@@ -213,6 +213,22 @@
   pointer-events: none;
 }
 
+.slides-table-dialog {
+  max-width: min(900px, 92vw);
+}
+
+.slides-table-grid {
+  display: grid;
+  gap: 6px;
+  max-height: 60vh;
+  overflow: auto;
+}
+
+.slides-table-merged {
+  border-radius: 4px;
+  background: var(--folio-subtle-hover);
+}
+
 .slides-text-editor {
   position: absolute;
   box-sizing: border-box;

@@ -328,3 +328,50 @@ export function emptyPlaceholders(pkg: Package, slidePart: string): Map<string, 
   }
   return hints;
 }
+
+// ---- Tables ---------------------------------------------------------------------------------
+
+/** A table's cells, by row, as text ('\n' between paragraphs); null for merged-away cells. */
+export function tableText(pkg: Package, slidePart: string, id: string): (string | null)[][] | null {
+  const doc = xmlOf(pkg, slidePart);
+  const table = doc && tableOf(doc, id);
+  if (!table) return null;
+  return children(table, NS.a, 'tr').map((row) =>
+    children(row, NS.a, 'tc').map((cell) =>
+      cell.getAttribute('hMerge') === '1' || cell.getAttribute('vMerge') === '1'
+        ? null
+        : (child(cell, NS.a, 'txBody') ? paragraphTexts(child(cell, NS.a, 'txBody')!) : []).join('\n'),
+    ),
+  );
+}
+
+function tableOf(doc: Document, id: string): Element | null {
+  const frame = findShape(doc, id);
+  if (!frame || frame.localName !== 'graphicFrame') return null;
+  return descendants(frame, NS.a, 'tbl')[0] ?? null;
+}
+
+/** Sets the text of a table's cells (null leaves a cell as it is). */
+export function setTableText(pkg: Package, slidePart: string, id: string, cells: (string | null)[][]): Package {
+  const doc = xmlOf(pkg, slidePart)!;
+  const table = tableOf(doc, id);
+  if (!table) throw new Error("That isn't a table.");
+  let changed = false;
+  children(table, NS.a, 'tr').forEach((row, r) => {
+    children(row, NS.a, 'tc').forEach((cell, c) => {
+      const text = cells[r]?.[c];
+      if (text === null || text === undefined) return;
+      let body = child(cell, NS.a, 'txBody');
+      const before = body ? paragraphTexts(body).join('\n') : '';
+      if (before === text) return;
+      if (!body) {
+        body = create(doc, NS.a, 'txBody', 'a');
+        body.append(create(doc, NS.a, 'bodyPr', 'a'), create(doc, NS.a, 'lstStyle', 'a'));
+        cell.prepend(body);
+      }
+      patchParagraphs(body, text.split('\n'));
+      changed = true;
+    });
+  });
+  return changed ? withParts(pkg, { [slidePart]: doc }) : pkg;
+}
