@@ -19,6 +19,7 @@ import { DeviceInputEventType } from '@univerjs/engine-render';
 import { SheetsSelectionsService } from '@univerjs/sheets';
 import { IEditorBridgeService, SetCellEditVisibleOperation } from '@univerjs/sheets-ui';
 import { type CsvSource, readCsv, writeCsv } from './csv';
+import { readXls } from './xls/biff';
 import { type SheetEngine, createEngine } from './engine';
 import { type Region, affected, protectedRegions, structuralChange } from './guard';
 import { CMD } from './sheetCommands';
@@ -98,13 +99,20 @@ export class SheetsSession {
       commands.beforeCommandExecuted((info) => {
         if (info.id === UndoCommand.id || info.id === RedoCommand.id) this.undoing += 1;
       }),
-      commands.onCommandExecuted((info) => {
+      commands.onCommandExecuted((info, options) => {
         if (info.id === UndoCommand.id || info.id === RedoCommand.id) {
           this.undoing = Math.max(0, this.undoing - 1);
           this.emit();
           return;
         }
         if (info.type !== CommandType.MUTATION || NOT_EDITS.test(info.id)) return;
+        // Formula results and the cell editor's own text are consequences, not edits.
+        const local = options as { onlyLocal?: boolean; fromFormula?: boolean } | undefined;
+        if (local?.fromFormula || local?.onlyLocal || info.id.startsWith('doc.mutation.')) {
+          this.updateSelection();
+          this.host.changed();
+          return;
+        }
         if (!this.undoing) {
           // The top undo step now stands for a new state (steps can grow while on top).
           const top = this.undoRedo.pitchTopUndoElement();
@@ -319,6 +327,13 @@ export function openBytes(bytes: Uint8Array, name: string): Opened {
   if (ext === 'csv' || ext === 'tsv') {
     const { data, source } = readCsv(bytes, name);
     return { kind: 'csv', data, csv: source, notes: [] };
+  }
+  if (ext === 'xls') {
+    const { data, skippedFormulas, macros } = readXls(bytes, name);
+    const notes = ['Saving makes a new .xlsx workbook; the .xls file stays as it is.'];
+    if (macros) notes.push("Its macros can't be carried over to the new workbook (Folio never runs them).");
+    if (skippedFormulas) notes.push(`${skippedFormulas} ${skippedFormulas === 1 ? "formula couldn't" : "formulas couldn't"} be read; ${skippedFormulas === 1 ? 'its last value is' : 'their last values are'} kept.`);
+    return { kind: 'xls', data, notes };
   }
   const { data, book } = readWorkbook(bytes, name);
   const notes: string[] = [];

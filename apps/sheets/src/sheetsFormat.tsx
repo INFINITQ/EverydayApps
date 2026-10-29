@@ -26,6 +26,8 @@ export const sheetsFormat: FormatModule = {
     { ext: 'xlsx', label: 'Excel workbook', canSave: true },
     { ext: 'xlsm', label: 'Excel macro-enabled workbook', canSave: true },
     { ext: 'csv', label: 'CSV file', canSave: true },
+    // Old workbooks open read-only; saving makes a new .xlsx (the first type that can save).
+    { ext: 'xls', label: 'Excel 97-2003 workbook', canSave: false },
   ],
   open: async (file, host) => createSheetsDocument(file.bytes, file.name, host),
 };
