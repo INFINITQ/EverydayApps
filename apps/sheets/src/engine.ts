@@ -23,6 +23,8 @@ import '@univerjs/drawing-ui/lib/index.css';
 import '@univerjs/sheets-drawing-ui/lib/index.css';
 
 import {
+  type IURLImageService as URLImages,
+  IURLImageService,
   type IWorkbookData,
   type Injector,
   LocaleType,
@@ -78,6 +80,29 @@ import { UniverThreadCommentUIPlugin } from '@univerjs/thread-comment-ui';
 import ThreadCommentUIEnUS from '@univerjs/thread-comment-ui/locale/en-US';
 import { UniverUIPlugin } from '@univerjs/ui';
 import UIEnUS from '@univerjs/ui/locale/en-US';
+
+/**
+ * Univer's picture loader, allowed only pictures held in memory (data: and blob: addresses).
+ * Univer would otherwise fetch a picture's web address (a picture pasted from a web page, say).
+ */
+export class LocalPicturesOnly implements URLImages {
+  static readonly refused = 'Pictures from the web are never loaded.';
+  private static local(url: string) {
+    return /^(data|blob):/i.test(url);
+  }
+  async getImage(url: string): Promise<string> {
+    if (!LocalPicturesOnly.local(url)) throw new Error(LocalPicturesOnly.refused);
+    return url;
+  }
+  async downloadImage(url: string): Promise<Blob> {
+    if (!LocalPicturesOnly.local(url)) throw new Error(LocalPicturesOnly.refused);
+    // eslint-disable-next-line no-restricted-globals -- reads a data: or blob: address held in memory (checked above), never the network
+    return (await fetch(url)).blob();
+  }
+  registerURLImageDownloader() {
+    return { dispose: () => undefined };
+  }
+}
 
 /** Functions that would reach outside the PC; removed from the formula engine. */
 export const BLOCKED_FUNCTIONS = ['IMAGE'];
@@ -143,7 +168,7 @@ export function createEngine(container: HTMLElement, data: IWorkbookData, option
   univer.registerPlugin(UniverThreadCommentUIPlugin);
   univer.registerPlugin(UniverSheetsThreadCommentPlugin);
   univer.registerPlugin(UniverSheetsThreadCommentUIPlugin);
-  univer.registerPlugin(UniverDrawingPlugin);
+  univer.registerPlugin(UniverDrawingPlugin, { override: [[IURLImageService, { useClass: LocalPicturesOnly }]] });
   univer.registerPlugin(UniverDrawingUIPlugin);
   univer.registerPlugin(UniverSheetsDrawingPlugin);
   univer.registerPlugin(UniverSheetsDrawingUIPlugin);
