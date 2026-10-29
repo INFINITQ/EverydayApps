@@ -90,6 +90,21 @@ describe('editing a deck', () => {
     expect(textOf(next, 'ppt/slides/slide2.xml')).toContain('b="1" dirty="0"/><a:t>15%</a:t>');
   });
 
+  it('removes animations of paragraphs an edit took away', async () => {
+    const pkg = await openPackage(await makePptx(SAMPLE));
+    const { withParts } = await import('./pkg');
+    // Slide 1 animates its title (shape 2); point that effect at the title's third paragraph.
+    const xml = textOf(pkg, 'ppt/slides/slide1.xml')!.replace(
+      '<p:spTgt spid="2"/>',
+      '<p:spTgt spid="2"><p:txEl><p:pRg st="2" end="2"/></p:txEl></p:spTgt>',
+    );
+    const three = setShapeText(withParts(pkg, { 'ppt/slides/slide1.xml': xml }), 'ppt/slides/slide1.xml', '2', ['a', 'b', 'c']);
+    expect(textOf(three, 'ppt/slides/slide1.xml')).toContain('<p:pRg st="2" end="2"/>');
+    const one = setShapeText(three, 'ppt/slides/slide1.xml', '2', ['a']);
+    expect(textOf(one, 'ppt/slides/slide1.xml')).not.toContain('<p:timing');
+    expect(textOf(one, 'ppt/slides/slide1.xml')).toContain('<p:transition');
+  });
+
   it('edits notes, and creates a notes page for a slide without one', async () => {
     const pkg = await openPackage(await makePptx(SAMPLE));
     const [first, , , last] = slidesOf(pkg);

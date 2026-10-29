@@ -150,6 +150,15 @@ export async function openDeck(pkg: Package, name: string, host: DocHost, conver
         fail(error);
       }
     },
+    cantEditText: (kind) => {
+      const what = { table: 'tables', chart: 'charts', group: 'grouped shapes' }[kind] ?? 'this kind of shape';
+      host.notify(
+        kind === 'picture'
+          ? 'To change this picture, use Replace picture.'
+          : `Folio Slides can't edit the text of ${what} yet; it stays as it is. You can still move, resize or delete it.`,
+        'info',
+      );
+    },
     canEditNotes: () => {
       const slide = session.state.slides[session.state.current];
       return Boolean(slide && canEditNotes(session.state.pkg, slide));

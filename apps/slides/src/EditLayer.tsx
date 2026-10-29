@@ -107,6 +107,7 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
   const onDoubleClick = (event: React.MouseEvent) => {
     const target = hit(toSlide(event));
     if (target?.nodeType === 'shape') session.setEditing(target.id);
+    else if (target) actions.cantEditText(target.nodeType);
   };
 
   const onKeyDown = (event: React.KeyboardEvent) => {

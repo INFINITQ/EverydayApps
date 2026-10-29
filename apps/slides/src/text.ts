@@ -210,7 +210,34 @@ export function setShapeText(pkg: Package, slidePart: string, id: string, paragr
   const before = paragraphsOf(shape);
   if (before.length === paragraphs.length && before.every((text, i) => text === paragraphs[i])) return pkg;
   patchParagraphs(body, paragraphs);
+  dropParagraphAnimations(doc, id, children(body, NS.a, 'p').length);
   return withParts(pkg, { [slidePart]: doc });
+}
+
+/**
+ * Animations can target paragraphs of a shape ("by paragraph" builds). When an edit leaves
+ * fewer paragraphs, effects on paragraphs that no longer exist are removed, so PowerPoint
+ * never finds an animation pointing past the text. Returns how many were removed.
+ */
+export function dropParagraphAnimations(doc: Document, id: string, count: number): number {
+  const timing = child(doc.documentElement, NS.p, 'timing');
+  if (!timing) return 0;
+  let removed = 0;
+  for (const target of descendants(timing, NS.p, 'spTgt')) {
+    if (target.getAttribute('spid') !== id || !timing.contains(target)) continue;
+    const range = path(target, NS.p, 'txEl', 'pRg');
+    if (!range || Number(range.getAttribute('end') ?? 0) < count) continue;
+    let node: Element | null = target;
+    while (node && node !== timing && !(node.localName === 'par' && child(node, NS.p, 'cTn')?.hasAttribute('presetClass'))) {
+      node = node.parentElement;
+    }
+    if (node && node !== timing) {
+      node.remove();
+      removed += 1;
+    }
+  }
+  if (removed && descendants(timing, NS.p, 'cTn').every((c) => !c.hasAttribute('presetClass'))) timing.remove();
+  return removed;
 }
 
 /** Sets a slide's speaker notes, creating its notes page when it has none. */

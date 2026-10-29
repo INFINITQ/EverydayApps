@@ -60,6 +60,8 @@ export type SlideActions = {
   deleteShape(): void;
   setNotes(text: string): void;
   canEditNotes(): boolean;
+  /** Says why a double-clicked shape's text can't be edited (a table, a chart...). */
+  cantEditText(kind: string): void;
 };
 
 function Tip({ label, children }: { label: string; children: ReactElement }) {
