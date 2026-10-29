@@ -1,9 +1,8 @@
-// Folio Slides' format module: .pptx and .pptm open, edit and save (only changed parts
-// are rewritten); old .ppt files open read-only, converted in memory, and Save As makes a
-// .pptx. Macros never run: they're reported and kept in the file. Linked pictures, media
-// and data are never fetched; links open only after the user says so.
+// An open deck as the shell sees it (DocumentSession): the view, commands, saving and
+// printing around a slides session. Loaded on first open (see slidesFormat.ts), so the
+// start screen doesn't wait for the renderer.
 
-import type { Command, DocHost, DocumentSession, FormatModule } from '@folio/shell';
+import type { Command, DocHost, DocumentSession } from '@folio/shell';
 import { hasMacros, slideSize, slidesOf } from './deck';
 import {
   type Package,
@@ -29,23 +28,15 @@ import { NS, REL, children } from './xml';
 const PRESENTATION = 'application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml';
 const MACRO_PRESENTATION = 'application/vnd.ms-powerpoint.presentation.macroEnabled.main+xml';
 
-export const slidesFormat: FormatModule = {
-  id: 'slides',
-  fileTypes: [
-    { ext: 'pptx', label: 'PowerPoint presentation', canSave: true },
-    { ext: 'pptm', label: 'PowerPoint macro-enabled presentation', canSave: true },
-    { ext: 'ppt', label: 'PowerPoint 97-2003 presentation', canSave: false },
-  ],
-  open: async (file, host) => {
-    const ext = file.name.split('.').pop()?.toLowerCase();
-    if (ext === 'ppt') {
-      const { convertPpt } = await import('./ppt');
-      const converted = await convertPpt(file.bytes);
-      return openDeck(await openPackage(converted), file.name, host, true);
-    }
-    return openDeck(await openPackage(file.bytes), file.name, host, false);
-  },
-};
+/** Opens a .pptx/.pptm, or converts an old .ppt (read-only until saved as .pptx). */
+export async function openFile(file: { bytes: Uint8Array; name: string }, host: DocHost): Promise<DocumentSession> {
+  const ext = file.name.split('.').pop()?.toLowerCase();
+  if (ext === 'ppt') {
+    const { convertPpt } = await import('./ppt');
+    return openDeck(await openPackage(await convertPpt(file.bytes)), file.name, host, true);
+  }
+  return openDeck(await openPackage(file.bytes), file.name, host, false);
+}
 
 /** The same deck without its macros, for saving as .pptx (PowerPoint refuses macros there). */
 export function withoutMacros(pkg: Package): Package {
