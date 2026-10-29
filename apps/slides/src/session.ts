@@ -85,7 +85,7 @@ export function createSlidesSession(pkg: Package, host: DocHost, options: { conv
   };
 
   /** Moves to another version of the package (an edit, undo or redo). */
-  const load = (next: Package, currentPart: string | null) => {
+  const load = (next: Package, currentPart: string | null, keepShape = false) => {
     const slides = slidesOf(next);
     // Notes and other parts the slides don't show don't need the deck rebuilt.
     const deck = drawsDifferently(state.pkg, next) ? buildDeck(next) : { ...state.deck, pkg: next };
@@ -98,13 +98,20 @@ export function createSlidesSession(pkg: Package, host: DocHost, options: { conv
       slides,
       current: Math.max(0, current),
       selected: part ? [part] : [],
-      shape: null,
+      shape: keepShape && part === state.slides[state.current]?.part ? state.shape : null,
       editing: null,
     });
   };
 
-  /** Applies an edit as one undo step. `coalesce` merges quick repeats of the same edit. */
-  const apply = (label: string, edit: (pkg: Package) => Package | { pkg: Package; current: string }, coalesce = false) => {
+  /**
+   * Applies an edit as one undo step. `coalesce` merges quick repeats of the same edit (typing);
+   * `keepShape` keeps the selected shape selected (it was moved or its text edited).
+   */
+  const apply = (
+    label: string,
+    edit: (pkg: Package) => Package | { pkg: Package; current: string },
+    { coalesce = false, keepShape = false }: { coalesce?: boolean; keepShape?: boolean } = {},
+  ) => {
     if (state.converted) {
       host.notify('This is an old PowerPoint file, opened read-only. Save it as .pptx to edit it.', 'info');
       return false;
@@ -121,7 +128,7 @@ export function createSlidesSession(pkg: Package, host: DocHost, options: { conv
       steps = [...steps.slice(0, pointer + 1), { id: nextId++, pkg: next, label, at: now, current }];
       pointer = steps.length - 1;
     }
-    load(next, current);
+    load(next, current, keepShape);
     return true;
   };
 

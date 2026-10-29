@@ -19,7 +19,7 @@ import {
   xmlOf,
 } from './pkg';
 import { printDeck } from './print';
-import { type RenderOptions, loadFonts } from './render';
+import { type RenderOptions, loadFonts, nodesOf } from './render';
 import { createSlidesSession } from './session';
 import { PICTURE_TYPES, deleteShape, insertPicture, isAnimated, replacePicture } from './shapes';
 import { type SlideActions, SlidesView, StatusText } from './SlidesView';
@@ -154,7 +154,7 @@ export async function openDeck(pkg: Package, name: string, host: DocHost, conver
       const slide = session.state.slides[session.state.current];
       if (!slide) return;
       try {
-        session.apply('Edit notes', (pkg) => setNotes(pkg, slide, text), true);
+        session.apply('Edit notes', (pkg) => setNotes(pkg, slide, text), { coalesce: true });
       } catch (error) {
         fail(error);
       }
@@ -188,7 +188,7 @@ export async function openDeck(pkg: Package, name: string, host: DocHost, conver
       id: 'slides.replacePicture',
       title: 'Replace picture…',
       group: 'Edit',
-      enabled: () => editable() && session.state.deck.presentation.slides[session.state.current]?.nodes.find((n) => n.id === session.state.shape)?.nodeType === 'picture',
+      enabled: () => editable() && nodesOf(session.state.deck, session.state.current).find((n) => n.id === session.state.shape)?.nodeType === 'picture',
       run: actions.replacePicture,
     },
     { id: 'slides.exportPdf', title: 'Export to PDF…', group: 'File', run: actions.exportPdf },

@@ -38,7 +38,7 @@ import {
 } from '@fluentui/react-icons';
 import { type ReactElement, type ReactNode, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { EditLayer } from './EditLayer';
-import type { RenderOptions } from './render';
+import { type RenderOptions, nodesOf } from './render';
 import type { SlidesSession } from './session';
 import { SlideCanvas, WhenVisible } from './SlideCanvas';
 import { Slideshow } from './Slideshow';
@@ -104,7 +104,7 @@ function SlidesToolbar({
   const readOnly = state.converted;
   const selection = session.selection();
   const allHidden = selection.length > 0 && selection.every((s) => s.hidden);
-  const shape = state.shape ? state.deck.presentation.slides[state.current]?.nodes.find((n) => n.id === state.shape) : undefined;
+  const shape = state.shape ? nodesOf(state.deck, state.current).find((n) => n.id === state.shape) : undefined;
   return (
     <Toolbar className="slides-toolbar" aria-label="Slides" size="small">
       <Menu positioning="below-start">

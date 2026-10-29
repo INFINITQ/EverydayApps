@@ -7,6 +7,7 @@ import {
   type PptxFiles,
   type PresentationData,
   type SlideHandle,
+  type SlideNode,
   buildPresentation,
   materializeSlideNodes,
   renderSlide,
@@ -146,6 +147,14 @@ export function renderKey(deck: Deck, index: number): string {
     .map(([, part]) => idOf(part))
     .join('.');
   return `${index}|${path}|${idOf(deck.pkg.parts.get(path))}|${idOf(deck.pkg.parts.get(rels))}|${shared}`;
+}
+
+/** A slide's top-level shapes (parsed on first use: decks are built lazily). */
+export function nodesOf(deck: Deck, index: number): SlideNode[] {
+  const slide = deck.presentation.slides[index];
+  if (!slide) return [];
+  materializeSlideNodes(deck.presentation, slide);
+  return slide.nodes;
 }
 
 export type RenderOptions = {

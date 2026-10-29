@@ -5,6 +5,7 @@
 
 import type { SlideNode } from '@aiden0z/pptx-renderer';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { nodesOf } from './render';
 import type { SlidesSession } from './session';
 import { EMU_PER_PX, setBounds } from './shapes';
 import type { SlideActions } from './SlidesView';
@@ -20,12 +21,11 @@ const boxOf = (node: SlideNode): Box => ({ x: node.position.x, y: node.position.
 export function EditLayer({ session, width, actions }: { session: SlidesSession; width: number; actions: SlideActions }) {
   const state = useSyncExternalStore(session.subscribe, () => session.state);
   const { deck, current } = state;
-  const slide = deck.presentation.slides[current];
   const scale = width / deck.presentation.width;
   const layer = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [preview, setPreview] = useState<Box | null>(null);
-  const nodes = (slide?.nodes ?? []).filter((n) => !n.hidden);
+  const nodes = nodesOf(deck, current).filter((n) => !n.hidden);
   const selected = nodes.find((n) => n.id === state.shape) ?? null;
   const editing = state.editing ? nodes.find((n) => n.id === state.editing) ?? null : null;
 
@@ -45,7 +45,9 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
   const commit = (box: Box) => {
     if (!selected || !part) return;
     const emu = { x: box.x * EMU_PER_PX, y: box.y * EMU_PER_PX, w: box.w * EMU_PER_PX, h: box.h * EMU_PER_PX };
-    session.apply(preview && drag?.kind === 'resize' ? 'Resize shape' : 'Move shape', (pkg) => setBounds(pkg, part, selected.id, emu));
+    session.apply(drag?.kind === 'resize' ? 'Resize shape' : 'Move shape', (pkg) => setBounds(pkg, part, selected.id, emu), {
+      keepShape: true,
+    });
   };
 
   const onPointerDown = (event: React.PointerEvent) => {
@@ -154,7 +156,9 @@ export function EditLayer({ session, width, actions }: { session: SlidesSession;
           scale={scale}
           onDone={(paragraphs) => {
             session.setEditing(null);
-            if (paragraphs && part) session.apply('Edit text', (pkg) => setShapeText(pkg, part, editing.id, paragraphs));
+            if (paragraphs && part) {
+              session.apply('Edit text', (pkg) => setShapeText(pkg, part, editing.id, paragraphs), { keepShape: true });
+            }
             layer.current?.focus();
           }}
         />
