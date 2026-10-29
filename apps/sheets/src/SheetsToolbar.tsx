@@ -20,6 +20,7 @@ import {
   ArrowSortUpRegular,
   ArrowUndoRegular,
   BorderAllRegular,
+  ChartMultipleRegular,
   ChevronDownRegular,
   CommentRegular,
   CurrencyDollarEuroRegular,
@@ -48,7 +49,7 @@ import {
 } from '@fluentui/react-icons';
 import { type ReactElement, useSyncExternalStore } from 'react';
 import type { SheetsSession } from './session';
-import { CMD, NUMBER_FORMATS } from './sheetCommands';
+import { CHART_TYPES, CMD, NUMBER_FORMATS } from './sheetCommands';
 
 const TEXT_COLORS = ['#000000', '#C00000', '#FF0000', '#FFC000', '#00B050', '#0070C0', '#7030A0', '#808080'];
 const FILL_COLORS = ['#FFFF00', '#FFC7CE', '#C6EFCE', '#FFEB9C', '#DDEBF7', '#FCE4D6', '#EDEDED', '#FFFFFF'];
@@ -259,6 +260,14 @@ export function SheetsToolbar({ session }: { session: SheetsSession }) {
       <Tip label="Comments">
         <ToolbarButton icon={<CommentRegular />} onClick={() => run(CMD.commentsPanel)} />
       </Tip>
+      <Menu>
+        <MenuTip label="Insert a chart" icon={<ChartMultipleRegular />} />
+        <MenuPopover>
+          {menuItems([
+            ...CHART_TYPES.map(([type, label]): [string, () => void] => [label, () => void session.insertChart(type)]),
+          ])}
+        </MenuPopover>
+      </Menu>
       <Tip label="Insert a picture">
         <ToolbarButton icon={<ImageAddRegular />} onClick={() => void session.insertPicture()} />
       </Tip>

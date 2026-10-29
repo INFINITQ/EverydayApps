@@ -78,7 +78,8 @@ import SheetsUIEnUS from '@univerjs/sheets-ui/locale/en-US';
 import { UniverThreadCommentPlugin } from '@univerjs/thread-comment';
 import { UniverThreadCommentUIPlugin } from '@univerjs/thread-comment-ui';
 import ThreadCommentUIEnUS from '@univerjs/thread-comment-ui/locale/en-US';
-import { UniverUIPlugin } from '@univerjs/ui';
+import { ComponentManager, UniverUIPlugin } from '@univerjs/ui';
+import { CHART_COMPONENT, FolioChart } from './charts/FolioChart';
 import UIEnUS from '@univerjs/ui/locale/en-US';
 
 /**
@@ -173,6 +174,8 @@ export function createEngine(container: HTMLElement, data: IWorkbookData, option
   univer.registerPlugin(UniverSheetsDrawingPlugin);
   univer.registerPlugin(UniverSheetsDrawingUIPlugin);
 
+  // Charts are drawings Univer places over the grid; Folio's component draws them.
+  univer.__getInjector().get(ComponentManager).register(CHART_COMPONENT, FolioChart);
   const workbook = univer.createUnit<IWorkbookData, Workbook>(UniverInstanceType.UNIVER_SHEET, data);
   const injector = univer.__getInjector();
   const functions = injector.get(IFunctionService);

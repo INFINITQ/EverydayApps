@@ -13,11 +13,12 @@
 
 import { BooleanNumber, CellValueType, type ICellData, type IStyleData, type IWorkbookData, type IWorksheetData } from '@univerjs/core';
 import { type DrawingData, type ThreadComment, writeComments, writePictures } from './annotations';
+import type { Resolve } from '../charts/model';
 import { type AutoFilter, type CfRule, type DvRule, RESOURCE, autoFilterXml, conditionalFormattingXml, dataValidationsXml } from './features';
 import { formulaToFile, shiftFormula } from './formula';
 import { CONTENT, Package, REL } from './opc';
 import { type SourceBook, type SourceCell, type SourceSheet, attrOf } from './read';
-import { type Range, cellName, quoteSheet, rangeName } from './refs';
+import { type Range, cellName, parseRange, quoteSheet, rangeName } from './refs';
 import { StyleSheet } from './styles';
 import { type XmlElement, attrsText, encodeOfficeText, escapeAttr, escapeText, parseXml, patchText } from './xml';
 
@@ -328,9 +329,10 @@ function patchSheet(
     const element = writeComments(ctx.pkg, source.part, cur, features.cur.comments, source.comments, p, root.child('legacyDrawing'));
     if (element !== undefined) put('legacyDrawing', element);
   }
-  const drawingKey = (d: DrawingData | null) => (d ? d.order.map((id) => [id, d.data[id]?.sheetTransform?.from, d.data[id]?.sheetTransform?.to, d.data[id]?.source.length]) : []);
+  const drawingKey = (d: DrawingData | null) =>
+    d ? d.order.map((id) => { const item = d.data[id] as { sheetTransform?: { from: unknown; to: unknown }; source?: string; data?: { chart?: { part?: string } } } | undefined; return [id, item?.sheetTransform?.from, item?.sheetTransform?.to, item?.source?.length ?? item?.data?.chart]; }) : [];
   if (!same(drawingKey(features.base.drawings), drawingKey(features.cur.drawings))) {
-    const element = writePictures(ctx.pkg, source.part, features.base.drawings, features.cur.drawings, source.pictures, p);
+    const element = writePictures(ctx.pkg, source.part, features.base.drawings, features.cur.drawings, source.pictures, p, snapshotResolver(ctx.current));
     if (element) put('drawing', element);
   }
 
@@ -701,6 +703,26 @@ function patchWorkbook(ctx: Context, placed: { id: string; source: SourceSheet |
   }
   const patched = patchText(text, edits);
   if (patched !== text) pkg.set(book.workbookPart, patched);
+}
+
+/** Values of a range like 'Data'!$B$2:$B$5 in a snapshot (for the caches of new charts). */
+function snapshotResolver(data: IWorkbookData): Resolve {
+  return (ref) => {
+    const match = /^(?:'((?:[^']|'')+)'|([^'!]+))!(.+)$/.exec(ref.trim());
+    const range = match ? parseRange(match[3]!.replace(/\$/g, '')) : undefined;
+    if (!match || !range) return null;
+    const name = (match[1] ?? match[2]!).replace(/''/g, "'");
+    const sheet = Object.values(data.sheets).find((s) => s?.name === name);
+    if (!sheet) return null;
+    const out: (string | number | null)[] = [];
+    for (let r = range.startRow; r <= Math.min(range.endRow, range.startRow + 10_000); r++) {
+      for (let c = range.startColumn; c <= Math.min(range.endColumn, range.startColumn + 1000); c++) {
+        const v = sheet.cellData?.[r]?.[c]?.v;
+        out.push(v === undefined || v === null ? null : typeof v === 'number' ? v : typeof v === 'boolean' ? Number(v) : String(v));
+      }
+    }
+    return out;
+  };
 }
 
 /** Old and new names of renamed sheets. */

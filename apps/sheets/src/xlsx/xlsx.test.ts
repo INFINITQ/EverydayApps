@@ -320,8 +320,8 @@ describe('comments and pictures', () => {
     const [note] = resourceOf(data, RESOURCE.comments).s1;
     expect(note).toMatchObject({ ref: 'B1', authorName: 'Sam Sample', text: { dataStream: 'Sam Sample:\rCheck this number\r\n' } });
     const drawing = resourceOf(data, RESOURCE.drawings).s2;
-    expect(drawing.order).toHaveLength(1);
-    const image = drawing.data[drawing.order[0]];
+    expect(drawing.order).toEqual(['s2-chart0', 's2-pic0']);
+    const image = drawing.data['s2-pic0'];
     expect(image.source).toMatch(/^data:image\/png;base64,/);
     expect(image.sheetTransform.from).toEqual({ column: 0, columnOffset: 0, row: 8, rowOffset: 0 });
     expect(image.transform).toMatchObject({ width: 40, height: 40 });
@@ -350,7 +350,7 @@ describe('comments and pictures', () => {
   it('moves, deletes and adds pictures, keeping the chart in the same drawing as written', () => {
     const { bytes, edited, save } = open();
     const drawings = resourceOf(edited, RESOURCE.drawings);
-    const id = drawings.s2.order[0];
+    const id = 's2-pic0';
     drawings.s2.data[id].sheetTransform.from = { column: 1, columnOffset: 5, row: 9, rowOffset: 0 };
     drawings.s2.data[id].sheetTransform.to = { column: 2, columnOffset: 0, row: 11, rowOffset: 0 };
     const png = drawings.s2.data[id].source;
@@ -367,10 +367,61 @@ describe('comments and pictures', () => {
     // Deleting the picture removes its anchor only.
     const again = open();
     const d = resourceOf(again.edited, RESOURCE.drawings);
-    d.s2 = { order: [], data: {} };
+    d.s2 = { order: ['s2-chart0'], data: { 's2-chart0': d.s2.data['s2-chart0'] } };
     setResource(again.edited, RESOURCE.drawings, d);
     const deleted = text(again.save(), 'xl/drawings/drawing1.xml');
     expect(deleted).not.toContain('<xdr:pic>');
     expect(deleted).toContain(chartAnchor);
+  });
+});
+
+describe('charts', () => {
+  const resourceOf = (data: IWorkbookData, name: string) => JSON.parse(data.resources!.find((r) => r.name === name)!.data);
+  const setResource = (data: IWorkbookData, name: string, value: unknown) => {
+    data.resources!.find((r) => r.name === name)!.data = JSON.stringify(value);
+  };
+
+  it("reads the file's charts with their references and cached values", () => {
+    const { data } = open();
+    const chart = resourceOf(data, RESOURCE.drawings).s2.data['s2-chart0'];
+    expect(chart).toMatchObject({ drawingType: 8, componentKey: 'FolioChart', sheetTransform: { from: { column: 3, row: 2 }, to: { column: 9, row: 17 } } });
+    expect(chart.data.chart).toMatchObject({
+      type: 'column',
+      grouping: 'clustered',
+      title: 'Sales by region',
+      legend: 'b',
+      part: 'xl/charts/chart1.xml',
+      series: [{ nameRef: 'Data!$B$1', name: 'Sales', categoriesRef: 'Data!$A$2:$A$5', valuesRef: 'Data!$B$2:$B$5', cache: { categories: ['North', 'South', 'East', 'West'], values: [1200.5, 950, 700.25, 1100] } }],
+    });
+  });
+
+  it('saves a chart inserted in Folio as a real Excel chart', () => {
+    const { edited, save } = open();
+    const drawings = resourceOf(edited, RESOURCE.drawings);
+    const template = drawings.s2.data['s2-chart0'];
+    drawings.s1 = {
+      order: ['new-chart'],
+      data: {
+        'new-chart': {
+          ...template,
+          drawingId: 'new-chart',
+          subUnitId: 's1',
+          sheetTransform: { ...template.sheetTransform, from: { column: 4, columnOffset: 0, row: 1, rowOffset: 0 }, to: { column: 10, columnOffset: 0, row: 15, rowOffset: 0 } },
+          data: { chart: { type: 'line', grouping: 'standard', title: 'Notes', legend: 'b', series: [{ nameRef: "'Notes'!$B$1", categoriesRef: "'Notes'!$A$2:$A$3", valuesRef: "'Notes'!$B$2:$B$3", cache: { categories: [], values: [] } }] } },
+        },
+      },
+    };
+    setResource(edited, RESOURCE.drawings, drawings);
+    const out = save();
+    const names = Object.keys(parts(out));
+    expect(names).toEqual(expect.arrayContaining(['xl/charts/chart2.xml', 'xl/drawings/drawing2.xml']));
+    const chart = text(out, 'xl/charts/chart2.xml');
+    expect(chart).toContain('<c:lineChart><c:grouping val="standard"/>');
+    expect(chart).toContain("<c:f>'Notes'!$B$2:$B$3</c:f><c:numCache><c:formatCode>General</c:formatCode><c:ptCount val=\"2\"/><c:pt idx=\"0\"><c:v>20</c:v></c:pt><c:pt idx=\"1\"><c:v>30</c:v></c:pt></c:numCache>".replace(/\\"/g, '"'));
+    expect(text(out, 'xl/drawings/drawing2.xml')).toMatch(/<c:chart [^>]*r:id="rId\d+"\/>/);
+    expect(text(out, '[Content_Types].xml')).toContain('/xl/charts/chart2.xml');
+    expect(text(out, 'xl/worksheets/sheet2.xml')).toMatch(/<drawing r:id="rId\d+"\/><legacyDrawing/);
+    // The file's own chart is untouched.
+    expect(text(out, 'xl/charts/chart1.xml')).toBe(text(makeXlsx(), 'xl/charts/chart1.xml'));
   });
 });

@@ -22,6 +22,9 @@ import { type CsvSource, readCsv, writeCsv } from './csv';
 import { readXls } from './xls/biff';
 import { type SheetEngine, createEngine } from './engine';
 import { type Region, affected, protectedRegions, structuralChange } from './guard';
+import { type ChartModel, type ChartType, chartFromRange, defaultGrouping } from './charts/model';
+import { CHART_COMPONENT } from './charts/FolioChart';
+import { IDrawingManagerService } from '@univerjs/drawing';
 import { CMD } from './sheetCommands';
 import { BLANK_WORKBOOK, readWorkbook, type SourceBook } from './xlsx/read';
 import { writeWorkbook } from './xlsx/write';
@@ -123,6 +126,9 @@ export class SheetsSession {
         this.emit();
       }),
     );
+    // Commands push their undo step after their changes are applied: look again then.
+    const history = this.undoRedo.undoRedoStatus$.subscribe(() => this.emit());
+    this.disposables.push({ dispose: () => history.unsubscribe() });
     const selections = this.engine.injector.get(SheetsSelectionsService);
     const subscription = selections.selectionMoveEnd$.subscribe(() => {
       this.updateSelection();
@@ -241,6 +247,75 @@ export class SheetsSession {
     const range = this.engine.injector.get(SheetsSelectionsService).getCurrentLastSelection()?.range;
     const count = range ? (kind === 'row' ? range.endRow - range.startRow + 1 : range.endColumn - range.startColumn + 1) : 1;
     return this.run(`sheet.command.insert-${kind}-${where}`, { value: Math.max(1, Math.min(count, 1000)) });
+  }
+
+  /** A new chart of the selected cells, placed to their right (undoable like any edit). */
+  async insertChart(type: ChartType): Promise<void> {
+    const sheet = this.engine.workbook.getActiveSheet();
+    const range = this.engine.injector.get(SheetsSelectionsService).getCurrentLastSelection()?.range;
+    if (!range || (range.startRow === range.endRow && range.startColumn === range.endColumn)) {
+      this.host.notify('Select the cells to chart first (with their headings).', 'info');
+      return;
+    }
+    // Whole rows or columns: chart only the part that has data.
+    const lastRow = Math.min(range.endRow, sheet.getLastRowWithContent());
+    const lastColumn = Math.min(range.endColumn, sheet.getLastColumnWithContent());
+    const area = { ...range, endRow: Math.max(range.startRow, lastRow), endColumn: Math.max(range.startColumn, lastColumn) };
+    const chart = chartFromRange(sheet.getName(), area, (r, c) => sheet.getCellRaw(r, c)?.v, type);
+    const width = 480;
+    const height = 288;
+    const fromColumn = area.endColumn + 2;
+    const fromRow = area.startRow;
+    let left = 0;
+    for (let c = 0; c < fromColumn; c++) left += sheet.getColumnWidth(c);
+    let top = 0;
+    for (let r = 0; r < fromRow; r++) top += sheet.getRowHeight(r);
+    const end = (start: number, size: number, measure: (i: number) => number) => {
+      let i = start;
+      let rest = size;
+      while (rest >= measure(i) && i < start + 500) rest -= measure(i++);
+      return { index: i, offset: rest };
+    };
+    const right = end(fromColumn, width, (c) => sheet.getColumnWidth(c));
+    const bottom = end(fromRow, height, (r) => sheet.getRowHeight(r));
+    const plain = { angle: 0, flipX: false, flipY: false, skewX: 0, skewY: 0 };
+    const position = {
+      from: { column: fromColumn, columnOffset: 0, row: fromRow, rowOffset: 0 },
+      to: { column: right.index, columnOffset: right.offset, row: bottom.index, rowOffset: bottom.offset },
+      ...plain,
+    };
+    const drawing = {
+      unitId: this.unitId,
+      subUnitId: sheet.getSheetId(),
+      drawingId: `chart-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+      drawingType: 8,
+      componentKey: CHART_COMPONENT,
+      data: { chart },
+      allowTransform: true,
+      transform: { left: left + 46, top: top + 20, width, height, ...plain },
+      sheetTransform: position,
+      axisAlignSheetTransform: position,
+      anchorType: '1',
+    };
+    await this.run('sheet.command.insert-sheet-image', { unitId: this.unitId, drawings: [drawing] });
+  }
+
+  /** Changes the selected chart's type (a chart from the file is then rewritten on save). */
+  async setChartType(type: ChartType): Promise<void> {
+    const focused = this.engine.injector
+      .get(IDrawingManagerService)
+      .getFocusDrawings()
+      .find((d) => d.drawingType === 8) as (ReturnType<IDrawingManagerService['getFocusDrawings']>[number] & { data?: { chart?: ChartModel } }) | undefined;
+    const chart = focused?.data?.chart;
+    if (!focused || !chart) {
+      this.host.notify('Select a chart first.', 'info');
+      return;
+    }
+    const next: ChartModel = { ...chart, type, grouping: defaultGrouping(type) };
+    await this.run('sheet.command.set-sheet-image', {
+      unitId: this.unitId,
+      drawings: [{ unitId: this.unitId, subUnitId: focused.subUnitId, drawingId: focused.drawingId, data: { chart: next } }],
+    });
   }
 
   zoomTo(ratio: number) {

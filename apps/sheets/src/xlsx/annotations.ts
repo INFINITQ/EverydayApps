@@ -6,6 +6,7 @@
 // same drawing are kept exactly as written.
 
 import type { IWorksheetData } from '@univerjs/core';
+import { type ChartModel, type Resolve, chartXml, readChart } from '../charts/model';
 import { CONTENT, type Package, REL } from './opc';
 import { cellName, parseCell } from './refs';
 import { type XmlElement, attrsText, escapeAttr, escapeText, parseXml } from './xml';
@@ -231,7 +232,11 @@ export type SheetImage = {
   axisAlignSheetTransform: { from: Cell; to: Cell; angle: number; flipX: boolean; flipY: boolean; skewX: number; skewY: number };
   anchorType: string;
 };
-export type DrawingData = { data: Record<string, SheetImage>; order: string[] };
+/** A chart over the grid (a Univer "DOM drawing" its chart component draws). */
+export type ChartDrawing = Omit<SheetImage, 'imageSourceType' | 'source'> & { componentKey: string; data: { chart: ChartModel }; allowTransform: boolean };
+export type DrawingData = { data: Record<string, SheetImage | ChartDrawing>; order: string[] };
+export const CHART_DRAWING = 8;
+const isChart = (d: SheetImage | ChartDrawing | undefined): d is ChartDrawing => d?.drawingType === CHART_DRAWING;
 
 export type PictureSource = {
   drawingPart?: string;
@@ -306,14 +311,18 @@ export function readPictures(pkg: Package, sheetPart: string, sheetId: string, u
   const grid = new Grid(sheet);
   const drawing: DrawingData = { data: {}, order: [] };
   let n = 0;
+  let charts = 0;
   for (const anchor of root.elements()) {
     const pic = anchor.child('pic');
-    if (!pic) continue;
-    const embed = pic.path('blipFill/blip')?.attr('r:embed');
-    const image = pkg.target(part, pkg.relById(part, embed));
+    const chartRel = anchor.child('graphicFrame')?.path('graphic/graphicData/chart')?.attr('r:id');
+    const chartPart = chartRel ? pkg.target(part, pkg.relById(part, chartRel)) : undefined;
+    if (!pic && !chartPart) continue;
+    const embed = pic?.path('blipFill/blip')?.attr('r:embed');
+    const image = pic ? pkg.target(part, pkg.relById(part, embed)) : undefined;
     const bytes = image ? pkg.bytesOf(image) : undefined;
-    if (!image || !bytes) continue;
-    const ext = image.split('.').pop()?.toLowerCase() ?? 'png';
+    const chartText = chartPart && pkg.has(chartPart) ? pkg.text(chartPart) : undefined;
+    if (pic ? !image || !bytes : !chartText) continue;
+    const ext = image?.split('.').pop()?.toLowerCase() ?? 'png';
     let from: Cell;
     let to: Cell;
     if (anchor.local === 'twoCellAnchor') {
@@ -337,16 +346,41 @@ export function readPictures(pkg: Package, sheetPart: string, sheetId: string, u
     // Univer measures from the window's corner, past the row and column headers.
     const headerX = sheet.rowHeader?.width ?? 46;
     const headerY = sheet.columnHeader?.height ?? 20;
-    const drawingId = `${sheetId}-pic${n++}`;
     const plain = { angle: 0, flipX: false, flipY: false, skewX: 0, skewY: 0 };
     const editAs = anchor.attr('editAs') ?? (anchor.local === 'twoCellAnchor' ? 'twoCell' : anchor.local === 'oneCellAnchor' ? 'oneCell' : 'absolute');
+    if (chartText) {
+      const drawingId = `${sheetId}-chart${charts++}`;
+      let chart: ChartModel;
+      try {
+        chart = readChart(chartText, chartPart!);
+      } catch {
+        chart = { type: 'unsupported', grouping: 'clustered', legend: null, series: [], part: chartPart };
+      }
+      drawing.data[drawingId] = {
+        unitId,
+        subUnitId: sheetId,
+        drawingId,
+        drawingType: CHART_DRAWING,
+        componentKey: 'FolioChart',
+        data: { chart },
+        allowTransform: true,
+        transform: { left: left + headerX, top: top + headerY, width: Math.max(1, width), height: Math.max(1, height), ...plain },
+        sheetTransform: { from, to, ...plain },
+        axisAlignSheetTransform: { from, to, ...plain },
+        anchorType: editAs === 'twoCell' ? '1' : editAs === 'oneCell' ? '0' : '2',
+      };
+      drawing.order.push(drawingId);
+      source.anchors.set(drawingId, { xml: text.slice(anchor.start, anchor.end), start: anchor.start, end: anchor.end });
+      continue;
+    }
+    const drawingId = `${sheetId}-pic${n++}`;
     drawing.data[drawingId] = {
       unitId,
       subUnitId: sheetId,
       drawingId,
       drawingType: 0,
       imageSourceType: 'BASE64',
-      source: `data:${MIME[ext] ?? 'image/png'};base64,${base64(bytes)}`,
+      source: `data:${MIME[ext] ?? 'image/png'};base64,${base64(bytes!)}`,
       transform: { left: left + headerX, top: top + headerY, width: Math.max(1, width), height: Math.max(1, height), ...plain },
       sheetTransform: { from, to, ...plain },
       axisAlignSheetTransform: { from, to, ...plain },
@@ -358,14 +392,23 @@ export function readPictures(pkg: Package, sheetPart: string, sheetId: string, u
   return { drawing: drawing.order.length ? drawing : null, source };
 }
 
-const positionKey = (image: SheetImage | undefined) => (image ? JSON.stringify([image.sheetTransform?.from, image.sheetTransform?.to, image.source.length]) : '');
+const positionKey = (d: SheetImage | ChartDrawing | undefined) =>
+  d ? JSON.stringify([d.sheetTransform?.from, d.sheetTransform?.to, isChart(d) ? d.data?.chart?.part : d.source.length]) : '';
 
 /**
  * Writes a sheet's pictures after they changed: moved pictures get new anchors, deleted ones
  * go, new ones are added (with their image parts). Everything else in the drawing stays.
  * Returns the sheet's <drawing> element to add when the sheet had no drawing.
  */
-export function writePictures(pkg: Package, sheetPart: string, before: DrawingData | null, after: DrawingData | null, source: PictureSource, prefix: string): string | undefined {
+export function writePictures(
+  pkg: Package,
+  sheetPart: string,
+  before: DrawingData | null,
+  after: DrawingData | null,
+  source: PictureSource,
+  prefix: string,
+  resolve: Resolve,
+): string | undefined {
   const xdr = 'xdr:';
   let part = source.drawingPart;
   let created: string | undefined;
@@ -392,9 +435,14 @@ export function writePictures(pkg: Package, sheetPart: string, before: DrawingDa
       edits.push({ start: anchor.start, end: anchor.end, text: '' });
       continue;
     }
-    if (positionKey(image) === positionKey(before?.data[drawingId])) continue;
-    const pic = /<xdr:pic>[\s\S]*<\/xdr:pic>/.exec(anchor.xml)?.[0];
-    if (pic) edits.push({ start: anchor.start, end: anchor.end, text: twoCellAnchor(image, pic) });
+    const previous = before?.data[drawingId];
+    if (isChart(image) && isChart(previous) && image.data.chart.part && JSON.stringify(image.data.chart) !== JSON.stringify(previous.data.chart)) {
+      // Its type (or data) was changed in Folio: the chart part is written again.
+      pkg.set(image.data.chart.part, chartXml(image.data.chart, resolve));
+    }
+    if (positionKey(image) === positionKey(previous)) continue;
+    const body = /<xdr:pic>[\s\S]*<\/xdr:pic>|<xdr:graphicFrame[\s\S]*<\/xdr:graphicFrame>/.exec(anchor.xml)?.[0];
+    if (body) edits.push({ start: anchor.start, end: anchor.end, text: twoCellAnchor(image, body) });
   }
   // New pictures: an image part, a relationship and an anchor each.
   let added = '';
@@ -402,6 +450,19 @@ export function writePictures(pkg: Package, sheetPart: string, before: DrawingDa
     if (source.anchors.has(drawingId)) continue;
     const image = after!.data[drawingId];
     if (!image) continue;
+    if (isChart(image)) {
+      // A chart made in Folio: a chart part of its own, written with the values it shows.
+      const chartPart = freeName(pkg, 'xl/charts/chart', '.xml');
+      pkg.set(chartPart, chartXml(image.data.chart, resolve), CONTENT.chart);
+      const rel = pkg.addRel(part, REL.chart, chartPart);
+      const id = nextId++;
+      const frame =
+        `<${xdr}graphicFrame macro=""><${xdr}nvGraphicFramePr><${xdr}cNvPr id="${id}" name="Chart ${id}"/><${xdr}cNvGraphicFramePr/></${xdr}nvGraphicFramePr>` +
+        `<${xdr}xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></${xdr}xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">` +
+        `<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="${rel}"/></a:graphicData></a:graphic></${xdr}graphicFrame>`;
+      added += twoCellAnchor(image, frame);
+      continue;
+    }
     const match = /^data:image\/([a-z+]+);base64,(.*)$/.exec(image.source);
     if (!match) continue;
     const ext = match[1] === 'jpeg' ? 'jpg' : match[1] === 'svg+xml' ? 'svg' : match[1]!;
@@ -430,7 +491,7 @@ export function writePictures(pkg: Package, sheetPart: string, before: DrawingDa
   return created;
 }
 
-function twoCellAnchor(image: SheetImage, pic: string): string {
+function twoCellAnchor(image: SheetImage | ChartDrawing, pic: string): string {
   const { from, to } = image.sheetTransform;
   const cell = (tag: string, c: Cell) =>
     `<xdr:${tag}><xdr:col>${c.column}</xdr:col><xdr:colOff>${Math.round(c.columnOffset * EMU_PER_PIXEL)}</xdr:colOff><xdr:row>${c.row}</xdr:row><xdr:rowOff>${Math.round(c.rowOffset * EMU_PER_PIXEL)}</xdr:rowOff></xdr:${tag}>`;

@@ -17,7 +17,7 @@ import {
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { printSheet } from './print';
 import { SheetsSession, openBytes } from './session';
-import { CMD, NUMBER_FORMATS } from './sheetCommands';
+import { CHART_TYPES, CMD, NUMBER_FORMATS } from './sheetCommands';
 import { SheetsToolbar } from './SheetsToolbar';
 
 export const sheetsFormat: FormatModule = {
@@ -132,6 +132,8 @@ export function createSheetsDocument(bytes: Uint8Array, name: string, host: DocH
     { id: 'view.actualSize', title: 'Zoom to 100%', group: 'View', keys: 'Ctrl+0', run: () => session.zoomTo(1) },
     { id: 'insert.comment', title: 'Comments', group: 'Insert', run: run(CMD.commentsPanel) },
     { id: 'insert.picture', title: 'Insert a picture…', group: 'Insert', run: () => session.insertPicture() },
+    ...CHART_TYPES.map(([type, label]) => ({ id: `insert.chart.${type}`, title: `Insert a ${label.toLowerCase()}`, group: 'Insert', run: () => session.insertChart(type) })),
+    ...CHART_TYPES.map(([type, label]) => ({ id: `chart.type.${type}`, title: `Change the selected chart to a ${label.toLowerCase()}`, group: 'Chart', run: () => session.setChartType(type) })),
     { id: 'sheet.insert', title: 'Insert a sheet', group: 'Sheet', keys: 'Shift+F11', run: run(CMD.insertSheet) },
     { id: 'sheet.rename', title: 'Rename sheet', group: 'Sheet', run: run(CMD.renameSheet) },
     { id: 'sheet.remove', title: 'Delete sheet', group: 'Sheet', run: run(CMD.removeSheet) },

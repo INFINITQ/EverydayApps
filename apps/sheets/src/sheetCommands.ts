@@ -70,3 +70,13 @@ export const NUMBER_FORMATS: { label: string; pattern: string | null }[] = [
   { label: 'Scientific', pattern: '0.00E+00' },
   { label: 'Text', pattern: '@' },
 ];
+
+export const CHART_TYPES: ['column' | 'bar' | 'line' | 'area' | 'pie' | 'doughnut' | 'scatter', string][] = [
+  ['column', 'Column chart'],
+  ['bar', 'Bar chart'],
+  ['line', 'Line chart'],
+  ['area', 'Area chart'],
+  ['pie', 'Pie chart'],
+  ['doughnut', 'Doughnut chart'],
+  ['scatter', 'Scatter chart'],
+];
