@@ -1,0 +1,13 @@
+/* Folio Sheets: the workbook view fills the document pane; Univer draws inside it. */
+.sheets-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.sheets-grid {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}

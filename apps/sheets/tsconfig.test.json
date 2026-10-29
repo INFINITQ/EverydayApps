@@ -1,0 +1,15 @@
+{
+  "$comment": "Unit tests run in Node (vitest), so they get Node's types on top of the app's.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": [
+      "vite/client",
+      "node"
+    ]
+  },
+  "include": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ],
+  "exclude": []
+}
