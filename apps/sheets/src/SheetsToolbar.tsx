@@ -63,6 +63,19 @@ function Tip({ label, children }: { label: string; children: ReactElement }) {
   );
 }
 
+/** A toolbar button that opens a menu, with a Fluent tooltip (the trigger's props go to the button). */
+function MenuTip({ label, icon }: { label: string; icon: ReactElement }) {
+  return (
+    <MenuTrigger disableButtonEnhancement>
+      {(trigger: object) => (
+        <Tooltip content={label} relationship="label" withArrow>
+          <ToolbarButton {...trigger} icon={icon} />
+        </Tooltip>
+      )}
+    </MenuTrigger>
+  );
+}
+
 function Swatches({ colors, onPick }: { colors: string[]; onPick: (color: string | null) => void }) {
   return (
     <div className="sheets-swatches" role="group">
@@ -131,31 +144,19 @@ export function SheetsToolbar({ session }: { session: SheetsSession }) {
         <ToolbarButton icon={<TextStrikethroughRegular />} onClick={() => run(CMD.strike)} />
       </Tip>
       <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <Tip label="Font color">
-            <ToolbarButton icon={<TextColorRegular />} />
-          </Tip>
-        </MenuTrigger>
+        <MenuTip label="Font color" icon={<TextColorRegular />} />
         <MenuPopover>
           <Swatches colors={TEXT_COLORS} onPick={(color) => (color ? run(CMD.textColor, { value: color }) : run(CMD.resetTextColor))} />
         </MenuPopover>
       </Menu>
       <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <Tip label="Fill color">
-            <ToolbarButton icon={<PaintBucketRegular />} />
-          </Tip>
-        </MenuTrigger>
+        <MenuTip label="Fill color" icon={<PaintBucketRegular />} />
         <MenuPopover>
           <Swatches colors={FILL_COLORS} onPick={(color) => (color ? run(CMD.fillColor, { value: color }) : run(CMD.resetFillColor))} />
         </MenuPopover>
       </Menu>
       <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <Tip label="Borders">
-            <ToolbarButton icon={<BorderAllRegular />} />
-          </Tip>
-        </MenuTrigger>
+        <MenuTip label="Borders" icon={<BorderAllRegular />} />
         <MenuPopover>
           {menuItems([
             ['All borders', () => run(CMD.border, borderParams('all'))],
@@ -180,11 +181,7 @@ export function SheetsToolbar({ session }: { session: SheetsSession }) {
         <ToolbarButton icon={<TextWrapRegular />} onClick={() => run(CMD.wrap, { value: 3 })} />
       </Tip>
       <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <Tip label="Merge cells">
-            <ToolbarButton icon={<TableCellsMergeRegular />} />
-          </Tip>
-        </MenuTrigger>
+        <MenuTip label="Merge cells" icon={<TableCellsMergeRegular />} />
         <MenuPopover>
           {menuItems([
             ['Merge and center', () => void session.run(CMD.mergeAll).then(() => run(CMD.horizontal, { value: 2 }))],
@@ -196,11 +193,7 @@ export function SheetsToolbar({ session }: { session: SheetsSession }) {
       </Menu>
       <ToolbarDivider />
       <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <Tip label="Number format">
-            <ToolbarButton icon={<NumberSymbolRegular />} />
-          </Tip>
-        </MenuTrigger>
+        <MenuTip label="Number format" icon={<NumberSymbolRegular />} />
         <MenuPopover>
           <MenuList>
             {NUMBER_FORMATS.map((format) => (
@@ -224,17 +217,13 @@ export function SheetsToolbar({ session }: { session: SheetsSession }) {
       </Tip>
       <ToolbarDivider />
       <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <Tip label="Insert or delete rows and columns">
-            <ToolbarButton icon={<TableInsertRowRegular />} />
-          </Tip>
-        </MenuTrigger>
+        <MenuTip label="Insert or delete rows and columns" icon={<TableInsertRowRegular />} />
         <MenuPopover>
           {menuItems([
-            ['Insert row above', () => run(CMD.insertRowAbove)],
-            ['Insert row below', () => run(CMD.insertRowBelow)],
-            ['Insert column left', () => run(CMD.insertColumnLeft)],
-            ['Insert column right', () => run(CMD.insertColumnRight)],
+            ['Insert rows above', () => void session.insert('row', 'before')],
+            ['Insert rows below', () => void session.insert('row', 'after')],
+            ['Insert columns left', () => void session.insert('col', 'before')],
+            ['Insert columns right', () => void session.insert('col', 'after')],
             ['Delete rows', () => run(CMD.deleteRows)],
             ['Delete columns', () => run(CMD.deleteColumns)],
           ])}
@@ -250,11 +239,7 @@ export function SheetsToolbar({ session }: { session: SheetsSession }) {
         <ToolbarButton icon={<FilterRegular />} onClick={() => run(CMD.filter)} />
       </Tip>
       <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <Tip label="Freeze panes">
-            <ToolbarButton icon={<TableFreezeRowRegular />} />
-          </Tip>
-        </MenuTrigger>
+        <MenuTip label="Freeze panes" icon={<TableFreezeRowRegular />} />
         <MenuPopover>
           {menuItems([
             ['Freeze top row', () => run(CMD.freezeRow)],
@@ -282,11 +267,7 @@ export function SheetsToolbar({ session }: { session: SheetsSession }) {
         <ToolbarButton icon={<SearchRegular />} onClick={() => run(CMD.find)} />
       </Tip>
       <Menu>
-        <MenuTrigger disableButtonEnhancement>
-          <Tip label="More">
-            <ToolbarButton icon={<MoreHorizontalRegular />} />
-          </Tip>
-        </MenuTrigger>
+        <MenuTip label="More" icon={<MoreHorizontalRegular />} />
         <MenuPopover>
           {menuItems([
             ['Clear formatting', () => run(CMD.clearFormat)],

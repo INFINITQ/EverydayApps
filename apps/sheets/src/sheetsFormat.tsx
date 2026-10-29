@@ -3,7 +3,17 @@
 // files into Univer data and patch Univer's changes back into the original file.
 
 import type { Command, DocHost, DocumentSession, FormatModule } from '@folio/shell';
-import { MessageBar, MessageBarBody } from '@fluentui/react-components';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
+  MessageBar,
+  MessageBarBody,
+} from '@fluentui/react-components';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { printSheet } from './print';
 import { SheetsSession, openBytes } from './session';
@@ -34,7 +44,7 @@ export function createSheetsDocument(bytes: Uint8Array, name: string, host: DocH
     const [notes, setNotes] = useState(opened.notes);
     useSyncExternalStore(
       (listener) => session.subscribe(listener),
-      () => session.stateId(),
+      () => session.version,
     );
     useEffect(() => {
       holder.current?.appendChild(session.container);
@@ -51,6 +61,20 @@ export function createSheetsDocument(bytes: Uint8Array, name: string, host: DocH
           </MessageBar>
         )}
         <div className="sheets-grid-holder" ref={holder} />
+        <Dialog open={session.question !== null} onOpenChange={(_, data) => !data.open && session.answer(false)}>
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>{session.question?.title}</DialogTitle>
+              <DialogContent>{session.question?.body}</DialogContent>
+              <DialogActions>
+                <Button appearance="primary" onClick={() => session.answer(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => session.answer(true)}>{session.question?.confirm}</Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
       </div>
     );
   }
@@ -90,10 +114,10 @@ export function createSheetsDocument(bytes: Uint8Array, name: string, host: DocH
     { id: 'data.sortCustom', title: 'Custom sort…', group: 'Data', run: run(CMD.sortCustom) },
     { id: 'data.filter', title: 'Filter', group: 'Data', keys: 'Ctrl+Shift+L', run: run(CMD.filter) },
     { id: 'data.clearFilter', title: 'Clear filter', group: 'Data', run: run(CMD.clearFilter) },
-    { id: 'rows.insertAbove', title: 'Insert row above', group: 'Rows and columns', run: run(CMD.insertRowAbove) },
-    { id: 'rows.insertBelow', title: 'Insert row below', group: 'Rows and columns', run: run(CMD.insertRowBelow) },
-    { id: 'columns.insertLeft', title: 'Insert column left', group: 'Rows and columns', run: run(CMD.insertColumnLeft) },
-    { id: 'columns.insertRight', title: 'Insert column right', group: 'Rows and columns', run: run(CMD.insertColumnRight) },
+    { id: 'rows.insertAbove', title: 'Insert rows above', group: 'Rows and columns', keys: 'Ctrl+Shift+=', run: () => session.insert('row', 'before') },
+    { id: 'rows.insertBelow', title: 'Insert rows below', group: 'Rows and columns', run: () => session.insert('row', 'after') },
+    { id: 'columns.insertLeft', title: 'Insert columns left', group: 'Rows and columns', run: () => session.insert('col', 'before') },
+    { id: 'columns.insertRight', title: 'Insert columns right', group: 'Rows and columns', run: () => session.insert('col', 'after') },
     { id: 'rows.delete', title: 'Delete rows', group: 'Rows and columns', run: run(CMD.deleteRows) },
     { id: 'columns.delete', title: 'Delete columns', group: 'Rows and columns', run: run(CMD.deleteColumns) },
     { id: 'columns.autoWidth', title: 'Fit column width to contents', group: 'Rows and columns', run: run(CMD.autoWidth) },

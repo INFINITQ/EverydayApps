@@ -20,6 +20,7 @@ import { SheetsSelectionsService } from '@univerjs/sheets';
 import { IEditorBridgeService, SetCellEditVisibleOperation } from '@univerjs/sheets-ui';
 import { type CsvSource, readCsv, writeCsv } from './csv';
 import { type SheetEngine, createEngine } from './engine';
+import { type Region, affected, protectedRegions, structuralChange } from './guard';
 import { CMD } from './sheetCommands';
 import { BLANK_WORKBOOK, readWorkbook, type SourceBook } from './xlsx/read';
 import { writeWorkbook } from './xlsx/write';
@@ -37,6 +38,23 @@ export type Opened = {
 };
 
 export type Selection = { sum: number; numbers: number; count: number; average: number } | null;
+
+/** A change Folio asks about before making it. */
+export type Question = { title: string; body: string; confirm: string; run(): void };
+
+/** Thrown to stop a Univer command until the user has answered (see `guard.ts`). */
+export class EditPaused extends Error {
+  constructor() {
+    super('Folio Sheets is asking before making this change.');
+  }
+}
+
+// Univer's own menus run commands without waiting for them; a paused one isn't an error.
+if (typeof window !== 'undefined') {
+  window.addEventListener('unhandledrejection', (event) => {
+    if (event.reason instanceof EditPaused) event.preventDefault();
+  });
+}
 
 /** Mutations that aren't edits: formula results arriving, and the like. */
 const NOT_EDITS = /formula|calculation|numfmt\.mutation\.set-numfmt-cache|^sheet\.mutation\.set-worksheet-row-auto-height|auto-height|set-worksheet-col-auto-width/;
@@ -56,6 +74,11 @@ export class SheetsSession {
   selection: Selection = null;
   /** Edits that a CSV file can't keep (formats, formulas, more sheets). */
   formatted = false;
+  question: Question | null = null;
+  /** Places Folio can't update when rows and columns move (pivot tables, tables, charts). */
+  private readonly regions: Region[];
+  private readonly accepted = new Set<Region>();
+  private allowOnce = false;
 
   constructor(
     readonly opened: Opened,
@@ -68,8 +91,10 @@ export class SheetsSession {
     this.unitId = this.engine.workbook.getUnitId();
     this.baseline = this.snapshot();
 
+    this.regions = opened.book ? protectedRegions(opened.book) : [];
     const commands = this.engine.injector.get(ICommandService);
     this.disposables.push(
+      commands.beforeCommandExecuted((info) => this.guard(info.id, info.params as Record<string, unknown> | undefined)),
       commands.beforeCommandExecuted((info) => {
         if (info.id === UndoCommand.id || info.id === RedoCommand.id) this.undoing += 1;
       }),
@@ -101,6 +126,38 @@ export class SheetsSession {
     this.observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   }
 
+  /** Asks before rows or columns move under a pivot table, a table or a chart's data. */
+  private guard(id: string, params: Record<string, unknown> | undefined) {
+    if (this.allowOnce || this.regions.length === 0) return;
+    const sheet = this.engine.workbook.getActiveSheet();
+    const selection = this.engine.injector.get(SheetsSelectionsService).getCurrentLastSelection()?.range;
+    const change = structuralChange(id, params, sheet.getSheetId(), selection);
+    if (!change) return;
+    const hit = affected(this.regions, change).filter((r) => !this.accepted.has(r));
+    if (hit.length === 0) return;
+    const what = [...new Set(hit.map((r) => r.what))];
+    const list = what.length > 1 ? `${what.slice(0, -1).join(', ')} and ${what.at(-1)}` : what[0]!;
+    this.question = {
+      title: change.rows !== undefined ? 'Move rows anyway?' : 'Move columns anyway?',
+      body: `This moves cells that ${list} use. Folio keeps ${what.length > 1 ? 'them' : 'it'} as ${what.length > 1 ? 'they were' : 'it was'} but can't update ${what.length > 1 ? 'them' : 'it'}, so after saving ${what.length > 1 ? 'they' : 'it'} may point at the wrong cells until refreshed in Excel.`,
+      confirm: 'Make the change',
+      run: () => {
+        for (const region of hit) this.accepted.add(region);
+        this.allowOnce = true;
+        void this.run(id, params).finally(() => (this.allowOnce = false));
+      },
+    };
+    this.emit();
+    throw new EditPaused();
+  }
+
+  answer(confirmed: boolean) {
+    const question = this.question;
+    this.question = null;
+    this.emit();
+    if (confirmed) question?.run();
+  }
+
   private get undoRedo() {
     return this.engine.injector.get(IUndoRedoService);
   }
@@ -110,7 +167,11 @@ export class SheetsSession {
     return () => void this.listeners.delete(listener);
   }
 
+  /** Bumped on every change, for views that redraw on any of them. */
+  version = 0;
+
   private emit() {
+    this.version += 1;
     for (const listener of this.listeners) listener();
   }
 
@@ -135,7 +196,13 @@ export class SheetsSession {
   }
 
   run(id: string, params?: object): Promise<boolean> {
-    return this.engine.injector.get(ICommandService).executeCommand(id, params);
+    return this.engine.injector
+      .get(ICommandService)
+      .executeCommand(id, params)
+      .catch((error: unknown) => {
+        if (error instanceof EditPaused) return false;
+        throw error;
+      });
   }
 
   /** Univer's full snapshot of the workbook, with its plugins' data. */
@@ -159,6 +226,13 @@ export class SheetsSession {
     // CSV and old .xls files become new workbooks.
     const blank = readWorkbook(BLANK_WORKBOOK(), this.name, current.sheetOrder.slice(0, 1));
     return writeWorkbook(blank.book, blank.data, current);
+  }
+
+  /** Inserts as many rows or columns as are selected, before or after the selection (like Excel). */
+  insert(kind: 'row' | 'col', where: 'before' | 'after'): Promise<boolean> {
+    const range = this.engine.injector.get(SheetsSelectionsService).getCurrentLastSelection()?.range;
+    const count = range ? (kind === 'row' ? range.endRow - range.startRow + 1 : range.endColumn - range.startColumn + 1) : 1;
+    return this.run(`sheet.command.insert-${kind}-${where}`, { value: Math.max(1, Math.min(count, 1000)) });
   }
 
   zoomTo(ratio: number) {
