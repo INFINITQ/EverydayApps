@@ -28,4 +28,10 @@ blockExoticSubdeps: true
 # Dependency install scripts never run unless listed here as `true`. Any unreviewed
 # script makes the install fail (strictDepBuilds) instead of being silently skipped.
 strictDepBuilds: true
-allowBuilds: {}
+allowBuilds: { protobufjs: set this to true or false }
+
+# Removed dependencies (reviewed). @univerjs/protocol lists the gRPC client @grpc/grpc-js
+# (and through it protobufjs, which has an install script), but its browser build imports
+# nothing: Folio Sheets never loads either. Dropping them keeps network code out of the tree.
+overrides:
+  '@univerjs/protocol>@grpc/grpc-js': '-'
