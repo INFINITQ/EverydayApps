@@ -117,7 +117,7 @@ export async function openDeck(pkg: Package, name: string, host: DocHost, conver
         const part = currentPart();
         if (!id || !part) return;
         const picture = await pickPicture();
-        if (picture) session.apply('Replace picture', (pkg) => replacePicture(pkg, part, id, picture, reserved));
+        if (picture) session.apply('Replace picture', (pkg) => replacePicture(pkg, part, id, picture, reserved), { keepShape: true });
       })().catch(fail),
     insertPicture: () =>
       void (async () => {

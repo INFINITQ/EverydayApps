@@ -14,6 +14,8 @@ one that supersedes it.
 | [0006](0006-page-operations-in-bundled-pdfium.md) | Page operations in the bundled PDFium (no DLL); split files via a create-only folder grant | accepted |
 | [0007](0007-content-editing-in-bundled-pdfium.md) | Content editing in the bundled PDFium (no MuPDF), each edit checked by drawing the page | accepted |
 | [0008](0008-passwords-links-and-attachments.md) | Passwords in memory only; author restrictions followed; links ask first; attachments never opened | accepted |
+| [0009](0009-slides-renderer-and-patching.md) | Folio Slides: pptx-renderer on Folio's own package layer; saving patches only changed parts | accepted |
+| [0010](0010-old-ppt-through-office-oxide-wasm.md) | Old .ppt files through office_oxide compiled to an import-free WebAssembly module | accepted |
 
 ## Template
 

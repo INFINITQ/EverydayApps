@@ -32,6 +32,7 @@ import {
   DocumentPdfRegular,
   EyeOffRegular,
   EyeRegular,
+  ImageAddRegular,
   NotepadRegular,
   PlayRegular,
   PresenterRegular,
@@ -160,6 +161,10 @@ function SlidesToolbar({
       </Tip>
       <Tip label="Move slide down (Ctrl+Down)">
         <ToolbarButton aria-label="Move slide down" icon={<ArrowDownRegular />} disabled={readOnly} onClick={() => session.moveBy(1)} />
+      </Tip>
+      <ToolbarDivider />
+      <Tip label="Insert picture">
+        <ToolbarButton aria-label="Insert picture" icon={<ImageAddRegular />} disabled={readOnly} onClick={actions.insertPicture} />
       </Tip>
       {shape && !readOnly && (
         <>

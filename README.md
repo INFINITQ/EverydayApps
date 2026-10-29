@@ -7,7 +7,7 @@ Private, offline apps for PDF, Word, Excel and PowerPoint files on Windows 11.
 | Folio PDF | `.pdf` | ready |
 | Folio Sheets | `.xlsx`, `.csv` (old `.xls` read-only) | planned |
 | Folio Docs | `.docx` (old `.doc` read-only) | planned |
-| Folio Slides | `.pptx` (old `.ppt` read-only) | planned |
+| Folio Slides | `.pptx`, `.pptm` (old `.ppt` read-only) | ready for testing on Windows |
 
 Every app is a small native Windows program (Tauri 2 + WebView2) with a Windows 11 look
 (Fluent UI, Mica, your accent color). Documents never leave your PC.
@@ -32,6 +32,25 @@ Measured on a 100-page PDF: the installer is 3.4 MB; the window paints in about 
 first page shows in under 0.9 s; memory is about 225 MB with the file open (Task Manager's
 measure, WebView2 included). Reading all 100 pages raises it to about 430 MB, mostly
 WebView2's caches, and minimizing the window asks WebView2 to give memory back.
+
+## Folio Slides
+
+- **Read and present:** faithful slides (charts, SmartArt, tables, embedded fonts) with
+  thumbnails and speaker notes. Slideshow in full screen (F5 from the start, Shift+F5 from
+  the current slide): arrows, Page Down, Space or a click go on, B or W blank the screen,
+  a slide number and Enter jumps, Esc ends. Hidden slides are skipped. Presenter view
+  (Alt+F5) shows the current and next slide, your notes and a timer.
+- **Edit in place:** click a shape to select it, drag to move, drag a handle to resize,
+  double-click to edit its text where it is (formatting is kept), Delete removes it. Replace
+  or insert pictures. Edit speaker notes under the slide.
+- **Organize:** drag thumbnails to reorder (several at once), duplicate (Ctrl+D), delete,
+  hide from the slideshow. Undo and redo everything.
+- **Your file stays yours:** saving rewrites only the parts you changed. Animations,
+  transitions, SmartArt, media, comments and anything Folio doesn't edit are kept exactly
+  as they were. Macros in `.pptm` files never run, and are kept. Pictures and media a deck
+  links to on the web are never loaded. Old `.ppt` files open read-only, converted in
+  memory; Save As makes a `.pptx`.
+- **Print and PDF:** print one slide per page; choose "Microsoft Print to PDF" to make a PDF.
 
 ## Privacy
 
@@ -66,6 +85,8 @@ Node 24+, pnpm 11.
 pnpm install          # dependency install scripts are blocked unless reviewed
 pnpm dev:pdf          # run Folio PDF in development mode
 pnpm build:pdf        # build the release installer
+pnpm dev:slides       # run Folio Slides in development mode
+pnpm build:slides     # build its installer
 pnpm test             # unit tests (Vitest)
 pnpm e2e              # end-to-end tests (Playwright, uses your installed Edge)
 cargo test --workspace
