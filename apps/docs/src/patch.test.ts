@@ -78,6 +78,10 @@ describe('reading facts', () => {
     expect(facts.macros).toBe(true);
     expect(facts.comments).toEqual([{ id: '0', author: 'Reviewer', date: '2026-01-02T10:00:00Z', text: MARKERS.comment }]);
     expect(facts.revisions).toBe(2);
+    expect(facts.changes.map((c) => [c.kind, c.author, c.text])).toEqual([
+      ['insertion', 'Reviewer', MARKERS.inserted],
+      ['deletion', 'Reviewer', MARKERS.deleted],
+    ]);
     expect(facts.linkedPictures).toBe(1);
     expect(facts.hyperlinks).toBe(1);
     expect(facts.title).toBe(MARKERS.title);

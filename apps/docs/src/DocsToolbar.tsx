@@ -287,7 +287,7 @@ export function DocsToolbar({ session, state }: { session: DocsSession; state: D
           onClick={() => togglePanel('find')}
         />
       </Tip>
-      <Tip label={`Comments (${session.facts.comments.length})`}>
+      <Tip label={`Comments and tracked changes (${session.facts.comments.length + session.facts.revisions})`}>
         <ToolbarButton
           aria-label="Comments"
           icon={<CommentMultipleRegular />}
@@ -336,16 +336,6 @@ export function DocsToolbar({ session, state }: { session: DocsSession; state: D
             <MenuDivider />
             <MenuItem disabled={!enabled('review.paragraphMarks')} onClick={() => session.run('review.paragraphMarks')}>
               Show formatting marks
-            </MenuItem>
-            <MenuDivider />
-            <MenuItem disabled={!enabled('review.simpleMarkup')} onClick={() => session.run('review.simpleMarkup')}>
-              Tracked changes: simple markup
-            </MenuItem>
-            <MenuItem disabled={!enabled('review.allMarkup')} onClick={() => session.run('review.allMarkup')}>
-              Tracked changes: all markup
-            </MenuItem>
-            <MenuItem disabled={!enabled('review.noMarkup')} onClick={() => session.run('review.noMarkup')}>
-              Tracked changes: no markup
             </MenuItem>
           </MenuList>
         </MenuPopover>

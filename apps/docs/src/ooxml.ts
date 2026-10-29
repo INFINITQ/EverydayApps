@@ -164,12 +164,19 @@ export function checkXmlSafety(pkg: DocxPackage): void {
 
 export type Comment = { id: string; author: string; date: string | null; text: string };
 
+export type TrackedChange = { kind: 'insertion' | 'deletion' | 'move'; author: string; date: string | null; text: string };
+
+/** At most this many tracked changes are listed (all are kept regardless). */
+const MAX_LISTED_CHANGES = 500;
+
 export type DocumentFacts = {
   /** The file carries a macro project (it is kept, never run). */
   macros: boolean;
   comments: Comment[];
   /** Tracked insertions, deletions and moves in the body, headers, footers and notes. */
   revisions: number;
+  /** The body's tracked changes, in order (up to MAX_LISTED_CHANGES). */
+  changes: TrackedChange[];
   /** Pictures linked from outside the file (never loaded). */
   linkedPictures: number;
   /** Other content linked from outside (templates, OLE links, frames); never loaded. */
@@ -224,7 +231,22 @@ export function readFacts(pkg: DocxPackage): DocumentFacts {
   const settingsRel = mainRels.find((r) => r.type === `${REL}/settings` && !r.external);
   if (settingsRel) linkedOther += pkg.relationships(resolveTarget(main, settingsRel.target)).filter((r) => r.external).length;
 
+  const changes: TrackedChange[] = [];
+  const body = pkg.text(main);
+  if (body && /<w:(ins|del|moveFrom|moveTo)\s/.test(body)) {
+    const kinds: Record<string, TrackedChange['kind']> = { ins: 'insertion', del: 'deletion', moveFrom: 'move', moveTo: 'move' };
+    for (const element of parseXml(body).getElementsByTagNameNS(W, '*')) {
+      const kind = kinds[element.localName];
+      if (!kind || changes.length >= MAX_LISTED_CHANGES) continue;
+      const text = [...element.getElementsByTagNameNS(W, kind === 'deletion' || element.localName === 'moveFrom' ? 'delText' : 't')]
+        .map((t) => t.textContent ?? '')
+        .join('');
+      if (!text) continue; // formatting-only or paragraph-mark changes
+      changes.push({ kind, author: element.getAttributeNS(W, 'author') || 'Unknown author', date: element.getAttributeNS(W, 'date'), text });
+    }
+  }
+
   const core = pkg.text('docProps/core.xml');
   const title = core ? /<dc:title>([^<]*)<\/dc:title>/.exec(core)?.[1] ?? null : null;
-  return { macros, comments, revisions, linkedPictures, linkedOther, hyperlinks, title };
+  return { macros, comments, revisions, changes, linkedPictures, linkedOther, hyperlinks, title };
 }

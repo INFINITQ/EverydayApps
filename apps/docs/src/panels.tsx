@@ -113,20 +113,26 @@ export function FindPanel({ session, state }: { session: DocsSession; state: Doc
   );
 }
 
+const when = (date: string | null) => (date ? ` · ${new Date(date).toLocaleDateString()}` : '');
+const CHANGE_LABEL = { insertion: 'Inserted', deletion: 'Deleted', move: 'Moved' } as const;
+
+/** Comments and tracked changes from the file, read by Folio itself (the free engine core has no review UI). */
 export function CommentsPanel({ session }: { session: DocsSession }) {
   const live = session.editor?.getComments() ?? [];
   const known = new Map(session.facts.comments.map((c) => [c.id, c]));
   const comments = live.length
     ? live.map((c) => ({ id: c.id, text: c.text, resolved: c.resolved, author: known.get(c.id)?.author ?? '', date: known.get(c.id)?.date ?? null }))
     : session.facts.comments.map((c) => ({ ...c, resolved: false }));
+  const changes = session.facts.changes;
   return (
-    <PanelFrame title={`Comments (${comments.length})`} session={session}>
-      {comments.length === 0 && <Text>This document has no comments.</Text>}
+    <PanelFrame title="Review" session={session}>
+      <Text weight="semibold">{`Comments (${comments.length})`}</Text>
+      {comments.length === 0 && <Text size={200}>This document has no comments.</Text>}
       {comments.map((c) => (
         <article key={c.id} className={c.resolved ? 'docs-comment docs-comment-resolved' : 'docs-comment'}>
           <Text weight="semibold" size={200}>
             {c.author || 'Comment'}
-            {c.date ? ` · ${new Date(c.date).toLocaleDateString()}` : ''}
+            {when(c.date)}
             {c.resolved ? ' · resolved' : ''}
           </Text>
           <Text as="p" className="docs-comment-text">
@@ -134,8 +140,22 @@ export function CommentsPanel({ session }: { session: DocsSession }) {
           </Text>
         </article>
       ))}
+      <Text weight="semibold">{`Tracked changes (${session.facts.revisions})`}</Text>
+      {changes.length === 0 && <Text size={200}>No tracked changes to text.</Text>}
+      {changes.map((c, i) => (
+        <article key={i} className="docs-comment">
+          <Text weight="semibold" size={200}>
+            {`${CHANGE_LABEL[c.kind]} by ${c.author}`}
+            {when(c.date)}
+          </Text>
+          <Text as="p" className={c.kind === 'deletion' ? 'docs-comment-text docs-deleted' : 'docs-comment-text docs-inserted'}>
+            {c.text}
+          </Text>
+        </article>
+      ))}
       <Text size={200} className="docs-panel-note">
-        Comments are shown and kept when you save. Adding and resolving comments isn’t available in Folio yet.
+        Insertions are marked in the text; deleted text is listed here. Comments and tracked changes are kept when you save.
+        Adding comments and accepting or rejecting changes aren’t available in Folio yet.
       </Text>
     </PanelFrame>
   );

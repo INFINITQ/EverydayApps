@@ -268,3 +268,12 @@
     break-after: auto;
   }
 }
+
+.docs-deleted {
+  text-decoration: line-through;
+  color: var(--colorPaletteRedForeground1);
+}
+
+.docs-inserted {
+  text-decoration: underline;
+}

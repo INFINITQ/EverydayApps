@@ -524,14 +524,11 @@ function documentCommands(session: DocsSession): Command[] {
     },
     {
       id: 'review.comments',
-      title: session.ui.panel === 'comments' ? 'Hide comments' : 'Show comments',
+      title: session.ui.panel === 'comments' ? 'Hide comments and tracked changes' : 'Comments and tracked changes',
       group: 'Review',
       enabled: ready,
       run: () => session.update({ panel: session.ui.panel === 'comments' ? null : 'comments' }),
     },
-    slot('review.simpleMarkup', 'Tracked changes: simple markup', 'Review', 'review.simpleMarkup'),
-    slot('review.allMarkup', 'Tracked changes: all markup', 'Review', 'review.allMarkup'),
-    slot('review.noMarkup', 'Tracked changes: no markup', 'Review', 'review.noMarkup'),
     {
       id: 'view.outline',
       title: session.ui.panel === 'outline' ? 'Hide navigation' : 'Navigation (headings)',

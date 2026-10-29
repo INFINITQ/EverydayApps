@@ -126,6 +126,14 @@ try {
     check('clicking a link shows the link bar', false);
   }
 
+  // ---- Received tracked changes and comments are shown ----------------------------------------
+  await page.getByRole('button', { name: 'Comments' }).click();
+  const panel = page.locator('.docs-panel');
+  check('the review panel shows the comment', await panel.getByText(MARKERS.comment).isVisible());
+  check('the review panel lists the tracked deletion and insertion', (await panel.getByText(MARKERS.deleted).isVisible()) && (await panel.getByText(MARKERS.inserted).isVisible()));
+  await page.screenshot({ path: join(out, 'review.png') });
+  await page.getByRole('button', { name: 'Comments' }).click();
+
   // ---- Word count ------------------------------------------------------------------------------
   await page.keyboard.press('Control+Shift+G');
   await page.getByText('Word count').first().waitFor({ timeout: 5_000 });
