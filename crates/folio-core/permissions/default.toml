@@ -15,6 +15,7 @@ permissions = [
   "allow-release-folder",
   "allow-open-link",
   "allow-set-fullscreen",
+  "allow-presenter-screen",
   "allow-take-pending",
   "allow-backups-usage",
   "allow-backups-clear",

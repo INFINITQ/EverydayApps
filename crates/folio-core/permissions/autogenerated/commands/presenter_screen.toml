@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-presenter-screen"
+description = "Enables the presenter_screen command without any pre-configured scope."
+commands.allow = ["presenter_screen"]
+
+[[permission]]
+identifier = "deny-presenter-screen"
+description = "Denies the presenter_screen command without any pre-configured scope."
+commands.deny = ["presenter_screen"]

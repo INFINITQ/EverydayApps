@@ -13,6 +13,7 @@ const COMMANDS: &[&str] = &[
     "release_folder",
     "open_link",
     "set_fullscreen",
+    "presenter_screen",
     "take_pending",
     "backups_usage",
     "backups_clear",

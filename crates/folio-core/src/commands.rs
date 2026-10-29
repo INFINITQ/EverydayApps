@@ -195,6 +195,19 @@ pub async fn set_fullscreen(window: WebviewWindow<Wry>, on: bool) -> Result<()> 
     window.set_fullscreen(on).map_err(|e| Error::Windows(format!("full screen failed: {e}")))
 }
 
+/// Opens or closes a slideshow's audience window on a second monitor (see
+/// `window::audience`). Resolves true while it is open.
+#[tauri::command]
+pub async fn presenter_screen(app: AppHandle<Wry>, open: bool) -> Result<bool> {
+    let (sender, receiver) = std::sync::mpsc::channel();
+    let handle = app.clone();
+    // Windows are made on the main thread.
+    app.run_on_main_thread(move || {
+        let _ = sender.send(window::audience(&handle, open));
+    })?;
+    receiver.recv().map_err(|_| Error::Windows("the audience window couldn't be opened".into()))?
+}
+
 /// Files that arrived from Explorer, a second launch or a drop, since the last call.
 #[tauri::command]
 pub async fn take_pending(pending: State<'_, Pending>) -> Result<Vec<FileRef>> {

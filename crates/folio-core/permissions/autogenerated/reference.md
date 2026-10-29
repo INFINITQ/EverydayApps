@@ -16,6 +16,7 @@ Everything a Folio app window needs from the shared core. Debug-only commands ar
 - `allow-release-folder`
 - `allow-open-link`
 - `allow-set-fullscreen`
+- `allow-presenter-screen`
 - `allow-take-pending`
 - `allow-backups-usage`
 - `allow-backups-clear`
@@ -305,6 +306,32 @@ Enables the pick_save command without any pre-configured scope.
 <td>
 
 Denies the pick_save command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`folio-core:allow-presenter-screen`
+
+</td>
+<td>
+
+Enables the presenter_screen command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`folio-core:deny-presenter-screen`
+
+</td>
+<td>
+
+Denies the presenter_screen command without any pre-configured scope.
 
 </td>
 </tr>
