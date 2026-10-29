@@ -1,0 +1,73 @@
+# cargo-deny: run `cargo deny check` before every release build.
+# Folio only ships for Windows x64, and Tauri pulls some network crates only for
+# Android/iOS, so the dependency graph is evaluated for this one target.
+[graph]
+targets = ["x86_64-pc-windows-msvc"]
+all-features = false
+
+[advisories]
+version = 2
+yanked = "deny"
+ignore = []
+
+[licenses]
+version = 2
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "CC0-1.0",
+  "BSL-1.0",
+  "0BSD",
+  "Unlicense",
+  "CDLA-Permissive-2.0",
+]
+confidence-threshold = 0.9
+
+[licenses.private]
+# Our own workspace crates are not published.
+ignore = true
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+deny = [
+  # HTTP clients and servers
+  { crate = "reqwest", reason = "Folio is offline-only" },
+  { crate = "hyper", reason = "Folio is offline-only" },
+  { crate = "h2", reason = "Folio is offline-only" },
+  { crate = "h3", reason = "Folio is offline-only" },
+  { crate = "ureq", reason = "Folio is offline-only" },
+  { crate = "isahc", reason = "Folio is offline-only" },
+  { crate = "curl", reason = "Folio is offline-only" },
+  { crate = "surf", reason = "Folio is offline-only" },
+  { crate = "attohttpc", reason = "Folio is offline-only" },
+  # WebSockets, QUIC and TLS stacks
+  { crate = "tungstenite", reason = "Folio is offline-only" },
+  { crate = "quinn", reason = "Folio is offline-only" },
+  { crate = "rustls", reason = "Folio is offline-only" },
+  { crate = "native-tls", reason = "Folio is offline-only" },
+  # Tauri plugins that reach the network or run programs
+  { crate = "tauri-plugin-http", reason = "Folio is offline-only" },
+  { crate = "tauri-plugin-updater", reason = "Folio never updates itself over the network" },
+  { crate = "tauri-plugin-shell", reason = "Folio never runs other programs" },
+  { crate = "tauri-plugin-websocket", reason = "Folio is offline-only" },
+  { crate = "tauri-plugin-upload", reason = "Folio is offline-only" },
+]
+
+[[bans.features]]
+crate = "tokio"
+deny = ["net"]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

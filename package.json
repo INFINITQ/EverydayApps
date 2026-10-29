@@ -1,0 +1,39 @@
+{
+  "name": "folio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Private, offline PDF and Office apps for Windows 11",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev:hello": "pnpm --filter @folio/hello tauri dev",
+    "build:hello": "pnpm --filter @folio/hello tauri build",
+    "dev:pdf": "pnpm --filter @folio/pdf tauri dev",
+    "build:pdf": "pnpm --filter @folio/pdf tauri build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "e2e": "playwright test",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r --parallel typecheck",
+    "licenses:report": "node tools/license-report.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
+    "@types/node": "24.19.2",
+    "eslint": "10.13.0",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.13.0",
+    "jsdom": "30.1.3",
+    "pdfjs-dist": "6.4.299",
+    "prettier": "3.9.10",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vitest": "5.0.5"
+  }
+}

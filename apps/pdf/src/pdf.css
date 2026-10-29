@@ -1,0 +1,933 @@
+/* Folio PDF's viewer, on top of Folio's shared surfaces (packages/ui/src/folio.css). */
+
+.pdf-root,
+.pdf-viewer {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.pdf-viewer {
+  position: relative;
+}
+
+.pdf-toolbar {
+  flex: none;
+  gap: 2px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--folio-stroke);
+}
+
+.pdf-toolbar-spacer {
+  flex: 1;
+}
+
+.pdf-page-input {
+  width: 52px;
+}
+
+.pdf-page-input input {
+  text-align: center;
+}
+
+.pdf-page-count,
+.pdf-find-count {
+  margin: 0 6px;
+  color: var(--folio-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.pdf-zoom-level {
+  min-width: 64px;
+}
+
+.pdf-find {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pdf-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* The side panel: thumbnails, bookmarks or attached files, with tabs when there's a choice. */
+.pdf-side {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 172px;
+  min-height: 0;
+  border-right: 1px solid var(--folio-stroke);
+}
+
+.pdf-side[data-panel='bookmarks'],
+.pdf-side[data-panel='attachments'] {
+  width: 248px;
+}
+
+.pdf-side-tabs {
+  flex: none;
+  justify-content: center;
+  border-bottom: 1px solid var(--folio-stroke);
+}
+
+.pdf-side-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.pdf-bookmarks {
+  padding: 4px;
+}
+
+.pdf-attachments {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+}
+
+.pdf-attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pdf-attachment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px 4px 8px;
+  border-radius: 4px;
+}
+
+.pdf-attachment:hover {
+  background: var(--colorSubtleBackgroundHover);
+}
+
+.pdf-attachment-icon {
+  flex: none;
+  color: var(--folio-text-secondary);
+  font-size: 16px;
+}
+
+.pdf-attachment-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pdf-attachment-name,
+.pdf-attachment-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-attachment-meta,
+.pdf-side-hint {
+  color: var(--folio-text-secondary);
+  font-size: 11px;
+}
+
+.pdf-side-hint {
+  margin: 0;
+  padding: 0 4px;
+}
+
+.pdf-thumb {
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: default;
+}
+
+.pdf-thumb-image {
+  display: block;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+}
+
+.pdf-thumb:hover .pdf-thumb-image {
+  box-shadow: 0 0 0 2px var(--folio-stroke-strong), 0 1px 3px rgb(0 0 0 / 25%);
+}
+
+.pdf-thumb[data-current='true'] .pdf-thumb-image {
+  box-shadow: 0 0 0 2px var(--colorBrandStroke1, #0078d4), 0 1px 3px rgb(0 0 0 / 25%);
+}
+
+.pdf-thumb-label {
+  color: var(--folio-text-secondary);
+  font-size: 11px;
+}
+
+.pdf-viewport {
+  flex: 1;
+  min-width: 0;
+  background: var(--folio-canvas);
+}
+
+.pdf-restoring {
+  visibility: hidden;
+}
+
+.pdf-page {
+  position: relative;
+  margin: 0 auto;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 16%), 0 0 1px rgb(0 0 0 / 24%);
+}
+
+/*
+ * Pages and thumbnails are drawn as images. Without this, pressing on one and moving starts
+ * the browser's image drag, which cancels text selection, highlighting and pen strokes.
+ */
+.pdf-viewer img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.pdf-loading {
+  margin: auto;
+  color: var(--folio-text-secondary);
+}
+
+/*
+ * Reading modes change only how the pages' pictures look on screen; printing and saving use
+ * the document itself. Sepia multiplies by a paper color (an SVG filter the viewer defines).
+ */
+.pdf-viewer[data-reading='dark'] .pdf-page,
+.pdf-viewer[data-reading='dark'] .pdf-thumb-image {
+  background: #1f1f1f;
+}
+
+.pdf-viewer[data-reading='dark'] .pdf-page img,
+.pdf-viewer[data-reading='dark'] .pdf-thumb-image img {
+  filter: invert(0.88) hue-rotate(180deg);
+}
+
+.pdf-viewer[data-reading='sepia'] .pdf-page,
+.pdf-viewer[data-reading='sepia'] .pdf-thumb-image {
+  background: #f4ecd8;
+}
+
+.pdf-viewer[data-reading='sepia'] .pdf-page img,
+.pdf-viewer[data-reading='sepia'] .pdf-thumb-image img {
+  filter: var(--pdf-sepia);
+}
+
+.pdf-filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* Full screen is for reading: only the pages, and a faint way out. */
+.folio-fullscreen .pdf-toolbar,
+.folio-fullscreen .pdf-side,
+.folio-fullscreen .pdf-comments {
+  display: none;
+}
+
+.pdf-fullscreen-exit.fui-Button {
+  display: none;
+}
+
+.folio-fullscreen .pdf-fullscreen-exit.fui-Button {
+  position: absolute;
+  z-index: 10;
+  top: 8px;
+  right: 20px;
+  display: inline-flex;
+  opacity: 0.4;
+  transition: opacity 0.15s;
+}
+
+.folio-fullscreen .pdf-fullscreen-exit.fui-Button:hover,
+.folio-fullscreen .pdf-fullscreen-exit.fui-Button:focus-visible {
+  opacity: 1;
+}
+
+/* A protected file, waiting for its password. */
+.pdf-password {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: min(340px, 100% - 32px);
+  margin: auto;
+  text-align: center;
+}
+
+.pdf-password-icon {
+  color: var(--folio-text-secondary);
+  font-size: 40px;
+}
+
+.pdf-password-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.pdf-password-text {
+  margin: 0;
+  color: var(--folio-text-secondary);
+}
+
+.pdf-password-field {
+  align-self: stretch;
+  text-align: start;
+}
+
+.pdf-link-content,
+.pdf-protect-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pdf-link-content p,
+.pdf-protect-content p {
+  margin: 0;
+}
+
+.pdf-link-url {
+  max-height: 7.5em;
+  padding: 8px;
+  overflow: auto;
+  border-radius: 4px;
+  background: var(--colorNeutralBackground3);
+  font-family: 'Cascadia Mono', Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+.pdf-dialog-hint {
+  color: var(--folio-text-secondary);
+  font-size: 12px;
+}
+
+.pdf-properties {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+}
+
+.pdf-properties-row {
+  display: contents;
+}
+
+.pdf-properties dt {
+  color: var(--folio-text-secondary);
+}
+
+.pdf-properties dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+
+/* Annotate mode: the second toolbar row. */
+.pdf-annotate-bar {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+
+.pdf-tool-group {
+  display: contents;
+}
+
+.pdf-swatches {
+  padding: 0 4px;
+  gap: 2px;
+}
+
+.pdf-swatches[data-off='true'] {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.pdf-annotate-hint {
+  padding: 0 8px;
+  color: var(--folio-text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.pdf-mode-button[aria-pressed='true'] {
+  background: var(--colorSubtleBackgroundSelected);
+}
+
+/* The small menu next to a selected annotation. */
+.pdf-selection-menu {
+  position: absolute;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border: 1px solid var(--folio-stroke);
+  border-radius: 6px;
+  background: var(--colorNeutralBackground1);
+  box-shadow: var(--shadow8);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: default;
+}
+
+/* Edit mode: a layer over each page with boxes for its text and pictures. */
+.pdf-edit-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  touch-action: none;
+}
+
+.pdf-edit-layer[data-tool='text'] {
+  cursor: text;
+}
+
+.pdf-edit-layer[data-tool='whiteout'],
+.pdf-edit-layer[data-tool='redact'] {
+  cursor: crosshair;
+}
+
+.pdf-edit-text {
+  position: absolute;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  cursor: text;
+}
+
+.pdf-edit-text:hover,
+.pdf-edit-text:focus-visible {
+  border-color: var(--colorBrandStroke1);
+  background: rgb(0 120 212 / 6%);
+  outline: none;
+}
+
+.pdf-edit-image {
+  position: absolute;
+  border: 1px dashed transparent;
+  cursor: move;
+}
+
+.pdf-edit-image:hover {
+  border-color: var(--colorBrandStroke1);
+}
+
+.pdf-edit-image[data-selected='true'] {
+  border: 2px solid var(--colorBrandStroke1);
+}
+
+.pdf-edit-handle {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  background: var(--colorBrandBackground);
+  cursor: nwse-resize;
+}
+
+.pdf-edit-input {
+  position: absolute;
+  z-index: 2;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 4px;
+  border: 1px solid var(--colorBrandStroke1);
+  border-radius: 2px;
+  outline: none;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+}
+
+.pdf-edit-area,
+.pdf-edit-redaction {
+  position: absolute;
+  pointer-events: none;
+}
+
+.pdf-edit-area[data-tool='whiteout'] {
+  border: 1px solid #8a8a8a;
+  background: rgb(255 255 255 / 85%);
+}
+
+.pdf-edit-area[data-tool='redact'],
+.pdf-edit-redaction {
+  border: 2px solid #c00000;
+  background: rgb(192 0 0 / 14%);
+}
+
+.pdf-edit-unmark {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #c00000;
+  color: #ffffff;
+  font-size: 12px;
+  pointer-events: auto;
+  cursor: default;
+}
+
+.pdf-edit-style {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdf-edit-family {
+  min-width: 120px;
+}
+
+.pdf-edit-size {
+  width: 64px;
+}
+
+.pdf-confirm-dialog {
+  width: min(480px, calc(100vw - 48px));
+}
+
+.pdf-confirm-content p {
+  margin: 0 0 8px;
+}
+
+/* Organize pages: a grid of page cards. */
+.pdf-organize {
+  position: relative;
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(auto-fill, minmax(164px, 1fr));
+  align-content: start;
+  gap: 20px 16px;
+  min-width: 0;
+  padding: 20px 24px 40px;
+  overflow: auto;
+  background: var(--folio-canvas);
+  outline: none;
+  user-select: none;
+}
+
+.pdf-organize[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+.pdf-organize[data-dragging='true'] .pdf-organize-card {
+  cursor: grabbing;
+}
+
+.pdf-organize-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 8px;
+  outline: none;
+  cursor: default;
+}
+
+.pdf-organize-card:hover {
+  background: var(--colorSubtleBackgroundHover);
+}
+
+.pdf-organize-card[data-selected='true'] {
+  background: var(--colorSubtleBackgroundSelected);
+}
+
+.pdf-organize-card:focus-visible {
+  box-shadow: 0 0 0 2px var(--colorStrokeFocus2);
+}
+
+.pdf-organize-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  height: 160px;
+}
+
+.pdf-organize-thumb img {
+  max-width: 100%;
+  max-height: 100%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 28%);
+}
+
+.pdf-organize-card[data-selected='true'] .pdf-organize-thumb img {
+  box-shadow: 0 0 0 3px var(--colorBrandStroke1), 0 1px 4px rgb(0 0 0 / 28%);
+}
+
+.pdf-organize-label {
+  color: var(--folio-text-secondary);
+  font-size: 12px;
+}
+
+.pdf-organize-marker {
+  position: absolute;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--colorBrandStroke1);
+  pointer-events: none;
+}
+
+.pdf-organize-ghost {
+  position: fixed;
+  z-index: 10;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: var(--colorBrandBackground);
+  color: var(--colorNeutralForegroundOnBrand);
+  font-size: 12px;
+  pointer-events: none;
+}
+
+/* Split dialog. */
+.pdf-split-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdf-split-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-split-every {
+  width: 72px;
+}
+
+.pdf-split-ranges {
+  flex: 1;
+}
+
+.pdf-split-summary {
+  min-height: 20px;
+  margin: 4px 0 0;
+}
+
+.pdf-split-summary[data-error='true'] {
+  color: var(--colorPaletteRedForeground1);
+}
+
+.pdf-split-hint {
+  margin: 0;
+  color: var(--folio-text-secondary);
+  font-size: 12px;
+}
+
+/* Stamp menu: each stamp drawn as it will look. */
+.pdf-stamp-preview {
+  display: block;
+  height: 28px;
+}
+
+/* Comments panel, on the right of the pages. */
+.pdf-comments {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 300px;
+  min-height: 0;
+  border-left: 1px solid var(--folio-stroke);
+}
+
+.pdf-comments-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 4px 14px;
+  font-weight: 600;
+}
+
+.pdf-comments-empty {
+  margin: 8px 14px;
+  color: var(--folio-text-secondary);
+  font-size: 12px;
+}
+
+.pdf-comments-list {
+  flex: 1;
+  margin: 0;
+  padding: 0 8px 12px;
+  overflow: auto;
+  list-style: none;
+}
+
+.pdf-comments-page {
+  margin: 12px 6px 6px;
+  color: var(--folio-text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.pdf-comment {
+  margin-bottom: 6px;
+  padding: 6px;
+  border: 1px solid var(--folio-stroke);
+  border-radius: 6px;
+  background: var(--colorNeutralBackground1);
+}
+
+.pdf-comment[data-selected='true'] {
+  border-color: var(--colorBrandStroke1);
+  box-shadow: 0 0 0 1px var(--colorBrandStroke1);
+}
+
+.pdf-comment-head {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.pdf-comment-show {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  grid-template-columns: 20px 1fr;
+  column-gap: 6px;
+  align-items: center;
+  padding: 2px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: default;
+}
+
+.pdf-comment-show:hover {
+  background: var(--colorSubtleBackgroundHover);
+}
+
+.pdf-comment-icon {
+  display: flex;
+  grid-row: span 2;
+  font-size: 18px;
+}
+
+.pdf-comment-title {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-comment-meta {
+  overflow: hidden;
+  color: var(--folio-text-secondary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-comment-text {
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* Signature dialog. */
+.pdf-sign-dialog {
+  width: min(560px, calc(100vw - 48px));
+}
+
+.pdf-sign-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pdf-sign-pad {
+  position: relative;
+  height: 168px;
+  overflow: hidden;
+  border: 1px solid var(--folio-stroke-strong);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #000000;
+}
+
+/* The line people sign on. */
+.pdf-sign-pad::after {
+  content: '';
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 40px;
+  border-bottom: 1px solid #c8c8c8;
+  pointer-events: none;
+}
+
+.pdf-sign-surface {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* The typed-signature input is 100% wide; its default padding must not push it wider. */
+.pdf-sign-surface input {
+  box-sizing: border-box;
+}
+
+.pdf-sign-hint {
+  position: absolute;
+  left: 24px;
+  bottom: 18px;
+  color: #8a8a8a;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.pdf-sign-options {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pdf-sign-fonts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pdf-sign-font {
+  min-width: 0;
+  padding: 6px 8px;
+  overflow: hidden;
+  border: 1px solid var(--folio-stroke);
+  border-radius: 6px;
+  background: var(--colorNeutralBackground1);
+  color: var(--colorNeutralForeground1);
+  font-size: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
+
+.pdf-sign-font[aria-checked='true'] {
+  border-color: var(--colorBrandStroke1);
+  box-shadow: 0 0 0 1px var(--colorBrandStroke1);
+}
+
+.pdf-sign-picture {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pdf-sign-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8a8a8a;
+}
+
+.pdf-sign-preview::after {
+  display: none;
+}
+
+.pdf-sign-preview img {
+  max-width: 90%;
+  max-height: 140px;
+}
+
+.pdf-sign-saved {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.pdf-sign-card {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--folio-stroke);
+  border-radius: 6px;
+}
+
+.pdf-sign-card-pick {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  border: 0;
+  border-radius: 4px;
+  background: #ffffff;
+  cursor: default;
+}
+
+.pdf-sign-card-pick:hover {
+  box-shadow: 0 0 0 2px var(--colorBrandStroke1);
+}
+
+.pdf-sign-card-pick img {
+  max-width: 100%;
+  max-height: 64px;
+}
+
+/* Printing: only the rendered pages are printed. */
+.pdf-print {
+  display: none;
+}
+
+@media print {
+  body > *:not(.pdf-print) {
+    display: none !important;
+  }
+
+  .pdf-print {
+    display: block;
+  }
+
+  .pdf-print-page {
+    display: block;
+    width: 100%;
+    break-after: page;
+  }
+}

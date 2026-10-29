@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-backups-clear"
+description = "Enables the backups_clear command without any pre-configured scope."
+commands.allow = ["backups_clear"]
+
+[[permission]]
+identifier = "deny-backups-clear"
+description = "Denies the backups_clear command without any pre-configured scope."
+commands.deny = ["backups_clear"]

@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-debug-crash-renderer"
+description = "Enables the debug_crash_renderer command without any pre-configured scope."
+commands.allow = ["debug_crash_renderer"]
+
+[[permission]]
+identifier = "deny-debug-crash-renderer"
+description = "Denies the debug_crash_renderer command without any pre-configured scope."
+commands.deny = ["debug_crash_renderer"]

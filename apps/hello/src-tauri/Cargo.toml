@@ -1,0 +1,21 @@
+[package]
+name = "folio-hello"
+description = "Folio Hello: dev-only testbed for the shared core (never shipped)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "folio-hello"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { workspace = true }
+
+[dependencies]
+tauri = { workspace = true }
+folio-core = { workspace = true }
+
+[lints]
+workspace = true

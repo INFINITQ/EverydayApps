@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-view-state-set"
+description = "Enables the view_state_set command without any pre-configured scope."
+commands.allow = ["view_state_set"]
+
+[[permission]]
+identifier = "deny-view-state-set"
+description = "Denies the view_state_set command without any pre-configured scope."
+commands.deny = ["view_state_set"]

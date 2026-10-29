@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-backups-usage"
+description = "Enables the backups_usage command without any pre-configured scope."
+commands.allow = ["backups_usage"]
+
+[[permission]]
+identifier = "deny-backups-usage"
+description = "Denies the backups_usage command without any pre-configured scope."
+commands.deny = ["backups_usage"]

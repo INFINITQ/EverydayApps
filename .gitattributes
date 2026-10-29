@@ -1,0 +1,20 @@
+# Normalise line endings in the repo; Windows tools still get CRLF where they need it.
+* text=auto eol=lf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binary files
+*.png binary
+*.ico binary
+*.icns binary
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.doc binary
+*.xls binary
+*.ppt binary
+*.wasm binary
+*.woff2 binary
+*.ttf binary

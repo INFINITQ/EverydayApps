@@ -1,0 +1,10 @@
+pnpm-lock.yaml
+node_modules/
+dist/
+target/
+apps/*/src-tauri/gen/
+coverage/
+playwright-report/
+test-results/
+vendor/
+fixtures/

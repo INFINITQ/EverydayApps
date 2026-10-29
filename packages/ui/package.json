@@ -1,0 +1,26 @@
+{
+  "name": "@folio/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Folio's Windows 11 look: Fluent theme from the accent color, title bar with tabs, command palette, start screen",
+  "exports": {
+    ".": "./src/index.ts",
+    "./folio.css": "./src/folio.css"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "dependencies": {
+    "@fluentui/react-components": "9.74.11",
+    "@fluentui/react-icons": "2.0.344"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
+}

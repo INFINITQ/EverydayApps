@@ -1,0 +1,47 @@
+[package]
+name = "folio-core"
+description = "Shared Rust core for the Folio apps"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+# Lets Tauri generate permissions for the internal `folio` plugin (see build.rs).
+links = "tauri-plugin-folio"
+
+[features]
+# Debug-only automation hooks for the end-to-end smoke test. lib.rs refuses to compile
+# it into release builds.
+e2e = []
+
+[dependencies]
+tauri = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+rfd = { workspace = true }
+webview2-com = { workspace = true }
+windows = { workspace = true, features = [
+  "Foundation",
+  "UI",
+  "UI_ViewManagement",
+  "Win32_Foundation",
+  "Win32_Graphics_Gdi",
+  "Win32_NetworkManagement_WindowsFirewall",
+  "Win32_Security",
+  "Win32_Security_Cryptography",
+  "Win32_Storage_FileSystem",
+  "Win32_System_Com",
+  "Win32_System_DataExchange",
+  "Win32_System_LibraryLoader",
+  "Win32_System_Threading",
+  "Win32_UI_Accessibility",
+  "Win32_UI_Input_KeyboardAndMouse",
+  "Win32_UI_Shell",
+  "Win32_UI_WindowsAndMessaging",
+] }
+
+[build-dependencies]
+tauri-plugin = { workspace = true }
+
+[lints]
+workspace = true

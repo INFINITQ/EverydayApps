@@ -1,0 +1,27 @@
+# Dependencies and build output
+node_modules/
+dist/
+target/
+*.tsbuildinfo
+.vite/
+
+# Tauri generated files
+apps/*/src-tauri/gen/
+
+# Test output
+coverage/
+playwright-report/
+test-results/
+blob-report/
+
+# Your own documents used for engine comparisons. Never commit these.
+fixtures/real/
+
+# Downloaded native binaries (fetched by tools/ with pinned checksums)
+vendor/**/*.dll
+vendor/**/*.tgz
+
+# Local environment and logs
+.env
+.env.*
+*.log

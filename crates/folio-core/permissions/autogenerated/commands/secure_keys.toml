@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-secure-keys"
+description = "Enables the secure_keys command without any pre-configured scope."
+commands.allow = ["secure_keys"]
+
+[[permission]]
+identifier = "deny-secure-keys"
+description = "Denies the secure_keys command without any pre-configured scope."
+commands.deny = ["secure_keys"]

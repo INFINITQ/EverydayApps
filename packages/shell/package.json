@@ -1,0 +1,28 @@
+{
+  "name": "@folio/shell",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Folio's shared app behaviour: documents and tabs, save flows, recovery, shortcuts, the Tauri bridge",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "peerDependencies": {
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "dependencies": {
+    "@folio/ui": "workspace:*",
+    "@fluentui/react-components": "9.74.11",
+    "@fluentui/react-icons": "2.0.344",
+    "@tauri-apps/api": "2.12.4",
+    "zustand": "5.0.16"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
+}

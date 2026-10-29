@@ -1,0 +1,46 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "apps/*/src-tauri"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+publish = false
+
+[workspace.dependencies]
+# One Tauri release for every app. Bump all apps together.
+tauri = { version = "=2.12.5", features = [] }
+tauri-build = { version = "2", features = [] }
+tauri-plugin = { version = "2", features = ["build"] }
+# No tauri-plugin-single-instance: it enables tokio's `net` feature on every platform
+# (only its macOS code uses it). folio-core has its own Windows-only version instead.
+# See docs/adr/0001-no-network-crates.md.
+
+# Must stay on the same versions Tauri's webview layer (wry) uses; check with
+# `cargo tree -i webview2-com` after any Tauri bump.
+webview2-com = "0.39"
+windows = "0.62"
+
+rfd = { version = "0.17", default-features = false }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+
+folio-core = { path = "crates/folio-core" }
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+# Folio is offline-only: std::net / tokio::net are banned through clippy.toml.
+disallowed_types = "deny"
+disallowed_methods = "deny"
+
+# Size-optimised release builds. Cargo only honours profiles in the workspace root.
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

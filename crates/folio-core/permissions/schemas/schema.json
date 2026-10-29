@@ -1,0 +1,738 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PermissionFile",
+  "description": "Permission file that can define a default permission, a set of permissions or a list of inlined permissions.",
+  "type": "object",
+  "properties": {
+    "default": {
+      "description": "The default permission set for the plugin",
+      "anyOf": [
+        {
+          "$ref": "#/definitions/DefaultPermission"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "set": {
+      "description": "A list of permissions sets defined",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PermissionSet"
+      }
+    },
+    "permission": {
+      "description": "A list of inlined permissions",
+      "default": [],
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Permission"
+      }
+    }
+  },
+  "definitions": {
+    "DefaultPermission": {
+      "description": "The default permission set of the plugin.\n\nWorks similarly to a permission with the \"default\" identifier.",
+      "type": "object",
+      "required": [
+        "permissions"
+      ],
+      "properties": {
+        "version": {
+          "description": "The version of the permission.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 1.0
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does. Tauri convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "permissions": {
+          "description": "All permissions this set contains.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PermissionSet": {
+      "description": "A set of direct permissions grouped together under a new name.",
+      "type": "object",
+      "required": [
+        "description",
+        "identifier",
+        "permissions"
+      ],
+      "properties": {
+        "identifier": {
+          "description": "A unique identifier for the permission.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does.",
+          "type": "string"
+        },
+        "permissions": {
+          "description": "All permissions this set contains.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PermissionKind"
+          }
+        }
+      }
+    },
+    "Permission": {
+      "description": "Descriptions of explicit privileges of commands.\n\nIt can enable commands to be accessible in the frontend of the application.\n\nIf the scope is defined it can be used to fine grain control the access of individual or multiple commands.",
+      "type": "object",
+      "required": [
+        "identifier"
+      ],
+      "properties": {
+        "version": {
+          "description": "The version of the permission.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint64",
+          "minimum": 1.0
+        },
+        "identifier": {
+          "description": "A unique identifier for the permission.",
+          "type": "string"
+        },
+        "description": {
+          "description": "Human-readable description of what the permission does. Tauri internal convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commands": {
+          "description": "Allowed or denied commands when using this permission.",
+          "default": {
+            "allow": [],
+            "deny": []
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/Commands"
+            }
+          ]
+        },
+        "scope": {
+          "description": "Allowed or denied scoped when using this permission.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Scopes"
+            }
+          ]
+        },
+        "platforms": {
+          "description": "Target platforms this permission applies. By default all platforms are affected by this permission.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Target"
+          }
+        }
+      }
+    },
+    "Commands": {
+      "description": "Allowed and denied commands inside a permission.\n\nIf two commands clash inside of `allow` and `deny`, it should be denied by default.",
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Allowed command.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "deny": {
+          "description": "Denied command, which takes priority.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Scopes": {
+      "description": "An argument for fine grained behavior control of Tauri commands.\n\nIt can be of any serde serializable type and is used to allow or prevent certain actions inside a Tauri command. The configured scope is passed to the command and will be enforced by the command implementation.\n\n## Example\n\n```json { \"allow\": [{ \"path\": \"$HOME/**\" }], \"deny\": [{ \"path\": \"$HOME/secret.txt\" }] } ```",
+      "type": "object",
+      "properties": {
+        "allow": {
+          "description": "Data that defines what is allowed by the scope.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        "deny": {
+          "description": "Data that defines what is denied by the scope. This should be prioritized by validation logic.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      }
+    },
+    "Value": {
+      "description": "All supported ACL values.",
+      "anyOf": [
+        {
+          "description": "Represents a null JSON value.",
+          "type": "null"
+        },
+        {
+          "description": "Represents a [`bool`].",
+          "type": "boolean"
+        },
+        {
+          "description": "Represents a valid ACL [`Number`].",
+          "allOf": [
+            {
+              "$ref": "#/definitions/Number"
+            }
+          ]
+        },
+        {
+          "description": "Represents a [`String`].",
+          "type": "string"
+        },
+        {
+          "description": "Represents a list of other [`Value`]s.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Value"
+          }
+        },
+        {
+          "description": "Represents a map of [`String`] keys to [`Value`]s.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/Value"
+          }
+        }
+      ]
+    },
+    "Number": {
+      "description": "A valid ACL number.",
+      "anyOf": [
+        {
+          "description": "Represents an [`i64`].",
+          "type": "integer",
+          "format": "int64"
+        },
+        {
+          "description": "Represents a [`f64`].",
+          "type": "number",
+          "format": "double"
+        }
+      ]
+    },
+    "Target": {
+      "description": "Platform target.",
+      "oneOf": [
+        {
+          "description": "MacOS.",
+          "type": "string",
+          "enum": [
+            "macOS"
+          ]
+        },
+        {
+          "description": "Windows.",
+          "type": "string",
+          "enum": [
+            "windows"
+          ]
+        },
+        {
+          "description": "Linux.",
+          "type": "string",
+          "enum": [
+            "linux"
+          ]
+        },
+        {
+          "description": "Android.",
+          "type": "string",
+          "enum": [
+            "android"
+          ]
+        },
+        {
+          "description": "iOS.",
+          "type": "string",
+          "enum": [
+            "iOS"
+          ]
+        }
+      ]
+    },
+    "PermissionKind": {
+      "type": "string",
+      "oneOf": [
+        {
+          "description": "Enables the app_ready command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-app-ready",
+          "markdownDescription": "Enables the app_ready command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the app_ready command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-app-ready",
+          "markdownDescription": "Denies the app_ready command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the backups_clear command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-backups-clear",
+          "markdownDescription": "Enables the backups_clear command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the backups_clear command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-backups-clear",
+          "markdownDescription": "Denies the backups_clear command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the backups_usage command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-backups-usage",
+          "markdownDescription": "Enables the backups_usage command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the backups_usage command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-backups-usage",
+          "markdownDescription": "Denies the backups_usage command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the caption_maximize_rect command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-caption-maximize-rect",
+          "markdownDescription": "Enables the caption_maximize_rect command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the caption_maximize_rect command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-caption-maximize-rect",
+          "markdownDescription": "Denies the caption_maximize_rect command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the debug_crash_renderer command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-debug-crash-renderer",
+          "markdownDescription": "Enables the debug_crash_renderer command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the debug_crash_renderer command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-debug-crash-renderer",
+          "markdownDescription": "Denies the debug_crash_renderer command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the network_lock command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-network-lock",
+          "markdownDescription": "Enables the network_lock command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the network_lock command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-network-lock",
+          "markdownDescription": "Denies the network_lock command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the open_link command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-open-link",
+          "markdownDescription": "Enables the open_link command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the open_link command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-open-link",
+          "markdownDescription": "Denies the open_link command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the pick_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-pick-folder",
+          "markdownDescription": "Enables the pick_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the pick_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-pick-folder",
+          "markdownDescription": "Denies the pick_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the pick_open command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-pick-open",
+          "markdownDescription": "Enables the pick_open command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the pick_open command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-pick-open",
+          "markdownDescription": "Denies the pick_open command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the pick_save command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-pick-save",
+          "markdownDescription": "Enables the pick_save command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the pick_save command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-pick-save",
+          "markdownDescription": "Denies the pick_save command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the read command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-read",
+          "markdownDescription": "Enables the read command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the read command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-read",
+          "markdownDescription": "Denies the read command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the recent_clear command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-recent-clear",
+          "markdownDescription": "Enables the recent_clear command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the recent_clear command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-recent-clear",
+          "markdownDescription": "Denies the recent_clear command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the recent_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-recent-list",
+          "markdownDescription": "Enables the recent_list command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the recent_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-recent-list",
+          "markdownDescription": "Denies the recent_list command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the recent_open command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-recent-open",
+          "markdownDescription": "Enables the recent_open command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the recent_open command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-recent-open",
+          "markdownDescription": "Denies the recent_open command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the recent_remove command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-recent-remove",
+          "markdownDescription": "Enables the recent_remove command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the recent_remove command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-recent-remove",
+          "markdownDescription": "Denies the recent_remove command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the recovery_drop command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-recovery-drop",
+          "markdownDescription": "Enables the recovery_drop command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the recovery_drop command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-recovery-drop",
+          "markdownDescription": "Denies the recovery_drop command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the recovery_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-recovery-list",
+          "markdownDescription": "Enables the recovery_list command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the recovery_list command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-recovery-list",
+          "markdownDescription": "Denies the recovery_list command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the recovery_origin command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-recovery-origin",
+          "markdownDescription": "Enables the recovery_origin command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the recovery_origin command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-recovery-origin",
+          "markdownDescription": "Denies the recovery_origin command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the recovery_put command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-recovery-put",
+          "markdownDescription": "Enables the recovery_put command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the recovery_put command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-recovery-put",
+          "markdownDescription": "Denies the recovery_put command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the recovery_read command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-recovery-read",
+          "markdownDescription": "Enables the recovery_read command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the recovery_read command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-recovery-read",
+          "markdownDescription": "Denies the recovery_read command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the release command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-release",
+          "markdownDescription": "Enables the release command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the release command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-release",
+          "markdownDescription": "Denies the release command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the release_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-release-folder",
+          "markdownDescription": "Enables the release_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the release_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-release-folder",
+          "markdownDescription": "Denies the release_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the save command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-save",
+          "markdownDescription": "Enables the save command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the save command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-save",
+          "markdownDescription": "Denies the save command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the save_into_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-save-into-folder",
+          "markdownDescription": "Enables the save_into_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the save_into_folder command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-save-into-folder",
+          "markdownDescription": "Denies the save_into_folder command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the secure_delete command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-secure-delete",
+          "markdownDescription": "Enables the secure_delete command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the secure_delete command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-secure-delete",
+          "markdownDescription": "Denies the secure_delete command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the secure_get command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-secure-get",
+          "markdownDescription": "Enables the secure_get command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the secure_get command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-secure-get",
+          "markdownDescription": "Denies the secure_get command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the secure_keys command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-secure-keys",
+          "markdownDescription": "Enables the secure_keys command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the secure_keys command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-secure-keys",
+          "markdownDescription": "Denies the secure_keys command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the secure_put command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-secure-put",
+          "markdownDescription": "Enables the secure_put command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the secure_put command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-secure-put",
+          "markdownDescription": "Denies the secure_put command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the set_fullscreen command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-set-fullscreen",
+          "markdownDescription": "Enables the set_fullscreen command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the set_fullscreen command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-set-fullscreen",
+          "markdownDescription": "Denies the set_fullscreen command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the settings_get command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-settings-get",
+          "markdownDescription": "Enables the settings_get command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the settings_get command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-settings-get",
+          "markdownDescription": "Denies the settings_get command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the settings_set command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-settings-set",
+          "markdownDescription": "Enables the settings_set command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the settings_set command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-settings-set",
+          "markdownDescription": "Denies the settings_set command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the system command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-system",
+          "markdownDescription": "Enables the system command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the system command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-system",
+          "markdownDescription": "Denies the system command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the system_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-system-info",
+          "markdownDescription": "Enables the system_info command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the system_info command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-system-info",
+          "markdownDescription": "Denies the system_info command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the take_pending command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-take-pending",
+          "markdownDescription": "Enables the take_pending command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the take_pending command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-take-pending",
+          "markdownDescription": "Denies the take_pending command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the view_state_get command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-view-state-get",
+          "markdownDescription": "Enables the view_state_get command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the view_state_get command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-view-state-get",
+          "markdownDescription": "Denies the view_state_get command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the view_state_set command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-view-state-set",
+          "markdownDescription": "Enables the view_state_set command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the view_state_set command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-view-state-set",
+          "markdownDescription": "Denies the view_state_set command without any pre-configured scope."
+        },
+        {
+          "description": "Everything a Folio app window needs from the shared core. Debug-only commands are not included.\n#### This default permission set includes:\n\n- `allow-app-ready`\n- `allow-system-info`\n- `allow-pick-open`\n- `allow-pick-save`\n- `allow-read`\n- `allow-save`\n- `allow-release`\n- `allow-pick-folder`\n- `allow-save-into-folder`\n- `allow-release-folder`\n- `allow-open-link`\n- `allow-set-fullscreen`\n- `allow-take-pending`\n- `allow-backups-usage`\n- `allow-backups-clear`\n- `allow-settings-get`\n- `allow-settings-set`\n- `allow-recent-list`\n- `allow-recent-open`\n- `allow-recent-remove`\n- `allow-recent-clear`\n- `allow-view-state-get`\n- `allow-view-state-set`\n- `allow-recovery-put`\n- `allow-recovery-list`\n- `allow-recovery-read`\n- `allow-recovery-drop`\n- `allow-recovery-origin`\n- `allow-secure-put`\n- `allow-secure-get`\n- `allow-secure-delete`\n- `allow-secure-keys`\n- `allow-system`\n- `allow-network-lock`\n- `allow-caption-maximize-rect`",
+          "type": "string",
+          "const": "default",
+          "markdownDescription": "Everything a Folio app window needs from the shared core. Debug-only commands are not included.\n#### This default permission set includes:\n\n- `allow-app-ready`\n- `allow-system-info`\n- `allow-pick-open`\n- `allow-pick-save`\n- `allow-read`\n- `allow-save`\n- `allow-release`\n- `allow-pick-folder`\n- `allow-save-into-folder`\n- `allow-release-folder`\n- `allow-open-link`\n- `allow-set-fullscreen`\n- `allow-take-pending`\n- `allow-backups-usage`\n- `allow-backups-clear`\n- `allow-settings-get`\n- `allow-settings-set`\n- `allow-recent-list`\n- `allow-recent-open`\n- `allow-recent-remove`\n- `allow-recent-clear`\n- `allow-view-state-get`\n- `allow-view-state-set`\n- `allow-recovery-put`\n- `allow-recovery-list`\n- `allow-recovery-read`\n- `allow-recovery-drop`\n- `allow-recovery-origin`\n- `allow-secure-put`\n- `allow-secure-get`\n- `allow-secure-delete`\n- `allow-secure-keys`\n- `allow-system`\n- `allow-network-lock`\n- `allow-caption-maximize-rect`"
+        }
+      ]
+    }
+  }
+}

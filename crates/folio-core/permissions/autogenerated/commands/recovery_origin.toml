@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-recovery-origin"
+description = "Enables the recovery_origin command without any pre-configured scope."
+commands.allow = ["recovery_origin"]
+
+[[permission]]
+identifier = "deny-recovery-origin"
+description = "Denies the recovery_origin command without any pre-configured scope."
+commands.deny = ["recovery_origin"]

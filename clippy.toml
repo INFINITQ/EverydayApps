@@ -1,0 +1,15 @@
+# Folio never opens network connections. cargo-deny bans HTTP/TLS crates and tokio's `net`
+# feature (so tokio's socket types don't even exist in the build); these rules catch direct
+# use of the standard library's networking types.
+disallowed-types = [
+  { path = "std::net::TcpStream", reason = "Folio is offline-only" },
+  { path = "std::net::TcpListener", reason = "Folio is offline-only" },
+  { path = "std::net::UdpSocket", reason = "Folio is offline-only" },
+]
+disallowed-methods = [
+  { path = "std::net::TcpStream::connect", reason = "Folio is offline-only" },
+  { path = "std::net::TcpStream::connect_timeout", reason = "Folio is offline-only" },
+  { path = "std::net::TcpListener::bind", reason = "Folio is offline-only" },
+  { path = "std::net::UdpSocket::bind", reason = "Folio is offline-only" },
+  { path = "std::net::ToSocketAddrs::to_socket_addrs", reason = "Folio is offline-only (no DNS lookups)" },
+]
