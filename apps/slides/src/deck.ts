@@ -48,16 +48,21 @@ export function slidesOf(pkg: Package): SlideInfo[] {
     const relId = entry.getAttributeNS(NS.r, 'id') ?? '';
     const part = rels.get(relId);
     if (!part || !has(pkg, part)) continue;
-    const slide = xmlOf(pkg, part)!;
     slides.push({
       part,
       id: Number(entry.getAttribute('id')),
       relId,
-      hidden: slide.documentElement.getAttribute('show') === '0',
+      hidden: isHidden(textOf(pkg, part) ?? ''),
       notesPart: related(pkg, part, REL.notesSlide).find((rel) => has(pkg, rel.part))?.part ?? null,
     });
   }
   return slides;
+}
+
+/** Reads `show="0"` from the slide's root tag without parsing the whole slide. */
+function isHidden(xml: string): boolean {
+  const root = /<(?:[\w.-]+:)?sld\b[^>]*>/.exec(xml.slice(0, 4096))?.[0] ?? '';
+  return /\sshow\s*=\s*["'](0|false)["']/.test(root);
 }
 
 /** Slide size in EMU (914400 per inch). */
@@ -75,10 +80,14 @@ export function notesBody(doc: Document): Element | null {
   return null;
 }
 
-/** Paragraph texts of a text body (`a:br` line breaks become U+2028). */
+/** Paragraph texts of a shape's text body (`a:br` line breaks become U+2028). */
 export function paragraphsOf(shape: Element | null): string[] {
   const body = child(shape, NS.p, 'txBody') ?? child(shape, NS.a, 'txBody');
-  if (!body) return [];
+  return body ? paragraphTexts(body) : [];
+}
+
+/** Paragraph texts of a text body (p:txBody or a:txBody). */
+export function paragraphTexts(body: Element): string[] {
   return children(body, NS.a, 'p').map((p) => {
     let text = '';
     for (let node = p.firstElementChild; node; node = node.nextElementSibling) {
