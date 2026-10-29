@@ -40,6 +40,10 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
   heights, number formats, frozen panes, several sheets (add, rename, delete, move), find and
   replace, sort and filter. A formula bar, sheet tabs, a Fluent toolbar, and the sum, average and
   count of the selection in the status bar.
+- **Also kept and editable:** conditional formatting, data validation (with drop-down lists),
+  filters, comments (notes; threaded comments are shown and kept), and pictures. Inserting or
+  deleting rows under a pivot table, a table or a chart's data asks first.
+- **Old `.xls` files** open read-only; Save makes a new `.xlsx` (ADR 0010).
 - **Your file stays your file:** saving patches only what you changed into the original package.
   Pivot tables, charts, pictures, macros, external links and anything Folio doesn't show yet are
   kept byte for byte. Macros never run; links to other workbooks are never followed.
