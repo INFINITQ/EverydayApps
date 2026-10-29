@@ -24,7 +24,9 @@
 }
 
 .sheets-toolbar {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
   gap: 2px;
   padding: 2px 8px;
   border-bottom: 1px solid var(--colorNeutralStroke2);

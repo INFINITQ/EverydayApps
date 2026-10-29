@@ -12,6 +12,7 @@
 //   is copied as it is.
 
 import { BooleanNumber, CellValueType, type ICellData, type IStyleData, type IWorkbookData, type IWorksheetData } from '@univerjs/core';
+import { type AutoFilter, type CfRule, type DvRule, RESOURCE, autoFilterXml, conditionalFormattingXml, dataValidationsXml } from './features';
 import { formulaToFile, shiftFormula } from './formula';
 import { CONTENT, Package, REL } from './opc';
 import { type SourceBook, type SourceCell, type SourceSheet, attrOf } from './read';
@@ -124,6 +125,38 @@ function freezeOf(sheet: Partial<IWorksheetData>) {
 
 const same = (a: unknown, b: unknown) => stableJson(a) === stableJson(b);
 
+/** A plugin's data for every sheet (Univer keeps it as JSON in the snapshot's resources). */
+function resource<T>(data: IWorkbookData, name: string): Record<string, T> {
+  const found = data.resources?.find((r) => r.name === name)?.data;
+  if (!found) return {};
+  try {
+    const parsed = JSON.parse(found) as Record<string, T> | null;
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/** A sheet's conditional formatting, validation and filter. */
+type SheetFeatures = { cf: CfRule[]; dv: DvRule[]; filter: AutoFilter | null };
+
+function featuresOf(data: IWorkbookData, id: string): SheetFeatures {
+  return {
+    cf: resource<CfRule[]>(data, RESOURCE.cf)[id] ?? [],
+    dv: resource<DvRule[]>(data, RESOURCE.dv)[id] ?? [],
+    filter: resource<AutoFilter>(data, RESOURCE.filter)[id] ?? null,
+  };
+}
+
+/** Rows a filter hides are written as hidden rows, like Excel does. */
+function withFilteredRows(sheet: Partial<IWorksheetData>, filter: AutoFilter | null): Partial<IWorksheetData> {
+  const rows = filter?.cachedFilteredOut ?? [];
+  if (rows.length === 0) return sheet;
+  const rowData = { ...(sheet.rowData ?? {}) };
+  for (const r of rows) rowData[r] = { ...(rowData[r] ?? {}), hd: BooleanNumber.TRUE };
+  return { ...sheet, rowData };
+}
+
 /** Strings added on save, appended to sharedStrings.xml. */
 class StringTable {
   private readonly index = new Map<string, number>();
@@ -173,17 +206,18 @@ export function writeWorkbook(book: SourceBook, baseline: IWorkbookData, current
     const sheet = current.sheets[id];
     if (!sheet) continue;
     let source = book.sheets.find((s) => s.id === id);
+    const features = { base: featuresOf(baseline, id), cur: featuresOf(current, id) };
+    const base = withFilteredRows(baseline.sheets[id] ?? {}, features.base.filter);
+    const cur = withFilteredRows(sheet, features.cur.filter);
     if (source) {
-      const before = sheetContent(baseline.sheets[id], baseline.styles);
-      const after = sheetContent(sheet, current.styles);
-      if (!same({ ...before, name: 0, hidden: 0 }, { ...after, name: 0, hidden: 0 })) {
-        pkg.set(source.part, patchSheet(ctx, source, baseline.sheets[id] ?? {}, sheet));
-      }
+      const before = { ...sheetContent(base, baseline.styles), name: 0, hidden: 0, features: features.base };
+      const after = { ...sheetContent(cur, current.styles), name: 0, hidden: 0, features: features.cur };
+      if (!same(before, after)) pkg.set(source.part, patchSheet(ctx, source, base, cur, features));
       placed.push({ id, source, part: source.part, relId: source.relId });
     } else {
       const part = freePart(pkg, 'xl/worksheets/sheet', '.xml');
       source = blankSheet(id, sheet.name ?? 'Sheet', part);
-      pkg.set(part, patchSheet(ctx, source, {}, sheet), CONTENT.worksheet);
+      pkg.set(part, patchSheet(ctx, source, {}, cur, { base: { cf: [], dv: [], filter: null }, cur: features.cur }), CONTENT.worksheet);
       const relId = pkg.addRel(book.workbookPart, REL.worksheet, part);
       placed.push({ id, source: undefined, part, relId });
     }
@@ -219,13 +253,19 @@ function blankSheet(id: string, name: string, part: string): SourceSheet {
   const root = parseXml(text, ['sheetData']);
   return {
     id, name, part, relId: '', entry: root, text, root, sheetData: root.child('sheetData')!, rows: new Map(), cells: new Map(), cols: [],
-    defaultRowHeight: 20, defaultColumnWidth: 64, digitWidth: 7, sharedFormulas: new Map(),
+    defaultRowHeight: 20, defaultColumnWidth: 64, digitWidth: 7, sharedFormulas: new Map(), cf: new Map(), dv: new Map(), filter: null,
   };
 }
 
 // ---- Worksheets -------------------------------------------------------------------------------
 
-function patchSheet(ctx: Context, source: SourceSheet, base: Partial<IWorksheetData>, cur: Partial<IWorksheetData>): string {
+function patchSheet(
+  ctx: Context,
+  source: SourceSheet,
+  base: Partial<IWorksheetData>,
+  cur: Partial<IWorksheetData>,
+  features: { base: SheetFeatures; cur: SheetFeatures },
+): string {
   const edits: Edit[] = [];
   const { root, text } = source;
   const p = root.prefix;
@@ -263,6 +303,20 @@ function patchSheet(ctx: Context, source: SourceSheet, base: Partial<IWorksheetD
   if (freezeOf(base) !== freezeOf(cur) || (base.showGridlines === BooleanNumber.FALSE) !== (cur.showGridlines === BooleanNumber.FALSE)) {
     sheetViewEdits(source, cur, edits, put);
   }
+
+  // Conditional formatting: all of the sheet's blocks are replaced together, where the first was.
+  if (!same(features.base.cf, features.cur.cf)) {
+    const blocks = root.elements('conditionalFormatting');
+    for (const block of blocks) edits.push({ start: block.start, end: block.end, text: '' });
+    const xml = conditionalFormattingXml(p, features.cur.cf, features.base.cf, source.cf, ctx.styles);
+    if (xml) {
+      if (blocks[0]) edits.push({ start: blocks[0].start, end: blocks[0].start, text: xml });
+      else put('conditionalFormatting', xml);
+    }
+  }
+  if (!same(features.base.dv, features.cur.dv)) put('dataValidations', dataValidationsXml(p, features.cur.dv, features.base.dv, source.dv, root.child('dataValidations')));
+  const filterKey = (f: AutoFilter | null) => (f ? { ...f, cachedFilteredOut: undefined } : null);
+  if (!same(filterKey(features.base.filter), filterKey(features.cur.filter))) put('autoFilter', autoFilterXml(p, features.cur.filter, source.filter));
 
   if ((base.tabColor || '') !== (cur.tabColor || '')) {
     const sheetPr = root.child('sheetPr');

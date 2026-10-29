@@ -16,6 +16,7 @@ import {
 import { CONTENT, Package, REL } from './opc';
 import { writeZip } from './zip';
 import { MAX_COLUMNS, MAX_ROWS, type Range, cellName, parseCell, parseRange } from './refs';
+import { type AutoFilter, type CfSource, type DvSource, RESOURCE, readConditionalFormatting, readDataValidation, readFilter } from './features';
 import { StyleSheet } from './styles';
 import { type XmlElement, decodeOfficeText, parseAttrs, parseXml, scanTags, unescapeXml } from './xml';
 
@@ -67,6 +68,10 @@ export type SourceSheet = {
   digitWidth: number;
   /** Shared formula groups by their si, as written. */
   sharedFormulas: Map<string, { master: SourceCell; ref?: Range }>;
+  /** Conditional formatting, validation and filter as read (for writing unchanged ones back). */
+  cf: CfSource;
+  dv: DvSource;
+  filter: { xml: string; filter: string } | null;
 };
 
 /** Things in the file Folio shows or keeps without editing them. */
@@ -162,6 +167,7 @@ export function readWorkbook(bytes: Uint8Array, name: string, sheetIds?: string[
   for (let i = 0; i < styles.count; i++) data.styles[`x${i}`] = styles.style(i);
 
   const sheets: SourceSheet[] = [];
+  const resources = { cf: {} as Record<string, unknown>, dv: {} as Record<string, unknown>, filter: {} as Record<string, AutoFilter> };
   const entries = workbook.child('sheets')?.elements('sheet') ?? [];
   let worksheets = 0;
   entries.forEach((entry, index) => {
@@ -177,9 +183,31 @@ export function readWorkbook(bytes: Uint8Array, name: string, sheetIds?: string[
     const source = readSheet(pkg, part, id, sheetName, relId, entry, digitWidth);
     sheets.push(source);
     data.sheetOrder.push(source.id);
-    data.sheets[source.id] = toUniverSheet(source, entry, styles, sst.strings, date1904);
+    const sheet = toUniverSheet(source, entry, styles, sst.strings, date1904);
+    data.sheets[source.id] = sheet;
     collectFeatures(pkg, source, features);
+
+    const cf = readConditionalFormatting(source.id, source.root, source.text, styles);
+    source.cf = cf.source;
+    if (cf.rules.length) resources.cf[source.id] = cf.rules;
+    const dv = readDataValidation(source.id, source.root, source.text);
+    source.dv = dv.source;
+    if (dv.rules.length) resources.dv[source.id] = dv.rules;
+    const hidden = new Set(Object.entries(sheet.rowData ?? {}).filter(([, row]) => row?.hd).map(([r]) => Number(r)));
+    const filter = readFilter(source.root, hidden);
+    if (filter) {
+      resources.filter[source.id] = filter;
+      const el = source.root.child('autoFilter')!;
+      source.filter = { xml: source.text.slice(el.start, el.end), filter: JSON.stringify({ ...filter, cachedFilteredOut: undefined }) };
+      // Rows a filter hides belong to the filter, not to the rows themselves.
+      for (const r of filter.cachedFilteredOut ?? []) if (sheet.rowData?.[r]) delete sheet.rowData[r]!.hd;
+    }
   });
+  data.resources = [
+    { name: RESOURCE.cf, data: JSON.stringify(resources.cf) },
+    { name: RESOURCE.dv, data: JSON.stringify(resources.dv) },
+    { name: RESOURCE.filter, data: JSON.stringify(resources.filter) },
+  ];
   if (sheets.length === 0) throw new Error('This workbook has no worksheets Folio can show.');
 
   return {
@@ -323,6 +351,9 @@ function readSheet(pkg: Package, part: string, id: string, name: string, relId: 
     defaultColumnWidth,
     digitWidth,
     sharedFormulas,
+    cf: new Map(),
+    dv: new Map(),
+    filter: null,
   };
 }
 

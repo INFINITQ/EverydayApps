@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import * as XLSX from 'xlsx';
 // @ts-expect-error plain ES module without types
 import { makeMinimalXlsx, makeXlsx, zip } from '../../../../tools/fixtures/make-xlsx.mjs';
+import { RESOURCE } from './features';
 import { readWorkbook } from './read';
 import { writeWorkbook } from './write';
 import { parseXml } from './xml';
@@ -257,5 +258,53 @@ describe('saving', () => {
     const again = readWorkbook(save(), 'sample.xlsx').data as IWorkbookData;
     expect(again.sheets.s0!.cellData![1]![1]).toMatchObject({ v: 1234, s: 'x2' });
     expect(again.sheets.s0!.cellData![2]![2]).toMatchObject({ si: 's0-0', v: 1900 });
+  });
+});
+
+describe('conditional formatting, validation and filters', () => {
+  const resourceOf = (data: IWorkbookData, name: string) => JSON.parse(data.resources!.find((r) => r.name === name)!.data);
+  const setResource = (data: IWorkbookData, name: string, value: unknown) => {
+    data.resources!.find((r) => r.name === name)!.data = JSON.stringify(value);
+  };
+
+  it('reads them into Univer', () => {
+    const { data } = open();
+    const cf = resourceOf(data, RESOURCE.cf).s1;
+    expect(cf).toHaveLength(1);
+    expect(cf[0]).toMatchObject({ ranges: [{ startRow: 1, startColumn: 0, endRow: 2, endColumn: 0 }], rule: { type: 'highlightCell', subType: 'number', operator: 'greaterThan', value: 10 } });
+    expect(cf[0].rule.style).toMatchObject({ bl: 1, cl: { rgb: '#9C0006' }, bg: { rgb: '#FFC7CE' } });
+    const dv = resourceOf(data, RESOURCE.dv).s1;
+    expect(dv[0]).toMatchObject({ type: 'list', formula1: 'Yes,No,Maybe', ranges: [{ startRow: 3, startColumn: 0 }], showDropDown: true, allowBlank: true });
+    expect(resourceOf(data, RESOURCE.filter).s1).toMatchObject({ ref: { startRow: 0, startColumn: 0, endRow: 2, endColumn: 1 } });
+  });
+
+  it('writes back only the rules that changed, keeping the others as written', () => {
+    const { bytes, edited, save } = open();
+    const cf = resourceOf(edited, RESOURCE.cf);
+    cf.s1.push({ cfId: 'new', ranges: [{ startRow: 0, startColumn: 1, endRow: 2, endColumn: 1 }], stopIfTrue: false, rule: { type: 'dataBar', isShowValue: true, config: { min: { type: 'min' }, max: { type: 'max' }, isGradient: true, positiveColor: '#638EC6', nativeColor: '#FF0000' } } });
+    setResource(edited, RESOURCE.cf, cf);
+    const dv = resourceOf(edited, RESOURCE.dv);
+    dv.s1[0].formula1 = 'Yes,No';
+    dv.s1.push({ uid: 'n', type: 'whole', operator: 'between', formula1: '1', formula2: '10', ranges: [{ startRow: 5, startColumn: 1, endRow: 5, endColumn: 1 }], showErrorMessage: true, errorStyle: 1 });
+    setResource(edited, RESOURCE.dv, dv);
+    const filter = resourceOf(edited, RESOURCE.filter);
+    filter.s1.filterColumns = [{ colId: 1, customFilters: { customFilters: [{ operator: 'greaterThan', val: 15 }] } }];
+    filter.s1.cachedFilteredOut = [1];
+    setResource(edited, RESOURCE.filter, filter);
+    const out = save();
+    expect(changedParts(bytes, out)).toEqual(['xl/styles.xml', 'xl/worksheets/sheet2.xml'].filter((p) => p !== 'xl/styles.xml'));
+    const xml = text(out, 'xl/worksheets/sheet2.xml');
+    expect(xml).toContain('<conditionalFormatting sqref="A2:A3"><cfRule type="cellIs" dxfId="0" priority="1" operator="greaterThan"><formula>10</formula></cfRule></conditionalFormatting>');
+    expect(xml).toContain('<conditionalFormatting sqref="B1:B3"><cfRule type="dataBar" priority="2"><dataBar><cfvo type="min"/><cfvo type="max"/><color rgb="FF638EC6"/></dataBar></cfRule></conditionalFormatting>');
+    expect(xml).toContain('<formula1>"Yes,No"</formula1>');
+    expect(xml).toContain('<dataValidation type="whole" showErrorMessage="1" sqref="B6"><formula1>1</formula1><formula2>10</formula2></dataValidation>');
+    expect(xml).toContain('<autoFilter ref="A1:B3"><filterColumn colId="1"><customFilters><customFilter operator="greaterThan" val="15"/></customFilters></filterColumn></autoFilter>');
+    expect(xml).toMatch(/<row r="2" hidden="1">/);
+    // Schema order: autoFilter, conditionalFormatting, dataValidations, hyperlinks.
+    expect(xml.indexOf('<autoFilter')).toBeLessThan(xml.indexOf('<conditionalFormatting'));
+    expect(xml.indexOf('<conditionalFormatting')).toBeLessThan(xml.indexOf('<dataValidations'));
+    expect(xml.indexOf('<dataValidations')).toBeLessThan(xml.indexOf('<hyperlinks'));
+    const wb = sheetJs(out);
+    expect(wb.Sheets.Notes!.A2!.v).toBe(5);
   });
 });
