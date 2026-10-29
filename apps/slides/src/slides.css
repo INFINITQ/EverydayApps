@@ -131,6 +131,10 @@
   transform-origin: 0 0;
 }
 
+.slides-canvas[data-preview] {
+  pointer-events: none;
+}
+
 .slides-canvas-error {
   position: absolute;
   inset: 0;

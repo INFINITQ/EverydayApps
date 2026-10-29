@@ -277,7 +277,7 @@ function Rail({ session, options }: { session: SlidesSession; options: RenderOpt
           <span className="slides-thumb-number">{index + 1}</span>
           <div className="slides-thumb-image">
             <WhenVisible height={height}>
-              <SlideCanvas deck={deck} index={index} width={THUMB_WIDTH} options={options} />
+              <SlideCanvas deck={deck} index={index} width={THUMB_WIDTH} options={options} interactive={false} />
             </WhenVisible>
             {slide.hidden && (
               <span className="slides-thumb-hidden" title="Hidden in slideshows">

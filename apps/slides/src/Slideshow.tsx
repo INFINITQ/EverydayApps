@@ -49,7 +49,8 @@ function useShowKeys(session: SlidesSession) {
   useEffect(() => {
     let typed = '';
     const onKeyDown = (event: KeyboardEvent) => {
-      if (!session.state.show || event.isComposing) return;
+      // A dialog (a link waiting for Open or Cancel) has the keys first.
+      if (!session.state.show || session.state.linkPrompt || event.isComposing) return;
       if (event.ctrlKey || event.altKey || event.metaKey) return;
       const key = event.key;
       if (/^[0-9]$/.test(key)) {
@@ -215,7 +216,9 @@ function PresenterView({ session, options }: { session: SlidesSession; options: 
               {next === undefined ? (
                 <p className="slides-presenter-end">End of the slideshow</p>
               ) : (
-                upcoming.width > 0 && <SlideCanvas key={next} deck={deck} index={next} width={upcoming.width} options={options} />
+                upcoming.width > 0 && (
+                  <SlideCanvas key={next} deck={deck} index={next} width={upcoming.width} options={options} interactive={false} />
+                )
               )}
             </div>
           </section>

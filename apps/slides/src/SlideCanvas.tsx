@@ -12,12 +12,15 @@ export function SlideCanvas({
   width,
   options,
   label,
+  interactive = true,
 }: {
   deck: Deck;
   index: number;
   width: number;
   options: RenderOptions;
   label?: string;
+  /** False for previews (thumbnails, the next slide): links in them can't be clicked or focused. */
+  interactive?: boolean;
 }) {
   const host = useRef<HTMLDivElement>(null);
   const [failed, setFailed] = useState(false);
@@ -38,7 +41,18 @@ export function SlideCanvas({
       setFailed(true);
     }
     if (handle) element.replaceChildren(handle.element);
+    // The renderer makes web links in text real <a target="_blank"> elements. Folio asks
+    // first instead (and the window would refuse to open them anyway).
+    const onClick = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.('a[href]');
+      if (!link) return;
+      event.preventDefault();
+      event.stopPropagation();
+      latest.current.options.onNavigate?.({ url: link.getAttribute('href') ?? '' });
+    };
+    element.addEventListener('click', onClick, { capture: true });
     return () => {
+      element.removeEventListener('click', onClick, { capture: true });
       handle?.dispose();
       element.replaceChildren();
     };
@@ -52,6 +66,8 @@ export function SlideCanvas({
       role="img"
       aria-label={label}
       data-failed={failed || undefined}
+      data-preview={interactive ? undefined : true}
+      inert={!interactive}
     >
       <div ref={host} className="slides-canvas-inner" style={{ width: slideWidth, height: slideHeight, transform: `scale(${scale})` }} />
       {failed && <div className="slides-canvas-error">This slide couldn&apos;t be drawn.</div>}
