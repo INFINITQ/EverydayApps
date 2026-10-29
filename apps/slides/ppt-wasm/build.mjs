@@ -3,6 +3,7 @@
 // this is only needed after changing the crate or bumping office_oxide.
 //
 // Usage: node apps/slides/ppt-wasm/build.mjs
+/* global URL, WebAssembly, console -- a Node script */
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { copyFileSync, readFileSync } from 'node:fs';
