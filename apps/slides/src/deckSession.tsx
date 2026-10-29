@@ -3,6 +3,7 @@
 // start screen doesn't wait for the renderer.
 
 import type { Command, DocHost, DocumentSession } from '@folio/shell';
+import { linkAudience } from './audienceLink';
 import { hasMacros, slideSize, slidesOf } from './deck';
 import {
   type Package,
@@ -165,6 +166,8 @@ export async function openDeck(pkg: Package, name: string, host: DocHost, conver
     },
   };
 
+  const unlinkAudience = linkAudience(session, host);
+
   function View() {
     return <SlidesView session={session} options={options} actions={actions} />;
   }
@@ -212,6 +215,7 @@ export async function openDeck(pkg: Package, name: string, host: DocHost, conver
     status: () => <StatusText session={session} />,
     dispose: () => {
       if (session.state.show) session.endShow();
+      unlinkAudience();
       session.dispose();
       for (const url of mediaUrlCache.values()) URL.revokeObjectURL(url);
       mediaUrlCache.clear();

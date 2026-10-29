@@ -473,3 +473,19 @@
     break-after: page;
   }
 }
+
+/* The audience's window on a second screen. */
+.slides-audience {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #000000;
+  cursor: none;
+}
+
+.slides-audience-wait {
+  color: #a0a0a0;
+  font: 16px var(--folio-font);
+  cursor: default;
+}

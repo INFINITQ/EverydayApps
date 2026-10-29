@@ -39,7 +39,8 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
   thumbnails and speaker notes. Slideshow in full screen (F5 from the start, Shift+F5 from
   the current slide): arrows, Page Down, Space or a click go on, B or W blank the screen,
   a slide number and Enter jumps, Esc ends. Hidden slides are skipped. Presenter view
-  (Alt+F5) shows the current and next slide, your notes and a timer.
+  (Alt+F5) shows the current and next slide, your notes and a timer; with a second screen
+  (a projector), the audience sees only the slides there.
 - **Edit in place:** click a shape to select it, drag to move, drag a handle to resize,
   double-click to edit its text where it is (formatting is kept), Delete removes it. Edit
   the text of tables. Replace or insert pictures. Edit speaker notes under the slide.

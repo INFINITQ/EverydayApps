@@ -16,6 +16,7 @@ one that supersedes it.
 | [0008](0008-passwords-links-and-attachments.md) | Passwords in memory only; author restrictions followed; links ask first; attachments never opened | accepted |
 | [0009](0009-slides-renderer-and-patching.md) | Folio Slides: pptx-renderer on Folio's own package layer; saving patches only changed parts | accepted |
 | [0010](0010-old-ppt-through-office-oxide-wasm.md) | Old .ppt files through office_oxide compiled to an import-free WebAssembly module | accepted |
+| [0011](0011-presenter-on-a-second-screen.md) | Presenter view on two screens: an audience window with no IPC, fed over a BroadcastChannel | accepted, hand check pending |
 
 ## Template
 

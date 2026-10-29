@@ -42,6 +42,8 @@ const harness = {
     fake.nextOpen([path]);
   },
   nextSave: (name: string) => fake.nextSave(`C:\\test\\${name}`),
+  /** Whether a second monitor is connected (for the audience window). */
+  secondScreen: (connected: boolean) => fake.setSecondScreen(connected),
 };
 (window as unknown as { harness: typeof harness }).harness = harness;
 
