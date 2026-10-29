@@ -165,15 +165,25 @@ export function relativeTarget(source: string, name: string): string {
   return [...from.slice(common).map(() => '..'), ...to.slice(common)].join('/');
 }
 
+/** Parsed relationships per .rels part (parts never change, so this can't go stale). */
+const parsedRels = new WeakMap<Part, Relationship[]>();
+
 export function relationships(pkg: Package, source: string): Relationship[] {
-  const doc = xmlOf(pkg, relsNameOf(source));
-  if (!doc) return [];
-  return children(doc.documentElement, NS.rel, 'Relationship').map((rel) => ({
-    id: rel.getAttribute('Id') ?? '',
-    type: rel.getAttribute('Type') ?? '',
-    target: rel.getAttribute('Target') ?? '',
-    external: rel.getAttribute('TargetMode') === 'External',
-  }));
+  const name = relsNameOf(source);
+  const part = pkg.parts.get(name);
+  if (!part) return [];
+  let rels = parsedRels.get(part);
+  if (!rels) {
+    const doc = xmlOf(pkg, name)!;
+    rels = children(doc.documentElement, NS.rel, 'Relationship').map((rel) => ({
+      id: rel.getAttribute('Id') ?? '',
+      type: rel.getAttribute('Type') ?? '',
+      target: rel.getAttribute('Target') ?? '',
+      external: rel.getAttribute('TargetMode') === 'External',
+    }));
+    parsedRels.set(part, rels);
+  }
+  return rels.map((rel) => ({ ...rel }));
 }
 
 /** Internal relationships of `source`, with their targets resolved to part names. */
