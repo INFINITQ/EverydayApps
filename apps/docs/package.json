@@ -1,0 +1,33 @@
+{
+  "name": "@folio/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Folio Docs: open, edit and save Word documents, offline",
+  "scripts": {
+    "dev:web": "vite",
+    "build:web": "vite build",
+    "tauri": "tauri",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.test.json"
+  },
+  "dependencies": {
+    "@docx-editor.dev/core": "2.32.0",
+    "@docx-editor.dev/i18n": "2.32.0",
+    "@docx-editor.dev/react": "2.32.0",
+    "@fluentui/react-components": "9.74.11",
+    "@fluentui/react-icons": "2.0.344",
+    "@folio/shell": "workspace:*",
+    "@folio/ui": "workspace:*",
+    "@tauri-apps/api": "2.12.4",
+    "fflate": "0.8.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "vite": "8.3.5"
+  }
+}

@@ -1,0 +1,223 @@
+/* Folio Docs: the document view around docx-editor.dev's pages. Folio's own surfaces follow
+   Windows 11 (folio.css); the pages stay white paper in both themes, like Word. */
+
+.docs-root {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.docs-root > .docx-editor,
+.docs-root > [class*='docx-editor'] {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+}
+
+.docs-toolbar {
+  flex: none;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--folio-stroke);
+  background: var(--folio-layer-alt);
+}
+
+.docs-style {
+  width: 150px;
+  min-width: 0;
+}
+
+.docs-font {
+  width: 150px;
+  min-width: 0;
+}
+
+.docs-size {
+  width: 72px;
+  min-width: 0;
+}
+
+.docs-zoom {
+  min-width: 56px;
+}
+
+.docs-notices {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px 0;
+}
+
+.docs-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.docs-viewport {
+  flex: 1;
+  min-width: 0;
+  background: var(--folio-canvas);
+  user-select: text;
+}
+
+.docs-loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--folio-canvas);
+}
+
+.docs-panel {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 300px;
+  border-left: 1px solid var(--folio-stroke);
+  background: var(--folio-layer-alt);
+}
+
+.docs-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 8px 8px 16px;
+}
+
+.docs-panel-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 16px;
+  overflow: auto;
+}
+
+.docs-panel-note {
+  color: var(--folio-text-secondary);
+}
+
+.docs-find-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.docs-comment {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--folio-stroke);
+  border-radius: var(--folio-radius-overlay);
+  background: var(--folio-card);
+}
+
+.docs-comment-resolved {
+  opacity: 0.7;
+}
+
+.docs-comment-text {
+  margin: 0;
+  white-space: pre-wrap;
+  user-select: text;
+}
+
+.docs-outline {
+  display: flex;
+  flex-direction: column;
+}
+
+.docs-outline-item {
+  padding: 6px 8px;
+  border: 0;
+  border-radius: var(--folio-radius-control);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.docs-outline-item:hover {
+  background: var(--folio-subtle-hover);
+}
+
+.docs-outline-current {
+  font-weight: 600;
+}
+
+.docs-linkbar {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(720px, calc(100% - 32px));
+  padding: 6px 8px 6px 12px;
+  border: 1px solid var(--folio-stroke-strong);
+  border-radius: var(--folio-radius-overlay);
+  background: var(--folio-solid-background);
+  box-shadow: 0 8px 16px rgb(0 0 0 / 14%);
+  transform: translateX(-50%);
+}
+
+.docs-linkbar-url {
+  overflow: hidden;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.docs-link-target {
+  word-break: break-all;
+  font-family: var(--folio-font);
+  font-weight: 600;
+}
+
+.docs-dialog-small {
+  max-width: 420px;
+}
+
+.docs-dialog-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.docs-margins {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+}
+
+.docs-stats {
+  width: 100%;
+  margin-bottom: 8px;
+  border-collapse: collapse;
+}
+
+.docs-stats th {
+  padding: 4px 0;
+  font-weight: normal;
+  text-align: start;
+}
+
+.docs-stats td {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.docs-toolbar .docs-on {
+  background: var(--folio-subtle-hover);
+  color: var(--colorBrandForeground1);
+}
