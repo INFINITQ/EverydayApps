@@ -45,6 +45,8 @@ export interface DocHost {
   openLink(url: string): Promise<void>;
   /** Turns full screen on or off (F11 and Esc work too). */
   toggleFullscreen(): void;
+  /** Whether the window is full screen now (a slideshow leaves it as it found it). */
+  isFullscreen?(): boolean;
   /** Small encrypted items (saved signatures), protected with Windows DPAPI. */
   secure: {
     put(key: string, bytes: Uint8Array): Promise<void>;

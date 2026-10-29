@@ -314,6 +314,7 @@ export class Shell {
       saveCopies: (files, title) => this.saveProducedMany(files, title),
       openLink: (url) => this.backend.openLink(url),
       toggleFullscreen: () => void this.setFullscreen(!this.state.fullscreen),
+      isFullscreen: () => this.state.fullscreen,
       secure: {
         put: (key, bytes) => this.backend.securePut(key, bytes),
         get: (key) => this.backend.secureGet(key),
