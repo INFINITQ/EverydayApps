@@ -9,6 +9,7 @@ import { createRoot } from 'react-dom/client';
 import { fakeBackend } from '../../../packages/shell/src/testing';
 import { AppIcon } from '../src/AppIcon';
 import { docsFormat } from '../src/docsFormat';
+import { printPages } from '../src/print';
 
 const fake = fakeBackend();
 const shell = new Shell(fake.backend, [docsFormat], 'Folio Docs');
@@ -30,6 +31,8 @@ declare global {
       file(path: string): string | null;
       nextSave(path: string | null): void;
       nextOpen(paths: string[]): void;
+      /** Paints the active document for printing and leaves it in place (print itself is stubbed). */
+      printKeep(): Promise<{ pages: number; text: number }>;
     };
   }
 }
@@ -45,6 +48,12 @@ window.harness = {
   },
   nextSave: (path) => fake.nextSave(path),
   nextOpen: (paths) => fake.nextOpen(paths),
+  printKeep: async () => {
+    window.print = () => undefined;
+    const session = shell.session(shell.state.activeId) as unknown as { editor: unknown; print(): Promise<void> };
+    const container = await printPages(session.editor, { keep: true });
+    return { pages: container?.querySelectorAll('.docx-page').length ?? 0, text: container?.textContent?.length ?? 0 };
+  },
 };
 
 createRoot(document.getElementById('root')!).render(

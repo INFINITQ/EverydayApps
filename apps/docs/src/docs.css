@@ -221,3 +221,50 @@
   background: var(--folio-subtle-hover);
   color: var(--colorBrandForeground1);
 }
+
+/* Printing (print.ts): only the painted pages, one sheet each, at their own size. */
+.docs-print {
+  display: none;
+}
+
+@media print {
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  body > *:not(.docs-print) {
+    display: none !important;
+  }
+
+  .docs-print {
+    display: block;
+    height: auto !important;
+  }
+
+  .docs-print .docx-pages {
+    display: block !important;
+    gap: 0 !important;
+    padding: 0 !important;
+  }
+
+  .docs-print .docx-page {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    border: 0 !important;
+    outline: 0 !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+    break-after: page;
+  }
+
+  .docs-print .docx-page:last-child {
+    break-after: auto;
+  }
+}

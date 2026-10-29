@@ -15,6 +15,7 @@ import { whenOpened } from './engine';
 import { convertDoc } from './legacy';
 import { type DocumentFacts, DocxPackage, checkXmlSafety, decodeXml, readFacts } from './ooxml';
 import { type Baseline, PatchError, baselineOf, engineLosses, patchPackage, verifyPackage } from './patch';
+import { printPages } from './print';
 import { CommentsPanel, FindPanel, InsertTableDialog, LinkBar, LinkDialog, OutlinePanel, PageSetupDialog, WordCountDialog } from './panels';
 import { type SlotId, pictureFile, textStats } from './text';
 
@@ -269,6 +270,17 @@ export class DocsSession implements DocumentSession {
   async snapshot(): Promise<Uint8Array> {
     await this.opened;
     return patchPackage(this.original, this.baseline, new Uint8Array(await this.editor!.save())).bytes;
+  }
+
+  async print(): Promise<void> {
+    await this.opened;
+    await printPages(this.editor);
+  }
+
+  /** PDF goes through the print dialog: Windows' own "Microsoft Print to PDF" writes the file. */
+  async exportPdf(): Promise<void> {
+    this.host.notify('To save a PDF, choose “Microsoft Print to PDF” (or “Save as PDF”) as the printer.', 'info');
+    await this.print();
   }
 
   status() {
@@ -528,6 +540,7 @@ function documentCommands(session: DocsSession): Command[] {
       run: () => session.update({ panel: session.ui.panel === 'outline' ? null : 'outline' }),
     },
     slot('view.paragraphMarks', 'Show formatting marks', 'View', 'review.paragraphMarks', 'Ctrl+Shift+8'),
+    { id: 'file.exportPdf', title: 'Export as PDF…', group: 'File', enabled: ready, run: () => session.exportPdf() },
     {
       id: 'tools.wordCount',
       title: 'Word count',

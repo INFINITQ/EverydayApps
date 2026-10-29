@@ -317,6 +317,13 @@ export function DocsToolbar({ session, state }: { session: DocsSession; state: D
         </MenuTrigger>
         <MenuPopover>
           <MenuList>
+            <MenuItem disabled={!state.ready} onClick={() => void session.print()} secondaryContent="Ctrl+P">
+              Print…
+            </MenuItem>
+            <MenuItem disabled={!state.ready} onClick={() => void session.exportPdf()}>
+              Export as PDF…
+            </MenuItem>
+            <MenuDivider />
             <MenuItem disabled={!state.ready} onClick={() => session.update({ dialog: 'wordCount' })} secondaryContent="Ctrl+Shift+G">
               Word count
             </MenuItem>

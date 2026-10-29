@@ -133,6 +133,23 @@ try {
   await page.screenshot({ path: join(out, 'wordcount.png') });
   await page.getByRole('button', { name: 'Close' }).last().click();
 
+  // ---- Printing paints every page (the view only paints what's on screen) ---------------------
+  const long = makeDocx({ plain: true, paragraphs: 400 });
+  await page.evaluate(([p, data]) => window.harness.put(p, data), ['C:\\docs\\long.docx', b64(long)]);
+  await page.evaluate((p) => window.harness.open(p), 'C:\\docs\\long.docx');
+  await page.locator('.docs-loading').waitFor({ state: 'detached', timeout: 30_000 });
+  const status = page.locator('.folio-statusbar');
+  await status.getByText(/Page \d+ of \d+/).waitFor({ timeout: 20_000 });
+  const total = Number((await status.textContent()).match(/Page \d+ of (\d+)/)[1]);
+  const printed = await page.evaluate(() => window.harness.printKeep());
+  check('printing paints every page', printed.pages === total && total > 5, `${printed.pages} of ${total} pages`);
+  await page.emulateMedia({ media: 'print' });
+  const pdf = await page.pdf({ preferCSSPageSize: true });
+  writeFileSync(join(out, 'printed.pdf'), pdf);
+  const pdfPages = (pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? []).length;
+  check('the printed PDF has one sheet per page', pdfPages === total, `${pdfPages} sheets for ${total} pages`);
+  await page.emulateMedia({ media: 'screen' });
+
   // ---- Privacy ---------------------------------------------------------------------------------
   const violations = await page.evaluate(() => window.__violations);
   check('no request left the page', outside.length === 0, outside.join(', '));
