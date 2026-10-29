@@ -93,7 +93,15 @@ test('a link opens only after asking', async () => {
   await page.getByRole('button', { name: 'Open…' }).click();
   await expect(page.getByText('Open this link?')).toBeVisible();
   await page.getByRole('button', { name: 'Open link' }).click();
-  await expect.poll(() => text(readFileSync(join(dir, 'links.log')))).toContain(WEB_LINK);
+  await expect
+    .poll(() => {
+      try {
+        return text(readFileSync(join(dir, 'links.log')));
+      } catch {
+        return ''; // not written yet
+      }
+    })
+    .toContain(WEB_LINK);
 });
 
 test('an old .doc opens read-only and Save makes a new .docx', async () => {
