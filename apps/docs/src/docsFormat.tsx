@@ -16,6 +16,7 @@ import { convertDoc } from './legacy';
 import { type DocumentFacts, DocxPackage, checkXmlSafety, decodeXml, readFacts } from './ooxml';
 import { type Baseline, PatchError, baselineOf, engineLosses, patchPackage, verifyPackage } from './patch';
 import { printPages } from './print';
+import { isCompoundFile } from './zip';
 import { CommentsPanel, FindPanel, InsertTableDialog, LinkBar, LinkDialog, OutlinePanel, PageSetupDialog, WordCountDialog } from './panels';
 import { type SlotId, pictureFile, textStats } from './text';
 
@@ -33,7 +34,8 @@ const extensionOf = (name: string) => (name.includes('.') ? name.slice(name.last
 
 export async function openDocument(file: { bytes: Uint8Array; name: string }, host: DocHost): Promise<DocsSession> {
   const legacy = extensionOf(file.name) === 'doc';
-  const bytes = legacy ? await convertDoc(file.bytes) : file.bytes;
+  // A recovery snapshot of a .doc is already a .docx (snapshots are what Save would write).
+  const bytes = legacy && isCompoundFile(file.bytes) ? await convertDoc(file.bytes) : file.bytes;
   const pkg = new DocxPackage(bytes);
   checkXmlSafety(pkg);
   return new DocsSession(pkg, readFacts(pkg), host, legacy);
@@ -195,6 +197,21 @@ export class DocsSession implements DocumentSession {
     if (this.state.mode === 'view') return { enabled: false, active: false };
     const state = toolbarCommandState(editor, slot as never);
     return { enabled: state.enabled, active: state.active };
+  }
+
+  /** Inserts a table of `rows` × `cols` at the caret. */
+  insertTable(rows: number, cols: number): void {
+    const editor = this.editor;
+    if (!editor || !this.state.ready) return;
+    const query = (editor as unknown as { query(q: { type: 'selection' }): { from: unknown; to: unknown } | null }).query;
+    const selection = query.call(editor, { type: 'selection' });
+    if (!selection) {
+      this.host.notify('Click in the document where the table should go.', 'info');
+      return;
+    }
+    const result = editor.exec({ type: 'insertTable', target: selection.to, rows, cols } as never);
+    if (!result.ok) this.host.notify(`The table couldn’t be inserted here${'reason' in result && result.reason ? `: ${String(result.reason)}` : '.'}`, 'warning');
+    this.selectionChanged();
   }
 
   async insertPicture(): Promise<void> {

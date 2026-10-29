@@ -327,7 +327,7 @@ export function InsertTableDialog({ session }: { session: DocsSession }) {
   const close = () => session.update({ dialog: null });
   const insert = () => {
     close();
-    session.run('table.insert', { rows, cols });
+    session.insertTable(rows, cols);
   };
   return (
     <Dialog open onOpenChange={(_e, data) => !data.open && close()}>

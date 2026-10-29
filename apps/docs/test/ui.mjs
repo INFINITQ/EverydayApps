@@ -11,7 +11,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { join } from 'node:path';
 import { strFromU8, unzipSync } from 'fflate';
-import { MARKERS, WEB_LINK, makeDocx } from '../../../tools/fixtures/make-docx.mjs';
+import { MARKERS, WEB_LINK, makeDocx, png } from '../../../tools/fixtures/make-docx.mjs';
 
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
@@ -141,6 +141,61 @@ try {
   await page.screenshot({ path: join(out, 'wordcount.png') });
   await page.getByRole('button', { name: 'Close' }).last().click();
 
+  // ---- Insert and layout through the toolbar, each saved and read back -----------------------
+  const plainPath = 'C:\\docs\\plain.docx';
+  await page.evaluate(([p, data]) => window.harness.put(p, data), [plainPath, b64(makeDocx({ plain: true }))]);
+  await page.evaluate((p) => window.harness.open(p), plainPath);
+  await page.locator('.docs-loading').waitFor({ state: 'detached', timeout: 30_000 });
+  const visible = () => page.locator('.folio-document:not([hidden])');
+  const saveAndRead = async () => {
+    await page.keyboard.press('Control+s');
+    await page.locator('.folio-statusbar').getByText('Saved', { exact: true }).waitFor({ timeout: 15_000 });
+    return parts(await page.evaluate((p) => window.harness.file(p), plainPath));
+  };
+  const insert = async (item) => {
+    await page.getByRole('button', { name: 'Insert' }).click();
+    await page.getByRole('menuitem', { name: item }).click();
+  };
+  await visible().getByText(MARKERS.body).first().click();
+  await page.keyboard.press('End');
+  await insert('Table…');
+  await page.getByRole('button', { name: 'Insert', exact: true }).last().click();
+  await page.waitForTimeout(500);
+  let saved2 = await saveAndRead();
+  const tableXml = strFromU8(saved2['word/document.xml']);
+  check('Insert → Table adds a 3 × 3 table', (tableXml.match(/<w:tc[\s>]/g) ?? []).length === 9, `tbl=${(tableXml.match(/<w:tbl[\s>]/g) ?? []).length} tc=${(tableXml.match(/<w:tc[\s>]/g) ?? []).length}`);
+  await visible().getByText(MARKERS.title).first().click();
+  await page.keyboard.press('End');
+  await insert('Footnote');
+  await page.waitForTimeout(400);
+  await page.keyboard.type('Folio footnote');
+  await page.waitForTimeout(400);
+  saved2 = await saveAndRead();
+  check('Insert → Footnote adds a note', strFromU8(saved2['word/document.xml']).includes('w:footnoteReference') && strFromU8(saved2['word/footnotes.xml'] ?? new Uint8Array()).includes('Folio footnote'));
+  await visible().getByText(MARKERS.body).first().click();
+  await page.keyboard.press('Home');
+  await insert('Table of contents');
+  await page.waitForTimeout(500);
+  saved2 = await saveAndRead();
+  check('Insert → Table of contents adds a contents field', /TOC \\o/.test(strFromU8(saved2['word/document.xml'])));
+  await page.getByRole('button', { name: 'Layout' }).click();
+  await page.getByRole('menuitem', { name: 'Page setup…' }).click();
+  await page.getByRole('radio', { name: 'Landscape' }).check();
+  await page.getByRole('button', { name: 'Apply' }).click();
+  await page.waitForTimeout(500);
+  saved2 = await saveAndRead();
+  check('Page setup → Landscape turns the page', strFromU8(saved2['word/document.xml']).includes('w:orient="landscape"'));
+  await page.evaluate(([p, data]) => window.harness.put(p, data), ['C:\\pictures\\dot.png', b64(png(40, 20, [200, 30, 30, 255]))]);
+  await page.evaluate(() => window.harness.nextOpen(['C:\\pictures\\dot.png']));
+  await visible().getByText(MARKERS.body).first().click();
+  await insert('Picture…');
+  await page.waitForTimeout(800);
+  saved2 = await saveAndRead();
+  const media = Object.keys(saved2).filter((n) => n.startsWith('word/media/'));
+  const pictureXml = strFromU8(saved2['word/document.xml']);
+  check('Insert → Picture embeds the picture', media.length === 1 && /<w:drawing[\s>]/.test(pictureXml), `${media.join(', ')} ${(pictureXml.match(/<[\w:]*(drawing|pict|blip)[^>]*>/g) ?? []).slice(0, 3).join(' ')}`);
+  await page.screenshot({ path: join(out, 'inserted.png') });
+
   // ---- Printing paints every page (the view only paints what's on screen) ---------------------
   const long = makeDocx({ plain: true, paragraphs: 400 });
   await page.evaluate(([p, data]) => window.harness.put(p, data), ['C:\\docs\\long.docx', b64(long)]);
@@ -180,7 +235,8 @@ try {
   check('no page errors', errors.length === 0, errors.slice(0, 3).join(' | ').slice(0, 300));
   writeFileSync(join(out, 'saved.docm'), Buffer.from(await page.evaluate((p) => window.harness.file(p), path), 'base64'));
 } catch (error) {
-  check(`unexpected: ${error.message.split('\n')[0]}`, false);
+  check(`unexpected: ${error.message.split('\n').slice(0, 3).join(' / ')}`, false);
+  await browser.contexts()[0]?.pages()[0]?.screenshot({ path: join(out, 'failure.png') }).catch(() => undefined);
 } finally {
   await browser.close();
   server.kill();
