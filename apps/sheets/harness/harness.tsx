@@ -1,5 +1,5 @@
 // Dev-only: Folio Sheets in a plain browser, on the shell's in-memory backend. Built with
-// vite.harness.config.ts and driven by harness/smoke.mjs (Playwright). Never shipped.
+// vite.harness.config.ts and driven by test/smoke.mjs (Playwright). Never shipped.
 import '@folio/ui/folio.css';
 import '../src/sheets.css';
 import { Shell, ShellApp } from '@folio/shell';
