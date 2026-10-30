@@ -17,7 +17,7 @@ import {
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { printSheet } from './print';
 import { SheetsSession, openBytes } from './session';
-import { CHART_TYPES, CMD, NUMBER_FORMATS } from './sheetCommands';
+import { CHART_TYPES, CMD, CONDITIONAL_RULES, NUMBER_FORMATS } from './sheetCommands';
 import { SheetsToolbar } from './SheetsToolbar';
 
 export const sheetsFormat: FormatModule = {
@@ -109,7 +109,7 @@ export function createSheetsDocument(bytes: Uint8Array, name: string, host: DocH
     })),
     { id: 'format.moreDecimals', title: 'More decimals', group: 'Format', run: run(CMD.moreDecimals) },
     { id: 'format.lessDecimals', title: 'Fewer decimals', group: 'Format', run: run(CMD.lessDecimals) },
-    { id: 'format.conditional', title: 'Conditional formatting…', group: 'Format', run: run(CMD.conditionalPanel) },
+    { id: 'format.conditional', title: 'Conditional formatting…', group: 'Format', run: run(CMD.conditionalPanel, CONDITIONAL_RULES) },
     { id: 'data.validation', title: 'Data validation…', group: 'Data', run: run(CMD.validationPanel) },
     { id: 'data.refreshPivots', title: 'Refresh pivot tables', group: 'Data', keys: 'Alt+F5', enabled: () => session.pivots.length > 0, run: () => session.refreshPivots() },
     { id: 'data.sortAscending', title: 'Sort A to Z', group: 'Data', run: run(CMD.sortAscending) },
@@ -137,7 +137,7 @@ export function createSheetsDocument(bytes: Uint8Array, name: string, host: DocH
     ...CHART_TYPES.map(([type, label]) => ({ id: `chart.type.${type}`, title: `Change the selected chart to a ${label.toLowerCase()}`, group: 'Chart', run: () => session.setChartType(type) })),
     { id: 'sheet.insert', title: 'Insert a sheet', group: 'Sheet', keys: 'Shift+F11', run: run(CMD.insertSheet) },
     { id: 'sheet.rename', title: 'Rename sheet', group: 'Sheet', run: run(CMD.renameSheet) },
-    { id: 'sheet.remove', title: 'Delete sheet', group: 'Sheet', run: run(CMD.removeSheet) },
+    { id: 'sheet.remove', title: 'Delete sheet', group: 'Sheet', run: () => session.removeSheet() },
   ];
 
   return {

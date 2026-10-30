@@ -57,6 +57,9 @@ export const CMD = {
   autoWidth: 'sheet.command.set-col-auto-width',
 };
 
+/** The conditional formatting panel opens on its list of rules (CF_MENU_OPERATION.viewRule). */
+export const CONDITIONAL_RULES = { value: 2 };
+
 export const NUMBER_FORMATS: { label: string; pattern: string | null }[] = [
   { label: 'General', pattern: null },
   { label: 'Number', pattern: '#,##0.00' },

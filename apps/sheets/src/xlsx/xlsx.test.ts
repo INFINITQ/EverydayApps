@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import * as XLSX from 'xlsx';
 // @ts-expect-error plain ES module without types
 import { makeMinimalXlsx, makeXlsx, zip } from '../../../../tools/fixtures/make-xlsx.mjs';
+import { FOLIO_USER_ID } from './annotations';
 import { RESOURCE } from './features';
 import { readWorkbook } from './read';
 import { writeWorkbook } from './write';
@@ -345,6 +346,22 @@ describe('comments and pictures', () => {
     const wb = sheetJs(out);
     expect((wb.Sheets.Data!.C2 as { c?: { t: string }[] }).c?.[0]?.t).toBe('Doubled\nvalue');
     expect((wb.Sheets.Notes!.B1 as { c?: { t: string }[] }).c?.[0]?.t).toBe('Checked');
+  });
+
+  it("saves comments added in Folio under Folio's name and reads them back as Folio's", () => {
+    const { edited, save } = open();
+    const comments = resourceOf(edited, RESOURCE.comments);
+    // As Univer makes them: the current user's id and no name.
+    const mine = { threadId: 'n1', ref: 'C2', dT: '', personId: FOLIO_USER_ID, unitId: edited.id, subUnitId: 's0' };
+    const reply = { ...mine, id: 'r1', parentId: 'n1', text: { dataStream: 'Checked\r\n' } };
+    comments.s0 = [{ ...mine, id: 'n1', text: { dataStream: 'Doubled\r\n' }, children: [reply] }];
+    setResource(edited, RESOURCE.comments, comments);
+    const out = save();
+    expect(text(out, 'xl/comments2.xml')).toContain('<authors><author>Folio</author></authors>');
+    expect(text(out, 'xl/comments2.xml')).toContain('Folio: Checked');
+    // Univer lets only a comment's author edit it, so the note is Folio's again when reopened.
+    const [note] = resourceOf(open(out).data, RESOURCE.comments).s0;
+    expect(note).toMatchObject({ ref: 'C2', personId: FOLIO_USER_ID, authorName: 'Folio' });
   });
 
   it('moves, deletes and adds pictures, keeping the chart in the same drawing as written', () => {

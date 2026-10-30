@@ -5,9 +5,9 @@ Private, offline apps for PDF, Word, Excel and PowerPoint files on Windows 11.
 | App | Opens | Status |
 |---|---|---|
 | Folio PDF | `.pdf` | ready |
-| Folio Sheets | `.xlsx`, `.xlsm`, `.csv` (old `.xls` read-only) | in progress |
-| Folio Docs | `.docx`, `.docm` (old `.doc` read-only) | in progress: edits and saves; not yet tried on Windows |
-| Folio Slides | `.pptx`, `.pptm` (old `.ppt` read-only) | ready for testing on Windows |
+| Folio Sheets | `.xlsx`, `.xlsm`, `.csv` (old `.xls` read-only) | ready |
+| Folio Docs | `.docx`, `.docm` (old `.doc` read-only) | ready |
+| Folio Slides | `.pptx`, `.pptm` (old `.ppt` read-only) | ready |
 
 Every app is a small native Windows program (Tauri 2 + WebView2) with a Windows 11 look
 (Fluent UI, Mica, your accent color). Documents never leave your PC.
@@ -50,6 +50,7 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
   document links from the web are never loaded. Links open only after you say so.
 - **Old `.doc` files** open read-only; Save as makes a `.docx` copy and never changes the
   original ([ADR 0011](docs/adr/0011-doc-via-office-oxide.md)).
+- **Not yet:** spell check, and adding your own comments or tracked changes.
 - Engine: [docx-editor.dev](https://www.docx-editor.dev) core (Apache-2.0), bundled; see
   [ADR 0009](docs/adr/0009-docx-engine.md) for how it was chosen over SuperDoc.
 
@@ -73,6 +74,7 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
 - **Your file stays your file:** saving patches only what you changed into the original package.
   Pivot tables, charts, pictures, macros, external links and anything Folio doesn't show yet are
   kept byte for byte. Macros never run; links to other workbooks are never followed.
+- **Not yet:** creating pivot tables, and opening links in cells (they're kept).
 - Built on [Univer](https://github.com/dream-num/univer) (Apache-2.0), bundled and offline. See
   [ADR 0009](docs/adr/0009-sheets-xlsx-bridge.md).
 
@@ -96,6 +98,7 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
   links to on the web are never loaded. Old `.ppt` files open read-only, converted in
   memory; Save As makes a `.pptx`.
 - **Print and PDF:** print one slide per page; choose "Microsoft Print to PDF" to make a PDF.
+- **Not yet:** playing animations and transitions in the slideshow (they're kept in the file).
 
 
 ## Privacy

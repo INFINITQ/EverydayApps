@@ -28,10 +28,21 @@ blockExoticSubdeps: true
 # Dependency install scripts never run unless listed here as `true`. Any unreviewed
 # script makes the install fail (strictDepBuilds) instead of being silently skipped.
 strictDepBuilds: true
-allowBuilds: { protobufjs: set this to true or false }
+allowBuilds: {}
 
 # Removed dependencies (reviewed). @univerjs/protocol lists the gRPC client @grpc/grpc-js
 # (and through it protobufjs, which has an install script), but its browser build imports
 # nothing: Folio Sheets never loads either. Dropping them keeps network code out of the tree.
 overrides:
   '@univerjs/protocol>@grpc/grpc-js': '-'
+
+# Fixes for running under Tauri's freezePrototype (config/security.json), which makes the
+# built-in prototypes read-only: assigning a name such as toString or constructor to a plain
+# object then throws. Each patch is as small as possible; re-check it when the package updates.
+patchedDependencies:
+  # Univer's formula engine (Folio Sheets): decimal.js builds its prototype as a plain object and
+  # then assigns toString, valueOf and constructor. The patch makes them own properties first.
+  decimal.js@10.6.0: patches/decimal.js@10.6.0.patch
+  # Folio Sheets and Slides: ECharts' scheduler copies every name of a class prototype (constructor
+  # included) onto plain objects. The patch defines them instead of assigning them.
+  echarts@6.1.0: patches/echarts@6.1.0.patch

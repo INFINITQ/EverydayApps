@@ -18,7 +18,7 @@ export type RunningApp = {
   dataDir: string;
   /** Launches the app again with `args` (it hands them to the running copy and exits). */
   launchAgain(args: string[]): number | null;
-  /** Stops the app and deletes its data folder. */
+  /** Stops the app and deletes its data folder; fails if the page threw an uncaught error. */
   close(): Promise<void>;
 };
 
@@ -63,7 +63,29 @@ export async function launchApp(
     throw new Error(`${exe} never opened its debugging port`);
   }
   const page = browser.contexts()[0]!.pages()[0]!;
-  await page.waitForFunction(() => document.querySelector('.folio-app') !== null);
+  // Uncaught errors fail the test (see close): code that works in a plain browser can still
+  // break in the app, for example under Tauri's frozen prototypes.
+  const errors: string[] = [];
+  page.on('pageerror', (error) =>
+    errors.push((error.stack ?? String(error)).split('\n').slice(0, 8).join(' | ')),
+  );
+  const started = () =>
+    page.waitForFunction(() => document.querySelector('.folio-app') !== null, null, {
+      timeout: 15_000,
+    });
+  try {
+    await started();
+  } catch {
+    // It went wrong before we were watching: load it again to see why.
+    await page.reload();
+    try {
+      await started();
+    } catch {
+      child.kill();
+      removeDataDir(dataDir);
+      throw new Error(`${exe} didn't start: ${errors.join(' || ') || 'no error was reported'}`);
+    }
+  }
   return {
     page,
     pid: child.pid ?? 0,
@@ -73,6 +95,7 @@ export async function launchApp(
       child.kill();
       await new Promise((resolve) => setTimeout(resolve, 300));
       removeDataDir(dataDir);
+      if (errors.length) throw new Error(`The app threw uncaught errors:\n${errors.join('\n')}`);
     },
   };
 }

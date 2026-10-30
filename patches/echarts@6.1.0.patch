@@ -1,0 +1,78 @@
+diff --git a/dist/echarts.common.js b/dist/echarts.common.js
+index 55fb4437b70fc79c9cff4168f889ae00ac5cb9a6..48f26ae1a8618966344c607c81cc4b5d902b6a89 100644
+--- a/dist/echarts.common.js
++++ b/dist/echarts.common.js
+@@ -25657,7 +25657,7 @@
+       /* eslint-disable */
+       for (var name_1 in Clz.prototype) {
+         // Do not use hasOwnProperty
+-        target[name_1] = noop;
++        Object.defineProperty(target, name_1, { value: noop, writable: true, enumerable: true, configurable: true });
+       }
+       /* eslint-enable */
+     }
+diff --git a/dist/echarts.esm.js b/dist/echarts.esm.js
+index 1f312a7b38d89cad98b0595750f3aa1f9db3937b..f9647f7177b695b3c4be548deea2828bb15acba2 100644
+--- a/dist/echarts.esm.js
++++ b/dist/echarts.esm.js
+@@ -26018,7 +26018,7 @@ function mockMethods(target, Clz) {
+   /* eslint-disable */
+   for (var name_1 in Clz.prototype) {
+     // Do not use hasOwnProperty
+-    target[name_1] = noop;
++    Object.defineProperty(target, name_1, { value: noop, writable: true, enumerable: true, configurable: true });
+   }
+   /* eslint-enable */
+ }
+diff --git a/dist/echarts.esm.mjs b/dist/echarts.esm.mjs
+index 3780a0bafb7f888a820451bf5c370cf86c7b93bd..6207c0d9b5096a55d305774ce26f7e53eb066f4a 100644
+--- a/dist/echarts.esm.mjs
++++ b/dist/echarts.esm.mjs
+@@ -26018,7 +26018,7 @@ function mockMethods(target, Clz) {
+   /* eslint-disable */
+   for (var name_1 in Clz.prototype) {
+     // Do not use hasOwnProperty
+-    target[name_1] = noop;
++    Object.defineProperty(target, name_1, { value: noop, writable: true, enumerable: true, configurable: true });
+   }
+   /* eslint-enable */
+ }
+diff --git a/dist/echarts.js b/dist/echarts.js
+index 71f6176b106a62749fa9d86f81a748176095fc44..049eceacf17c396646eee886731d556f6d74c519 100644
+--- a/dist/echarts.js
++++ b/dist/echarts.js
+@@ -26024,7 +26024,7 @@
+       /* eslint-disable */
+       for (var name_1 in Clz.prototype) {
+         // Do not use hasOwnProperty
+-        target[name_1] = noop;
++        Object.defineProperty(target, name_1, { value: noop, writable: true, enumerable: true, configurable: true });
+       }
+       /* eslint-enable */
+     }
+diff --git a/dist/echarts.simple.js b/dist/echarts.simple.js
+index 4975b342544e5bff48836c226fd60031418e9053..901252a25afccb33bdb4eb52042b1c0b2b9bc95a 100644
+--- a/dist/echarts.simple.js
++++ b/dist/echarts.simple.js
+@@ -24640,7 +24640,7 @@
+       /* eslint-disable */
+       for (var name_1 in Clz.prototype) {
+         // Do not use hasOwnProperty
+-        target[name_1] = noop;
++        Object.defineProperty(target, name_1, { value: noop, writable: true, enumerable: true, configurable: true });
+       }
+       /* eslint-enable */
+     }
+diff --git a/lib/core/Scheduler.js b/lib/core/Scheduler.js
+index 1b70d94393f48c8b27ac711d9afcf5a4b8931bea..abb52b300bd026e223fc5434f2bc71c65d0f7c1b 100644
+--- a/lib/core/Scheduler.js
++++ b/lib/core/Scheduler.js
+@@ -465,7 +465,7 @@ function mockMethods(target, Clz) {
+   /* eslint-disable */
+   for (var name_1 in Clz.prototype) {
+     // Do not use hasOwnProperty
+-    target[name_1] = noop;
++    Object.defineProperty(target, name_1, { value: noop, writable: true, enumerable: true, configurable: true });
+   }
+   /* eslint-enable */
+ }

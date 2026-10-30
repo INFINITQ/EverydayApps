@@ -14,7 +14,7 @@ import { strFromU8, unzipSync } from 'fflate';
 import { MARKERS, WEB_LINK, makeDocx, png } from '../../../tools/fixtures/make-docx.mjs';
 
 const require = createRequire(import.meta.url);
-const { chromium } = require('playwright');
+const { chromium } = require('@playwright/test');
 const here = import.meta.dirname;
 const out = join(here, 'out');
 mkdirSync(out, { recursive: true });
@@ -41,10 +41,18 @@ const bodyText = (xml) => [...xml.matchAll(/<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>/g)].
 const browser = await chromium.launch(process.env.FOLIO_BROWSER ? { channel: process.env.FOLIO_BROWSER } : {});
 try {
   const page = await browser.newPage({ viewport: { width: 1400, height: 950 } });
+  // The app runs with Tauri's freezePrototype (config/security.json); so does this page, or
+  // code that breaks only in the app would pass here.
+  await page.addInitScript(() => Object.freeze(Object.prototype));
   const errors = [];
   const outside = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  // Errors name what failed to load (the console only says "Failed to load resource"). Edge asks
+  // for /favicon.ico on its own; that's the browser, not the app.
+  page.on('console', (m) => {
+    const url = m.location().url ?? '';
+    if (m.type() === 'error' && !url.endsWith('/favicon.ico')) errors.push(`${m.text()} ${url}`.trim());
+  });
   page.on('request', (r) => {
     const url = new URL(r.url());
     if (!['localhost', '127.0.0.1'].includes(url.hostname) && !['blob:', 'data:'].includes(url.protocol)) outside.push(r.url());
@@ -262,7 +270,9 @@ try {
   await browser.contexts()[0]?.pages()[0]?.screenshot({ path: join(out, 'failure.png') }).catch(() => undefined);
 } finally {
   await browser.close();
-  server.kill();
+  // On Windows the server runs under a shell; stop the whole tree, not just the shell.
+  if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(server.pid), '/T', '/F'], { stdio: 'ignore' });
+  else server.kill();
 }
 const failed = results.filter((r) => !r.ok).length;
 console.log(`${results.length - failed} passed, ${failed} failed`);

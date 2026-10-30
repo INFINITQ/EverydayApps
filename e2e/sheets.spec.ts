@@ -15,7 +15,10 @@ let dir: string;
 
 test.beforeEach(async () => {
   dir = mkdtempSync(join(tmpdir(), 'folio-sheets-e2e-'));
-  app = await launchApp(EXE, 9344, { FOLIO_TEST_SAVE_DIR: dir, FOLIO_TEST_OPEN: join(dir, 'picture.png') });
+  app = await launchApp(EXE, 9344, {
+    FOLIO_TEST_SAVE_DIR: dir,
+    FOLIO_TEST_OPEN: join(dir, 'picture.png'),
+  });
 });
 
 test.afterEach(async () => {
@@ -29,7 +32,8 @@ function trackOutside(page: Page): string[] {
   page.on('request', (request) => {
     const url = new URL(request.url());
     if (url.protocol === 'blob:' || url.protocol === 'data:') return;
-    if (!['localhost', 'tauri.localhost', 'ipc.localhost'].includes(url.hostname)) outside.push(request.url());
+    if (!['localhost', 'tauri.localhost', 'ipc.localhost'].includes(url.hostname))
+      outside.push(request.url());
   });
   return outside;
 }
@@ -42,6 +46,16 @@ async function typeInto(page: Page, cell: string, value: string) {
   await nameBox.press('Enter');
   await page.keyboard.type(value);
   await page.keyboard.press('Enter');
+}
+
+/** The file's bytes, or none while a save is swapping it in (Windows says it's busy then). */
+function readSaved(file: string): Buffer {
+  try {
+    return readFileSync(file);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'EBUSY') return Buffer.alloc(0);
+    throw error;
+  }
 }
 
 /** Each part of a package, inflated. */
@@ -77,9 +91,18 @@ test('opens a workbook, edits a cell and saves only what changed', async () => {
   const before = partsOf(original);
   const after = partsOf(saved);
   const changed = [...new Set([...before.keys(), ...after.keys()])].filter(
-    (name) => !before.has(name) || !after.has(name) || Buffer.compare(before.get(name)!, after.get(name)!) !== 0,
+    (name) =>
+      !before.has(name) ||
+      !after.has(name) ||
+      Buffer.compare(before.get(name)!, after.get(name)!) !== 0,
   );
-  expect(changed.sort()).toEqual(['[Content_Types].xml', 'xl/_rels/workbook.xml.rels', 'xl/calcChain.xml', 'xl/workbook.xml', 'xl/worksheets/sheet1.xml']);
+  expect(changed.sort()).toEqual([
+    '[Content_Types].xml',
+    'xl/_rels/workbook.xml.rels',
+    'xl/calcChain.xml',
+    'xl/workbook.xml',
+    'xl/worksheets/sheet1.xml',
+  ]);
 
   expect(await violations()).toEqual([]);
   expect(outside).toEqual([]);
@@ -91,14 +114,20 @@ test('keeps macros, and an unchanged workbook saves byte for byte', async () => 
   const original = makeXlsx({ macros: true });
   writeFileSync(file, original);
   expect(app.launchAgain([file])).toBe(0);
-  await expect(page.getByText(/This workbook has macros\. Folio never runs them/)).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByText(/This workbook has macros\. Folio never runs them/)).toBeVisible({
+    timeout: 20_000,
+  });
   await page.keyboard.press('Control+S');
-  await expect.poll(() => Buffer.compare(readFileSync(file), Buffer.from(original))).toBe(0);
+  await expect.poll(() => Buffer.compare(readSaved(file), Buffer.from(original))).toBe(0);
 
   await typeInto(page, 'A2', 'Northwest');
   await page.keyboard.press('Control+S');
-  await expect.poll(() => XLSX.read(readFileSync(file), { type: 'buffer' }).Sheets.Data!.A2!.v).toBe('Northwest');
-  expect(partsOf(new Uint8Array(readFileSync(file))).get('xl/vbaProject.bin')).toEqual(partsOf(original).get('xl/vbaProject.bin'));
+  await expect
+    .poll(() => XLSX.read(readSaved(file), { type: 'buffer' }).Sheets.Data?.A2?.v)
+    .toBe('Northwest');
+  expect(partsOf(new Uint8Array(readFileSync(file))).get('xl/vbaProject.bin')).toEqual(
+    partsOf(original).get('xl/vbaProject.bin'),
+  );
 });
 
 test('edits a CSV file and keeps its other lines as written', async () => {
@@ -109,5 +138,7 @@ test('edits a CSV file and keeps its other lines as written', async () => {
   await expect(page.getByRole('tab', { name: /list\.csv/ })).toBeVisible();
   await typeInto(page, 'B3', '8');
   await page.keyboard.press('Control+S');
-  await expect.poll(() => readFileSync(file, 'utf8')).toBe('name;amount\r\n"Smith, J";1e5\r\nDoe;8\r\n');
+  await expect
+    .poll(() => readSaved(file).toString('utf8'))
+    .toBe('name;amount\r\n"Smith, J";1e5\r\nDoe;8\r\n');
 });
