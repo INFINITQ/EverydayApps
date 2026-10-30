@@ -421,6 +421,8 @@ export function createPdfSession(engine: PdfEngine, bytes: Uint8Array, name: str
     spread?: ViewerState['spread'];
     reading?: ViewerState['reading'];
   } | null = null;
+  /** The zoom and page a restore under way is heading for (its pages are hidden meanwhile). */
+  let heading: { page?: number; zoom?: number | string } | null = null;
 
   // Undo history and "unsaved" tracking: every step has its own id, and undo/redo move along
   // the steps, so undoing back to the saved step clears the unsaved marker. After a page
@@ -462,7 +464,12 @@ export function createPdfSession(engine: PdfEngine, bytes: Uint8Array, name: str
    * keeping the place and the mode.
    */
   const reload = (next: Uint8Array, nextPassword = password) => {
-    restore = { page: viewer.page, zoom: viewer.zoom, thumbnails: viewer.thumbnails, comments: viewer.commentsOpen };
+    // A restore still under way hasn't reached its place yet, so the next generation heads there.
+    restore = {
+      ...(heading ?? { page: viewer.page, zoom: viewer.zoom }),
+      thumbnails: viewer.thumbnails,
+      comments: viewer.commentsOpen,
+    };
     for (const stop of stops.splice(0)) stop();
     caps = null;
     connection = new Promise<Caps>((resolve) => (connected = resolve));
@@ -639,14 +646,18 @@ export function createPdfSession(engine: PdfEngine, bytes: Uint8Array, name: str
     // (EmbedPDF's views must start at "fit width"; a set zoom right away shows no pages.)
     const zoomBack = typeof saved.zoom === 'number' || (saved.zoom !== undefined && saved.zoom !== ZoomMode.FitWidth);
     if (zoomBack || (saved.page && saved.page > 1)) {
+      const target = { page: saved.page, zoom: saved.zoom };
+      heading = target;
       setViewer({ restoring: true });
-      let done = false;
+      // A reload (or a newer restore) takes over: this generation's engine is gone then, so
+      // this restore stops touching it, and the reload carries the place over.
+      const current = () => caps === next && heading === target;
       const finish = () => {
-        if (done) return;
-        done = true;
+        if (!current()) return;
+        heading = null;
         if (saved.page && saved.page > 1) next.scroll.scrollToPage({ pageNumber: saved.page, behavior: 'instant' });
         // One more frame so the pages are laid out at their place before they show.
-        requestAnimationFrame(() => setViewer({ restoring: false }));
+        requestAnimationFrame(() => heading === null && setViewer({ restoring: false }));
       };
       if (zoomBack) {
         // A zoom asked for before the view has its size is dropped, so ask until it holds.
@@ -657,6 +668,7 @@ export function createPdfSession(engine: PdfEngine, bytes: Uint8Array, name: str
             : next.zoom.getState().zoomLevel === level;
         let frames = 0;
         const check = () => {
+          if (!current()) return;
           if (holds() || frames > 60) return finish();
           if (frames % 6 === 0) next.zoom.requestZoom(level);
           frames += 1;
