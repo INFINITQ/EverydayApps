@@ -5,7 +5,7 @@ Private, offline apps for PDF, Word, Excel and PowerPoint files on Windows 11.
 | App | Opens | Status |
 |---|---|---|
 | Folio PDF | `.pdf` | ready |
-| Folio Sheets | `.xlsx`, `.csv` (old `.xls` read-only) | planned |
+| Folio Sheets | `.xlsx`, `.xlsm`, `.csv` (old `.xls` read-only) | in progress |
 | Folio Docs | `.docx`, `.docm` (old `.doc` read-only) | in progress: edits and saves; not yet tried on Windows |
 | Folio Slides | `.pptx` (old `.ppt` read-only) | planned |
 
@@ -53,6 +53,29 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
 - Engine: [docx-editor.dev](https://www.docx-editor.dev) core (Apache-2.0), bundled; see
   [ADR 0009](docs/adr/0009-docx-engine.md) for how it was chosen over SuperDoc.
 
+## Folio Sheets
+
+- **Open, edit and save** `.xlsx`, `.xlsm` and `.csv`: values, formulas (Univer's engine, about
+  500 functions), fonts, fills, borders, alignment, wrapping, merged cells, column widths, row
+  heights, number formats, frozen panes, several sheets (add, rename, delete, move), find and
+  replace, sort and filter. A formula bar, sheet tabs, a Fluent toolbar, and the sum, average and
+  count of the selection in the status bar.
+- **Also kept and editable:** conditional formatting, data validation (with drop-down lists),
+  filters, comments (notes; threaded comments are shown and kept), and pictures. Inserting or
+  deleting rows under a pivot table, a table or a chart's data asks first.
+- **Charts:** the workbook's charts are drawn from the current values (ECharts, ADR 0011); insert
+  column, bar, line, area, pie, doughnut and scatter charts from the selected cells, move, resize,
+  delete or change their type. They're saved as real Excel charts.
+- **Pivot tables** show as last refreshed and are kept as they are; simple ones (one row field,
+  sum/count/average/min/max) refresh from their data with Alt+F5, and Excel refreshes them again
+  when it opens the file.
+- **Old `.xls` files** open read-only; Save makes a new `.xlsx` (ADR 0010).
+- **Your file stays your file:** saving patches only what you changed into the original package.
+  Pivot tables, charts, pictures, macros, external links and anything Folio doesn't show yet are
+  kept byte for byte. Macros never run; links to other workbooks are never followed.
+- Built on [Univer](https://github.com/dream-num/univer) (Apache-2.0), bundled and offline. See
+  [ADR 0009](docs/adr/0009-sheets-xlsx-bridge.md).
+
 ## Privacy
 
 Folio is built so that it *can't* send your documents anywhere:
@@ -87,6 +110,7 @@ pnpm install          # dependency install scripts are blocked unless reviewed
 pnpm dev:pdf          # run Folio PDF in development mode
 pnpm build:pdf        # build the release installer
 pnpm dev:docs         # run Folio Docs in development mode (build:docs for its installer)
+pnpm dev:sheets       # run Folio Sheets in development mode (build:sheets for the installer)
 pnpm test             # unit tests (Vitest)
 pnpm e2e              # end-to-end tests (Playwright, uses your installed Edge)
 cargo test --workspace

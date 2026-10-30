@@ -7,7 +7,7 @@
 import { execFileSync, execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
-const APPS = ['@folio/pdf', '@folio/hello', '@folio/docs'];
+const APPS = ['@folio/pdf', '@folio/sheets', '@folio/hello', '@folio/docs'];
 /** Rust compiled to WebAssembly outside the Cargo workspace (Folio Docs' .doc converter, ADR 0011). */
 const WASM_CRATES = [{ manifest: 'apps/docs/legacy/Cargo.toml', target: 'wasm32-unknown-unknown' }];
 const BIG = { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 };
