@@ -13,6 +13,8 @@
     "build:hello": "pnpm --filter @folio/hello tauri build",
     "dev:pdf": "pnpm --filter @folio/pdf tauri dev",
     "build:pdf": "pnpm --filter @folio/pdf tauri build",
+    "dev:sheets": "pnpm --filter @folio/sheets tauri dev",
+    "build:sheets": "pnpm --filter @folio/sheets tauri build",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
@@ -34,6 +36,7 @@
     "prettier": "3.9.10",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.0",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "xlsx": "0.18.5"
   }
 }

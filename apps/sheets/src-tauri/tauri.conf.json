@@ -1,0 +1,99 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Folio Sheets",
+  "version": "0.1.0",
+  "identifier": "app.folio.sheets",
+  "build": {
+    "devUrl": "http://localhost:5172",
+    "frontendDist": "../dist",
+    "beforeDevCommand": "pnpm --filter @folio/sheets dev:web",
+    "beforeBuildCommand": "pnpm --filter @folio/sheets build:web"
+  },
+  "app": {
+    "windows": [],
+    "withGlobalTauri": false,
+    "security": {
+      "csp": {
+        "default-src": "'self'",
+        "script-src": "'self' 'wasm-unsafe-eval'",
+        "style-src": "'self' 'unsafe-inline'",
+        "img-src": "'self' blob: data:",
+        "media-src": "'self' blob: data:",
+        "font-src": "'self' data:",
+        "connect-src": "'self' ipc: http://ipc.localhost blob: data:",
+        "worker-src": "'self' blob:",
+        "frame-src": "'none'",
+        "object-src": "'none'",
+        "base-uri": "'none'",
+        "form-action": "'none'"
+      },
+      "dangerousDisableAssetCspModification": [
+        "style-src"
+      ],
+      "freezePrototype": true,
+      "capabilities": [
+        "main"
+      ]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "publisher": "Folio",
+    "shortDescription": "Private, offline spreadsheet editor",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "fileAssociations": [
+      {
+        "ext": [
+          "xlsx"
+        ],
+        "name": "Folio.XLSX",
+        "description": "Excel workbook",
+        "role": "Editor",
+        "mimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      },
+      {
+        "ext": [
+          "xlsm"
+        ],
+        "name": "Folio.XLSM",
+        "description": "Excel macro-enabled workbook",
+        "role": "Editor",
+        "mimeType": "application/vnd.ms-excel.sheet.macroEnabled.12"
+      },
+      {
+        "ext": [
+          "csv"
+        ],
+        "name": "Folio.CSV",
+        "description": "CSV file",
+        "role": "Editor",
+        "mimeType": "text/csv"
+      },
+      {
+        "ext": [
+          "xls"
+        ],
+        "name": "Folio.XLS",
+        "description": "Excel 97-2003 workbook",
+        "role": "Viewer",
+        "mimeType": "application/vnd.ms-excel"
+      }
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "skip"
+      },
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  }
+}

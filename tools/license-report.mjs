@@ -7,7 +7,7 @@
 import { execFileSync, execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
-const APPS = ['@folio/pdf', '@folio/hello'];
+const APPS = ['@folio/pdf', '@folio/sheets', '@folio/hello'];
 const BIG = { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 };
 /** Licenses that ask something of whoever shares the app (fine for personal use). */
 const COPYLEFT = /\b(A?GPL|LGPL|MPL|EPL|CDDL|EUPL|OSL|CC-BY-SA)\b/i;
