@@ -59,7 +59,7 @@ if ($Background) {
   $running = @(Get-CimInstance Win32_Process -Filter "Name='$exeName'" | Where-Object { $_.ExecutablePath -eq $exePath })
   if ($running.Count -gt 0) { throw "Close $exeName first: the audit starts a copy of its own." }
   if (-not $DataDir) {
-    $known = @{ 'folio-pdf.exe' = 'app.folio.pdf'; 'folio-hello.exe' = 'dev.folio.hello' }
+    $known = @{ 'folio-pdf.exe' = 'app.folio.pdf'; 'folio-slides.exe' = 'app.folio.slides'; 'folio-hello.exe' = 'dev.folio.hello' }
     if ($known.ContainsKey($exeName)) { $DataDir = Join-Path $env:LOCALAPPDATA $known[$exeName] }
   }
   # Opening the test files adds them to recent files; the list is put back afterwards.

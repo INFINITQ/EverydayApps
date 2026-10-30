@@ -1,8 +1,8 @@
 # Third-party licenses
 
 Made by `node tools/license-report.mjs` on 2026-10-30. It lists what the apps ship:
-302 npm packages installed for production (some are only partly bundled, or not at all) and
-242 Rust crates compiled into the apps (including Folio Docs' .doc converter, compiled to WebAssembly).
+319 npm packages installed for production (some are only partly bundled, or not at all) and
+242 Rust crates compiled into the apps (including Folio Docs' .doc converter and Folio Slides' .ppt converter, compiled to WebAssembly).
 Build tools and test-only packages are left out.
 
 `pdfium.wasm` (from `@embedpdf/pdfium`, MIT) is Google PDFium compiled to WebAssembly. PDFium is
@@ -12,19 +12,22 @@ Folio Docs ships two more WebAssembly files: `harfbuzz.wasm` (from `harfbuzzjs`,
 shaper, under HarfBuzz's own MIT-style licence; `folio_doc_legacy_bg.wasm` is office_oxide (MIT OR Apache-2.0)
 and the Rust crates listed below, built from source by `tools/build-doc-converter.mjs` (docs/adr/0011).
 
+Folio Slides' `ppt.wasm` is `apps/slides/ppt-wasm` (office_oxide and its crates, listed below) compiled
+to WebAssembly.
+
 ## Summary
 
 | License | npm | Rust |
 | --- | ---: | ---: |
-| MIT | 233 | 39 |
+| MIT | 245 | 39 |
 | MIT OR Apache-2.0 | 0 | 126 |
-| Apache-2.0 | 49 | 2 |
+| Apache-2.0 | 51 | 2 |
 | Apache-2.0 OR MIT | 1 | 22 |
 | Unicode-3.0 | 0 | 18 |
 | Unlicense OR MIT | 0 | 8 |
 | OFL-1.1 | 7 | 0 |
-| ISC | 6 | 0 |
-| MPL-2.0 | 0 | 5 |
+| ISC | 7 | 0 |
+| MPL-2.0 | 1 | 5 |
 | BSD-3-Clause | 2 | 2 |
 | MIT/Apache-2.0 | 0 | 4 |
 | 0BSD | 2 | 0 |
@@ -32,6 +35,7 @@ and the Rust crates listed below, built from source by `tools/build-doc-converte
 | MIT OR Zlib OR Apache-2.0 | 0 | 2 |
 | Unlicense/MIT | 0 | 2 |
 | BSD-2-Clause | 1 | 0 |
+| (MIT OR GPL-3.0-or-later) | 1 | 0 |
 | (MIT AND Zlib) | 1 | 0 |
 | 0BSD OR MIT OR Apache-2.0 | 0 | 1 |
 | BSD-3-Clause AND MIT | 0 | 1 |
@@ -48,6 +52,8 @@ and the Rust crates listed below, built from source by `tools/build-doc-converte
 
 These ask that changes to them be shared when the app is given to others (personal use is unaffected):
 
+- jszip 3.10.2: (MIT OR GPL-3.0-or-later)
+- mtx-decompressor 1.8.0: MPL-2.0
 - cssparser 0.37.0: MPL-2.0
 - cssparser-macros 0.7.1: MPL-2.0
 - dtoa-short 0.3.5: MPL-2.0
@@ -58,10 +64,11 @@ These ask that changes to them be shared when the app is given to others (person
 
 | Package | Version | License | Apps |
 | --- | --- | --- | --- |
+| @aiden0z/pptx-renderer | 1.4.0 | Apache-2.0 | slides |
 | @babel/helper-string-parser | 7.29.11 | MIT | pdf |
 | @babel/helper-validator-identifier | 7.29.7 | MIT | pdf |
 | @babel/parser | 7.29.11 | MIT | pdf |
-| @babel/runtime | 7.29.10 | MIT | docs, hello, pdf, sheets |
+| @babel/runtime | 7.29.10 | MIT | docs, hello, pdf, sheets, slides |
 | @babel/types | 7.29.11 | MIT | pdf |
 | @docx-editor.dev/core | 2.32.0 | Apache-2.0 | docs |
 | @docx-editor.dev/i18n | 2.32.0 | Apache-2.0 | docs |
@@ -103,89 +110,91 @@ These ask that changes to them be shared when the app is given to others (person
 | @embedpdf/plugin-viewport | 2.15.1 | MIT | pdf |
 | @embedpdf/plugin-zoom | 2.15.1 | MIT | pdf |
 | @embedpdf/utils | 2.15.1 | MIT | pdf |
-| @emotion/hash | 0.9.2 | MIT | docs, hello, pdf, sheets |
+| @emotion/hash | 0.9.2 | MIT | docs, hello, pdf, sheets, slides |
 | @flatten-js/interval-tree | 1.1.3 | MIT | sheets |
-| @floating-ui/core | 1.8.0 | MIT | docs, hello, pdf, sheets |
-| @floating-ui/devtools | 0.2.3 | MIT | docs, hello, pdf, sheets |
-| @floating-ui/dom | 1.8.0 | MIT | docs, hello, pdf, sheets |
+| @floating-ui/core | 1.8.0 | MIT | docs, hello, pdf, sheets, slides |
+| @floating-ui/devtools | 0.2.3 | MIT | docs, hello, pdf, sheets, slides |
+| @floating-ui/dom | 1.8.0 | MIT | docs, hello, pdf, sheets, slides |
 | @floating-ui/react-dom | 2.1.9 | MIT | docs, sheets |
-| @floating-ui/utils | 0.2.12 | MIT | docs, hello, pdf, sheets |
-| @fluentui/keyboard-keys | 9.0.9 | MIT | docs, hello, pdf, sheets |
-| @fluentui/priority-overflow | 9.4.3 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-accordion | 9.12.5 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-alert | 9.0.2-beta.1 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-aria | 9.17.16 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-avatar | 9.11.9 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-badge | 9.5.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-breadcrumb | 9.4.8 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-button | 9.11.3 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-card | 9.7.4 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-carousel | 9.9.16 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-checkbox | 9.6.6 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-color-picker | 9.3.3 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-combobox | 9.17.8 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-components | 9.74.11 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-context-selector | 9.2.21 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-dialog | 9.18.6 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-divider | 9.7.6 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-drawer | 9.13.5 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-field | 9.5.6 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-icons | 2.0.344 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-image | 9.4.6 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-infobutton | 9.0.1-beta.1 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-infolabel | 9.4.28 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-input | 9.8.8 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-jsx-runtime | 9.4.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-label | 9.4.6 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-link | 9.8.6 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-list | 9.7.0 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-menu | 9.25.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-message-bar | 9.7.9 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-motion | 9.16.5 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-motion-components-preview | 0.15.10 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-nav | 9.4.9 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-overflow | 9.9.5 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-persona | 9.7.11 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-popover | 9.14.10 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-portal | 9.8.17 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-positioning | 9.23.4 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-progress | 9.5.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-provider | 9.22.22 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-radio | 9.6.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-rating | 9.4.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-search | 9.4.8 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-select | 9.5.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-shared-contexts | 9.26.4 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-skeleton | 9.7.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-slider | 9.6.8 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-spinbutton | 9.6.8 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-spinner | 9.8.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-swatch-picker | 9.6.3 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-switch | 9.7.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-table | 9.19.23 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-tabs | 9.12.6 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-tabster | 9.26.19 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-tag-picker | 9.10.6 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-tags | 9.9.8 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-teaching-popover | 9.7.9 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-text | 9.6.21 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-textarea | 9.7.8 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-theme | 9.2.2 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-toast | 9.8.5 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-toolbar | 9.8.7 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-tooltip | 9.10.8 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-tree | 9.16.10 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-utilities | 9.27.0 | MIT | docs, hello, pdf, sheets |
-| @fluentui/react-virtualizer | 9.0.0-alpha.116 | MIT | docs, hello, pdf, sheets |
-| @fluentui/tokens | 1.0.0-alpha.24 | MIT | docs, hello, pdf, sheets |
-| @griffel/core | 1.21.4 | MIT | docs, hello, pdf, sheets |
-| @griffel/react | 1.7.8 | MIT | docs, hello, pdf, sheets |
-| @griffel/style-types | 1.4.3 | MIT | docs, hello, pdf, sheets |
+| @floating-ui/utils | 0.2.12 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/keyboard-keys | 9.0.9 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/priority-overflow | 9.4.3 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-accordion | 9.12.5 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-alert | 9.0.2-beta.1 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-aria | 9.17.16 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-avatar | 9.11.9 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-badge | 9.5.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-breadcrumb | 9.4.8 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-button | 9.11.3 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-card | 9.7.4 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-carousel | 9.9.16 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-checkbox | 9.6.6 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-color-picker | 9.3.3 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-combobox | 9.17.8 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-components | 9.74.11 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-context-selector | 9.2.21 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-dialog | 9.18.6 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-divider | 9.7.6 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-drawer | 9.13.5 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-field | 9.5.6 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-icons | 2.0.344 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-image | 9.4.6 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-infobutton | 9.0.1-beta.1 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-infolabel | 9.4.28 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-input | 9.8.8 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-jsx-runtime | 9.4.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-label | 9.4.6 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-link | 9.8.6 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-list | 9.7.0 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-menu | 9.25.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-message-bar | 9.7.9 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-motion | 9.16.5 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-motion-components-preview | 0.15.10 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-nav | 9.4.9 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-overflow | 9.9.5 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-persona | 9.7.11 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-popover | 9.14.10 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-portal | 9.8.17 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-positioning | 9.23.4 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-progress | 9.5.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-provider | 9.22.22 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-radio | 9.6.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-rating | 9.4.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-search | 9.4.8 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-select | 9.5.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-shared-contexts | 9.26.4 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-skeleton | 9.7.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-slider | 9.6.8 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-spinbutton | 9.6.8 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-spinner | 9.8.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-swatch-picker | 9.6.3 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-switch | 9.7.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-table | 9.19.23 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-tabs | 9.12.6 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-tabster | 9.26.19 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-tag-picker | 9.10.6 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-tags | 9.9.8 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-teaching-popover | 9.7.9 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-text | 9.6.21 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-textarea | 9.7.8 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-theme | 9.2.2 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-toast | 9.8.5 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-toolbar | 9.8.7 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-tooltip | 9.10.8 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-tree | 9.16.10 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-utilities | 9.27.0 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/react-virtualizer | 9.0.0-alpha.116 | MIT | docs, hello, pdf, sheets, slides |
+| @fluentui/tokens | 1.0.0-alpha.24 | MIT | docs, hello, pdf, sheets, slides |
+| @griffel/core | 1.21.4 | MIT | docs, hello, pdf, sheets, slides |
+| @griffel/react | 1.7.8 | MIT | docs, hello, pdf, sheets, slides |
+| @griffel/style-types | 1.4.3 | MIT | docs, hello, pdf, sheets, slides |
 | @jridgewell/gen-mapping | 0.3.13 | MIT | pdf |
 | @jridgewell/remapping | 2.3.5 | MIT | pdf |
 | @jridgewell/resolve-uri | 3.1.2 | MIT | pdf |
 | @jridgewell/sourcemap-codec | 1.6.0 | MIT | pdf |
 | @jridgewell/trace-mapping | 0.3.31 | MIT | pdf |
+| @napi-rs/canvas | 1.0.13 | MIT | slides |
+| @napi-rs/canvas-linux-x64-gnu | 1.0.13 | MIT | slides |
 | @nodable/entities | 3.1.0 | MIT | docs |
 | @radix-ui/number | 1.1.3 | MIT | docs |
 | @radix-ui/primitive | 1.2.0 | MIT | docs, sheets |
@@ -221,10 +230,10 @@ These ask that changes to them be shared when the app is given to others (person
 | @radix-ui/react-visually-hidden | 1.2.13 | MIT | docs |
 | @radix-ui/rect | 1.1.3 | MIT | docs, sheets |
 | @sveltejs/acorn-typescript | 1.0.13 | MIT | pdf |
-| @swc/helpers | 0.5.23 | Apache-2.0 | docs, hello, pdf, sheets |
-| @tauri-apps/api | 2.12.4 | Apache-2.0 OR MIT | docs, hello, pdf, sheets |
+| @swc/helpers | 0.5.23 | Apache-2.0 | docs, hello, pdf, sheets, slides |
+| @tauri-apps/api | 2.12.4 | Apache-2.0 OR MIT | docs, hello, pdf, sheets, slides |
 | @types/estree | 1.0.9 | MIT | pdf |
-| @types/react | 19.3.0 | MIT | docs, hello, pdf, sheets |
+| @types/react | 19.3.0 | MIT | docs, hello, pdf, sheets, slides |
 | @types/react-dom | 19.3.0 | MIT | docs, sheets |
 | @typescript-eslint/types | 8.72.0 | MIT | pdf |
 | @univerjs/core | 1.2.0 | Apache-2.0 | sheets |
@@ -286,14 +295,15 @@ These ask that changes to them be shared when the app is given to others (person
 | clsx | 2.1.1 | MIT | docs, pdf, sheets |
 | cmdk | 1.1.1 | MIT | sheets |
 | collapse-white-space | 2.1.0 | MIT | sheets |
-| csstype | 3.2.3 | MIT | docs, hello, pdf, sheets |
+| core-util-is | 1.0.3 | MIT | slides |
+| csstype | 3.2.3 | MIT | docs, hello, pdf, sheets, slides |
 | decimal.js | 10.6.0 | MIT | sheets |
 | detect-node-es | 1.1.0 | MIT | docs, sheets |
 | devalue | 5.9.4 | MIT | pdf |
-| echarts | 6.1.0 | Apache-2.0 | sheets |
-| embla-carousel | 8.6.0 | MIT | docs, hello, pdf, sheets |
-| embla-carousel-autoplay | 8.6.0 | MIT | docs, hello, pdf, sheets |
-| embla-carousel-fade | 8.6.0 | MIT | docs, hello, pdf, sheets |
+| echarts | 6.1.0 | Apache-2.0 | sheets, slides |
+| embla-carousel | 8.6.0 | MIT | docs, hello, pdf, sheets, slides |
+| embla-carousel-autoplay | 8.6.0 | MIT | docs, hello, pdf, sheets, slides |
+| embla-carousel-fade | 8.6.0 | MIT | docs, hello, pdf, sheets, slides |
 | emf-converter | 2.0.2 | Apache-2.0 | docs |
 | entities | 7.0.1 | BSD-2-Clause | pdf |
 | esm-env | 1.2.2 | MIT | pdf |
@@ -306,23 +316,31 @@ These ask that changes to them be shared when the app is given to others (person
 | franc-min | 6.2.0 | MIT | sheets |
 | get-nonce | 1.0.1 | MIT | docs, sheets |
 | harfbuzzjs | 1.6.1 | MIT | docs |
+| immediate | 3.0.6 | MIT | slides |
+| inherits | 2.0.4 | ISC | slides |
 | is-reference | 3.0.3 | MIT | pdf |
 | is-unsafe | 2.0.2 | MIT | docs |
+| isarray | 1.0.0 | MIT | slides |
+| jszip | 3.10.2 | (MIT OR GPL-3.0-or-later) | slides |
 | kdbush | 4.1.0 | ISC | sheets |
-| keyborg | 3.498.0 | MIT | docs, hello, pdf, sheets |
+| keyborg | 3.498.0 | MIT | docs, hello, pdf, sheets, slides |
+| lie | 3.3.0 | MIT | slides |
 | locate-character | 3.0.0 | MIT | pdf |
 | lodash-es | 4.18.1 | MIT | sheets |
 | magic-string | 0.30.21 | MIT | pdf |
+| mtx-decompressor | 1.8.0 | MPL-2.0 | slides |
 | n-gram | 2.0.2 | MIT | sheets |
 | nanoid | 3.3.20 | MIT | pdf |
 | orderedmap | 2.1.1 | MIT | docs |
 | ot-json1 | 1.0.2 | ISC | sheets |
 | ot-text-unicode | 4.0.0 | ISC | sheets |
-| pako | 1.0.11 | (MIT AND Zlib) | docs |
+| pako | 1.0.11 | (MIT AND Zlib) | docs, slides |
 | path-expression-matcher | 1.6.2 | MIT | docs |
+| pdfjs-dist | 6.4.299 | Apache-2.0 | slides |
 | picocolors | 1.1.1 | ISC | pdf |
 | postcss | 8.5.31 | MIT | pdf |
 | preact | 10.29.8 | MIT | pdf |
+| process-nextick-args | 2.0.1 | MIT | slides |
 | prosemirror-commands | 1.7.2 | MIT | docs |
 | prosemirror-keymap | 1.2.3 | MIT | docs |
 | prosemirror-model | 1.25.12 | MIT | docs |
@@ -331,35 +349,40 @@ These ask that changes to them be shared when the app is given to others (person
 | prosemirror-view | 1.42.8 | MIT | docs |
 | quickselect | 3.0.0 | ISC | sheets |
 | rbush | 4.0.1 | MIT | sheets |
-| react | 19.3.1 | MIT | docs, hello, pdf, sheets |
-| react-dom | 19.3.1 | MIT | docs, hello, pdf, sheets |
+| react | 19.3.1 | MIT | docs, hello, pdf, sheets, slides |
+| react-dom | 19.3.1 | MIT | docs, hello, pdf, sheets, slides |
 | react-remove-scroll | 2.7.2 | MIT | docs, sheets |
 | react-remove-scroll-bar | 2.3.8 | MIT | docs, sheets |
 | react-style-singleton | 2.2.3 | MIT | docs, sheets |
+| readable-stream | 2.3.8 | MIT | slides |
 | require-from-string | 2.0.2 | MIT | docs |
-| rtl-css-js | 1.16.1 | MIT | docs, hello, pdf, sheets |
+| rtl-css-js | 1.16.1 | MIT | docs, hello, pdf, sheets, slides |
 | rxjs | 7.8.2 | Apache-2.0 | sheets |
-| scheduler | 0.28.0 | MIT | docs, hello, pdf, sheets |
+| safe-buffer | 5.1.2 | MIT | slides |
+| scheduler | 0.28.0 | MIT | docs, hello, pdf, sheets, slides |
+| setimmediate | 1.0.5 | MIT | slides |
 | sonner | 2.0.8 | MIT | sheets |
 | source-map-js | 1.2.2 | BSD-3-Clause | pdf |
+| string_decoder | 1.1.1 | MIT | slides |
 | strnum | 2.5.1 | MIT | docs |
-| stylis | 4.4.0 | MIT | docs, hello, pdf, sheets |
+| stylis | 4.4.0 | MIT | docs, hello, pdf, sheets, slides |
 | svelte | 5.57.2 | MIT | pdf |
-| tabster | 8.8.1 | MIT | docs, hello, pdf, sheets |
+| tabster | 8.8.1 | MIT | docs, hello, pdf, sheets, slides |
 | trigram-utils | 2.0.1 | MIT | sheets |
-| tslib | 2.3.0 | 0BSD | sheets |
-| tslib | 2.8.1 | 0BSD | docs, hello, pdf, sheets |
+| tslib | 2.3.0 | 0BSD | sheets, slides |
+| tslib | 2.8.1 | 0BSD | docs, hello, pdf, sheets, slides |
 | typescript | 6.0.3 | Apache-2.0 | pdf |
 | unicount | 1.1.0 | ISC | sheets |
 | use-callback-ref | 1.3.3 | MIT | docs, sheets |
 | use-sidecar | 1.1.3 | MIT | docs, sheets |
-| use-sync-external-store | 1.7.0 | MIT | docs, hello, pdf, sheets |
+| use-sync-external-store | 1.7.0 | MIT | docs, hello, pdf, sheets, slides |
 | utif2 | 4.1.0 | MIT | docs |
+| util-deprecate | 1.0.2 | MIT | slides |
 | vue | 3.5.44 | MIT | pdf |
 | w3c-keyname | 2.2.8 | MIT | docs |
 | xml-naming | 0.3.0 | MIT | docs |
 | zimmerframe | 1.1.5 | MIT | pdf |
-| zrender | 6.1.0 | BSD-3-Clause | sheets |
+| zrender | 6.1.0 | BSD-3-Clause | sheets, slides |
 
 ## Rust crates
 

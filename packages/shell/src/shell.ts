@@ -314,6 +314,8 @@ export class Shell {
       saveCopies: (files, title) => this.saveProducedMany(files, title),
       openLink: (url) => this.backend.openLink(url),
       toggleFullscreen: () => void this.setFullscreen(!this.state.fullscreen),
+      isFullscreen: () => this.state.fullscreen,
+      presenterScreen: (open) => this.backend.presenterScreen(open).catch(() => false),
       secure: {
         put: (key, bytes) => this.backend.securePut(key, bytes),
         get: (key) => this.backend.secureGet(key),
@@ -448,6 +450,7 @@ export class Shell {
       }
       if (target === 'new' && doc.file && doc.file.token !== file.token) await this.backend.release(doc.file.token);
       this.updateDoc(doc.id, { file, title: file.name, ext: type.ext, savedStateId: savedState });
+      session.saved?.(type.ext);
       this.snapshots.delete(doc.id);
       await this.backend.recoveryDrop(doc.id).catch(() => undefined);
       void this.refreshRecent();

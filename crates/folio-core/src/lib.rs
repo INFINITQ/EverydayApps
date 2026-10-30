@@ -152,6 +152,7 @@ fn plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
             commands::release_folder,
             commands::open_link,
             commands::set_fullscreen,
+            commands::presenter_screen,
             commands::take_pending,
             commands::backups_usage,
             commands::backups_clear,

@@ -45,6 +45,14 @@ export interface DocHost {
   openLink(url: string): Promise<void>;
   /** Turns full screen on or off (F11 and Esc work too). */
   toggleFullscreen(): void;
+  /** Whether the window is full screen now (a slideshow leaves it as it found it). */
+  isFullscreen?(): boolean;
+  /**
+   * Opens (or closes) a full-screen window on a second monitor for a slideshow's audience.
+   * Resolves false when there's no second monitor. The window shows the app's page with
+   * `#audience` and has no access to anything: send it what to show over a BroadcastChannel.
+   */
+  presenterScreen?(open: boolean): Promise<boolean>;
   /** Small encrypted items (saved signatures), protected with Windows DPAPI. */
   secure: {
     put(key: string, bytes: Uint8Array): Promise<void>;
@@ -84,6 +92,11 @@ export interface DocumentSession {
   settle?(): Promise<void>;
   /** The file's bytes in format `ext` (one of the format's `fileTypes` with `canSave`). */
   save(ext: string): Promise<Uint8Array>;
+  /**
+   * The bytes from `save(ext)` are now the document's file (not called for a copy). An old
+   * format opened read-only becomes editable once it's saved in the new one.
+   */
+  saved?(ext: string): void;
   /** A cheaper serialization for crash recovery, if the format has one. */
   snapshot?(): Promise<Uint8Array>;
   viewState?(): unknown;

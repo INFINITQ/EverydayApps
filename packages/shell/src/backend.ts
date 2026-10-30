@@ -64,6 +64,8 @@ export interface Backend {
   networkLock(): Promise<NetworkLock>;
   setWindowTheme(theme: 'light' | 'dark' | null): Promise<void>;
   setFullscreen(on: boolean): Promise<void>;
+  /** Opens or closes a slideshow's audience window on a second monitor; true while it's open. */
+  presenterScreen(open: boolean): Promise<boolean>;
   /** Runs `confirm` when the window is asked to close; it closes only if that returns true. */
   onCloseRequested(confirm: () => Promise<boolean>): () => void;
   /** True while files are dragged over the window (the drop itself is handled in Rust). */
@@ -136,6 +138,7 @@ export function tauriBackend(): Backend {
     networkLock: () => invoke(folio('network_lock')),
     setWindowTheme: (theme) => win.setTheme(theme),
     setFullscreen: (on) => invoke(folio('set_fullscreen'), { on }),
+    presenterScreen: (open) => invoke(folio('presenter_screen'), { open }),
     onCloseRequested: (confirm) => {
       const stop = win.onCloseRequested(async (event) => {
         event.preventDefault();

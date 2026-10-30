@@ -64,6 +64,12 @@ pub fn create_main(app: &AppHandle<Wry>, spec: AppSpec) -> Result<()> {
     let minimized = AtomicBool::new(false);
     window.on_window_event(move |event| match event {
         WindowEvent::DragDrop(DragDropEvent::Drop { paths, .. }) => crate::open::deliver(&handle, paths),
+        // A slideshow's audience window never outlives the app's window.
+        WindowEvent::Destroyed => {
+            if let Some(audience) = handle.get_webview_window(AUDIENCE) {
+                let _ = audience.destroy();
+            }
+        }
         WindowEvent::Resized(_) => {
             let now = watched.is_minimized().unwrap_or(false);
             if minimized.swap(now, Ordering::SeqCst) != now {
@@ -75,6 +81,52 @@ pub fn create_main(app: &AppHandle<Wry>, spec: AppSpec) -> Result<()> {
 
     show_if_ui_hangs(window);
     Ok(())
+}
+
+pub const AUDIENCE: &str = "audience";
+
+/// Opens (or closes) the window a slideshow's audience sees, full screen on a monitor other
+/// than the main window's. It shows the app's own page in its audience mode, hardened like
+/// the main window, and gets no IPC permissions (no capability names it): the main window
+/// sends it the slides over a same-origin BroadcastChannel. Returns false when there's no
+/// second monitor (the show then stays in the main window).
+pub fn audience(app: &AppHandle<Wry>, open: bool) -> Result<bool> {
+    if let Some(existing) = app.get_webview_window(AUDIENCE) {
+        if !open {
+            existing.destroy()?;
+            return Ok(false);
+        }
+        existing.set_focus()?;
+        return Ok(true);
+    }
+    if !open || crate::guard::background_mode() {
+        return Ok(false);
+    }
+    let Some(main) = app.get_webview_window(MAIN) else { return Ok(false) };
+    let here = main.current_monitor()?.map(|m| (*m.position(), *m.size()));
+    let Some(other) = app.available_monitors()?.into_iter().find(|m| Some((*m.position(), *m.size())) != here) else {
+        return Ok(false);
+    };
+    let data_dir = crate::data_dir(app)?;
+    let environment = webview2::create_environment(&data_dir)?;
+    let position = other.position().to_logical::<f64>(other.scale_factor());
+    let size = other.size().to_logical::<f64>(other.scale_factor());
+    let window = WebviewWindowBuilder::new(app, AUDIENCE, WebviewUrl::App("index.html#audience".into()))
+        .title("Slideshow")
+        .position(position.x, position.y)
+        .inner_size(size.width, size.height)
+        .decorations(false)
+        .fullscreen(true)
+        .incognito(true)
+        .general_autofill_enabled(false)
+        .zoom_hotkeys_enabled(false)
+        .initialization_script(INIT_SCRIPT)
+        .on_new_window(|_url, _features| NewWindowResponse::Deny)
+        .on_download(|_webview, _event| false)
+        .with_environment(environment)
+        .build()?;
+    webview2::harden(&window)?;
+    Ok(true)
 }
 
 /// Called by the UI once it has painted, so the window never flashes white.

@@ -7,7 +7,7 @@ Private, offline apps for PDF, Word, Excel and PowerPoint files on Windows 11.
 | Folio PDF | `.pdf` | ready |
 | Folio Sheets | `.xlsx`, `.xlsm`, `.csv` (old `.xls` read-only) | in progress |
 | Folio Docs | `.docx`, `.docm` (old `.doc` read-only) | in progress: edits and saves; not yet tried on Windows |
-| Folio Slides | `.pptx` (old `.ppt` read-only) | planned |
+| Folio Slides | `.pptx`, `.pptm` (old `.ppt` read-only) | ready for testing on Windows |
 
 Every app is a small native Windows program (Tauri 2 + WebView2) with a Windows 11 look
 (Fluent UI, Mica, your accent color). Documents never leave your PC.
@@ -76,6 +76,28 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
 - Built on [Univer](https://github.com/dream-num/univer) (Apache-2.0), bundled and offline. See
   [ADR 0009](docs/adr/0009-sheets-xlsx-bridge.md).
 
+## Folio Slides
+
+- **Read and present:** faithful slides (charts, SmartArt, tables, embedded fonts) with
+  thumbnails and speaker notes. Slideshow in full screen (F5 from the start, Shift+F5 from
+  the current slide): arrows, Page Down, Space or a click go on, B or W blank the screen,
+  a slide number and Enter jumps, Esc ends. Hidden slides are skipped. Presenter view
+  (Alt+F5) shows the current and next slide, your notes and a timer; with a second screen
+  (a projector), the audience sees only the slides there.
+- **Edit in place:** click a shape to select it, drag to move, drag a handle to resize,
+  double-click to edit its text where it is (formatting is kept), Delete removes it. Edit
+  the text of tables. Replace or insert pictures. Edit speaker notes under the slide.
+- **New slides** (Ctrl+M) on the current slide's layout, with its title and text boxes ready.
+- **Organize:** drag thumbnails to reorder (several at once), duplicate (Ctrl+D), delete,
+  hide from the slideshow. Undo and redo everything.
+- **Your file stays yours:** saving rewrites only the parts you changed. Animations,
+  transitions, SmartArt, media, comments and anything Folio doesn't edit are kept exactly
+  as they were. Macros in `.pptm` files never run, and are kept. Pictures and media a deck
+  links to on the web are never loaded. Old `.ppt` files open read-only, converted in
+  memory; Save As makes a `.pptx`.
+- **Print and PDF:** print one slide per page; choose "Microsoft Print to PDF" to make a PDF.
+
+
 ## Privacy
 
 Folio is built so that it *can't* send your documents anywhere:
@@ -111,6 +133,8 @@ pnpm dev:pdf          # run Folio PDF in development mode
 pnpm build:pdf        # build the release installer
 pnpm dev:docs         # run Folio Docs in development mode (build:docs for its installer)
 pnpm dev:sheets       # run Folio Sheets in development mode (build:sheets for the installer)
+pnpm dev:slides       # run Folio Slides in development mode
+pnpm build:slides     # build its installer
 pnpm test             # unit tests (Vitest)
 pnpm e2e              # end-to-end tests (Playwright, uses your installed Edge)
 cargo test --workspace

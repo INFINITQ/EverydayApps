@@ -21,6 +21,9 @@ one that supersedes it.
 | [0009](0009-sheets-xlsx-bridge.md) | Folio Sheets: Univer for the grid; our own TypeScript bridge patches .xlsx files instead of regenerating them | accepted |
 | [0010](0010-sheets-xls-reader.md) | Folio Sheets reads .xls (Excel 97-2003) with its own TypeScript BIFF8 reader | accepted |
 | [0011](0011-sheets-charts.md) | Folio Sheets draws charts with ECharts as Univer drawings, and saves real Excel charts | accepted |
+| [0009](0009-slides-renderer-and-patching.md) | Folio Slides: pptx-renderer on Folio's own package layer; saving patches only changed parts | accepted |
+| [0010](0010-old-ppt-through-office-oxide-wasm.md) | Old .ppt files through office_oxide compiled to an import-free WebAssembly module | accepted |
+| [0011](0011-presenter-on-a-second-screen.md) | Presenter view on two screens: an audience window with no IPC, fed over a BroadcastChannel | accepted, hand check pending |
 
 ## Template
 

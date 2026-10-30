@@ -196,6 +196,32 @@ describe('what a document can ask of the shell', () => {
     await vi.waitFor(() => expect(shell.state.fullscreen).toBe(false));
     expect(fake.calls.filter((c) => c.startsWith('fullscreen:'))).toEqual(['fullscreen:true', 'fullscreen:false']);
   });
+
+  it('says whether the window is full screen', async () => {
+    const { fake, shell, host } = setupWithHost();
+    await shell.openFile(fake.grant(A));
+    expect(host().isFullscreen?.()).toBe(false);
+    host().toggleFullscreen();
+    await vi.waitFor(() => expect(host().isFullscreen?.()).toBe(true));
+  });
+});
+
+describe('a document told about its saves', () => {
+  it('hears when its bytes became its file, but not for a copy', async () => {
+    const fake = fakeBackend({ [A]: 'hello' });
+    const saved: string[] = [];
+    const listening: FormatModule = {
+      ...textFormat,
+      open: async (file, host) => ({ ...(await textFormat.open(file, host)), saved: (ext: string) => void saved.push(ext) }),
+    };
+    const shell = new Shell(fake.backend, [listening], 'Folio Test');
+    await shell.openFile(fake.grant(A));
+    fake.nextSave('C:\\Docs\\copy.txt');
+    await shell.save(shell.state.activeId, 'saveCopy');
+    expect(saved).toEqual([]);
+    await shell.save(shell.state.activeId, 'save');
+    expect(saved).toEqual(['txt']);
+  });
 });
 
 describe('closing', () => {

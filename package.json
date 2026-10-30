@@ -17,6 +17,8 @@
     "build:docs": "pnpm --filter @folio/docs tauri build",
     "dev:sheets": "pnpm --filter @folio/sheets tauri dev",
     "build:sheets": "pnpm --filter @folio/sheets tauri build",
+    "dev:slides": "pnpm --filter @folio/slides tauri dev",
+    "build:slides": "pnpm --filter @folio/slides tauri build",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",

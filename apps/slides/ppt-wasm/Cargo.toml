@@ -1,0 +1,28 @@
+# The old-PowerPoint (.ppt) converter, built to WebAssembly and bundled with Folio Slides.
+# Its own workspace: it targets wasm32 only and never links into the Windows apps.
+# Rebuild with `node build.mjs` (needs the wasm32-unknown-unknown Rust target); the
+# resulting ppt.wasm is committed, so building the app doesn't need Rust for wasm.
+[package]
+name = "folio-ppt-wasm"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+# Reads .ppt and writes .pptx through its document model. No default features: no
+# threads, memory maps, Python or wasm-bindgen glue.
+office_oxide = { version = "=0.1.15", default-features = false }
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[workspace]

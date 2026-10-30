@@ -7,9 +7,12 @@
 import { execFileSync, execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
-const APPS = ['@folio/pdf', '@folio/sheets', '@folio/hello', '@folio/docs'];
-/** Rust compiled to WebAssembly outside the Cargo workspace (Folio Docs' .doc converter, ADR 0011). */
-const WASM_CRATES = [{ manifest: 'apps/docs/legacy/Cargo.toml', target: 'wasm32-unknown-unknown' }];
+const APPS = ['@folio/pdf', '@folio/sheets', '@folio/hello', '@folio/docs', '@folio/slides'];
+/** Rust compiled to WebAssembly outside the Cargo workspace. */
+const WASM_CRATES = [
+  { manifest: 'apps/docs/legacy/Cargo.toml', target: 'wasm32-unknown-unknown' },
+  { manifest: 'apps/slides/ppt-wasm/Cargo.toml', target: 'wasm32-unknown-unknown' },
+];
 const BIG = { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 };
 /** Licenses that ask something of whoever shares the app (fine for personal use). */
 const COPYLEFT = /\b(A?GPL|LGPL|MPL|EPL|CDDL|EUPL|OSL|CC-BY-SA)\b/i;
@@ -78,7 +81,7 @@ const lines = [
   '',
   `Made by \`node tools/license-report.mjs\` on ${new Date().toISOString().slice(0, 10)}. It lists what the apps ship:`,
   `${npmList.length} npm packages installed for production (some are only partly bundled, or not at all) and`,
-  `${rust.length} Rust crates compiled into the apps (including Folio Docs' .doc converter, compiled to WebAssembly).`,
+  `${rust.length} Rust crates compiled into the apps (including Folio Docs' .doc converter and Folio Slides' .ppt converter, compiled to WebAssembly).`,
   'Build tools and test-only packages are left out.',
   '',
   '`pdfium.wasm` (from `@embedpdf/pdfium`, MIT) is Google PDFium compiled to WebAssembly. PDFium is',
@@ -87,6 +90,9 @@ const lines = [
   "Folio Docs ships two more WebAssembly files: `harfbuzz.wasm` (from `harfbuzzjs`, MIT) is the HarfBuzz text",
   "shaper, under HarfBuzz's own MIT-style licence; `folio_doc_legacy_bg.wasm` is office_oxide (MIT OR Apache-2.0)",
   'and the Rust crates listed below, built from source by `tools/build-doc-converter.mjs` (docs/adr/0011).',
+  '',
+  "Folio Slides' `ppt.wasm` is `apps/slides/ppt-wasm` (office_oxide and its crates, listed below) compiled",
+  'to WebAssembly.',
   '',
   '## Summary',
   '',
