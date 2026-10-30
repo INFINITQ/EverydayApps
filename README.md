@@ -5,8 +5,8 @@ Private, offline apps for PDF, Word, Excel and PowerPoint files on Windows 11.
 | App | Opens | Status |
 |---|---|---|
 | Folio PDF | `.pdf` | ready |
-| Folio Sheets | `.xlsx`, `.csv` (old `.xls` read-only) | planned |
-| Folio Docs | `.docx` (old `.doc` read-only) | planned |
+| Folio Sheets | `.xlsx`, `.xlsm`, `.csv` (old `.xls` read-only) | in progress |
+| Folio Docs | `.docx`, `.docm` (old `.doc` read-only) | in progress: edits and saves; not yet tried on Windows |
 | Folio Slides | `.pptx`, `.pptm` (old `.ppt` read-only) | ready for testing on Windows |
 
 Every app is a small native Windows program (Tauri 2 + WebView2) with a Windows 11 look
@@ -33,6 +33,49 @@ first page shows in under 0.9 s; memory is about 225 MB with the file open (Task
 measure, WebView2 included). Reading all 100 pages raises it to about 430 MB, mostly
 WebView2's caches, and minimizing the window asks WebView2 to give memory back.
 
+## Folio Docs
+
+- **Edit:** real pages with styles, fonts, bold/italic/underline, alignment, bulleted and
+  numbered lists, tables, pictures, links, page and section breaks, footnotes and endnotes,
+  a table of contents, page numbers, headers and footers, and page setup (size, orientation,
+  margins). Find and replace, word count, headings navigation, zoom, print and export as PDF
+  (through Windows' "Microsoft Print to PDF").
+- **Keeps what it doesn't understand:** saving starts from your original file and only
+  rewrites the parts you changed; everything else (including things Folio can't edit yet)
+  stays byte for byte as it was, and every saved file is checked before it's written.
+  See [ADR 0010](docs/adr/0010-docx-patch-on-save.md).
+- **Received files:** comments and tracked changes are listed in the Review panel (insertions
+  are also marked in the text), and both are kept when you save.
+  Macros in `.docm` files never run; Folio says the file has them and keeps them. Pictures a
+  document links from the web are never loaded. Links open only after you say so.
+- **Old `.doc` files** open read-only; Save as makes a `.docx` copy and never changes the
+  original ([ADR 0011](docs/adr/0011-doc-via-office-oxide.md)).
+- Engine: [docx-editor.dev](https://www.docx-editor.dev) core (Apache-2.0), bundled; see
+  [ADR 0009](docs/adr/0009-docx-engine.md) for how it was chosen over SuperDoc.
+
+## Folio Sheets
+
+- **Open, edit and save** `.xlsx`, `.xlsm` and `.csv`: values, formulas (Univer's engine, about
+  500 functions), fonts, fills, borders, alignment, wrapping, merged cells, column widths, row
+  heights, number formats, frozen panes, several sheets (add, rename, delete, move), find and
+  replace, sort and filter. A formula bar, sheet tabs, a Fluent toolbar, and the sum, average and
+  count of the selection in the status bar.
+- **Also kept and editable:** conditional formatting, data validation (with drop-down lists),
+  filters, comments (notes; threaded comments are shown and kept), and pictures. Inserting or
+  deleting rows under a pivot table, a table or a chart's data asks first.
+- **Charts:** the workbook's charts are drawn from the current values (ECharts, ADR 0011); insert
+  column, bar, line, area, pie, doughnut and scatter charts from the selected cells, move, resize,
+  delete or change their type. They're saved as real Excel charts.
+- **Pivot tables** show as last refreshed and are kept as they are; simple ones (one row field,
+  sum/count/average/min/max) refresh from their data with Alt+F5, and Excel refreshes them again
+  when it opens the file.
+- **Old `.xls` files** open read-only; Save makes a new `.xlsx` (ADR 0010).
+- **Your file stays your file:** saving patches only what you changed into the original package.
+  Pivot tables, charts, pictures, macros, external links and anything Folio doesn't show yet are
+  kept byte for byte. Macros never run; links to other workbooks are never followed.
+- Built on [Univer](https://github.com/dream-num/univer) (Apache-2.0), bundled and offline. See
+  [ADR 0009](docs/adr/0009-sheets-xlsx-bridge.md).
+
 ## Folio Slides
 
 - **Read and present:** faithful slides (charts, SmartArt, tables, embedded fonts) with
@@ -53,6 +96,7 @@ WebView2's caches, and minimizing the window asks WebView2 to give memory back.
   links to on the web are never loaded. Old `.ppt` files open read-only, converted in
   memory; Save As makes a `.pptx`.
 - **Print and PDF:** print one slide per page; choose "Microsoft Print to PDF" to make a PDF.
+
 
 ## Privacy
 
@@ -87,6 +131,8 @@ Node 24+, pnpm 11.
 pnpm install          # dependency install scripts are blocked unless reviewed
 pnpm dev:pdf          # run Folio PDF in development mode
 pnpm build:pdf        # build the release installer
+pnpm dev:docs         # run Folio Docs in development mode (build:docs for its installer)
+pnpm dev:sheets       # run Folio Sheets in development mode (build:sheets for the installer)
 pnpm dev:slides       # run Folio Slides in development mode
 pnpm build:slides     # build its installer
 pnpm test             # unit tests (Vitest)
@@ -109,7 +155,7 @@ packages/    ui (Fluent theme + window chrome) and shell (tabs, documents, save 
 crates/      folio-core: the shared Rust core every app runs on
 config/      security.json, the one master copy of the security settings
 docs/adr/    architecture decision records (spike outcomes)
-fixtures/    generated test documents (fixtures/real/ is git-ignored)
+fixtures/    generated and public test documents (fixtures/real/ is git-ignored)
 tools/       dev-only scripts: network audit, license report, fixture generator
 ```
 

@@ -51,7 +51,7 @@ export default defineConfig([
   },
   {
     // Tests, tooling and config files run in Node or drive the app from outside.
-    files: ['**/*.test.{ts,tsx}', 'e2e/**', 'tools/**', '*.config.{js,ts}'],
+    files: ['**/*.test.{ts,tsx}', 'e2e/**', 'tools/**', 'apps/*/test/**', '*.config.{js,ts}'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
     rules: { 'no-restricted-globals': 'off', 'no-restricted-properties': 'off' },
   },
