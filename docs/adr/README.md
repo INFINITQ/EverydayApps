@@ -14,6 +14,10 @@ one that supersedes it.
 | [0006](0006-page-operations-in-bundled-pdfium.md) | Page operations in the bundled PDFium (no DLL); split files via a create-only folder grant | accepted |
 | [0007](0007-content-editing-in-bundled-pdfium.md) | Content editing in the bundled PDFium (no MuPDF), each edit checked by drawing the page | accepted |
 | [0008](0008-passwords-links-and-attachments.md) | Passwords in memory only; author restrictions followed; links ask first; attachments never opened | accepted |
+| [0009](0009-docx-engine.md) | Folio Docs runs on docx-editor.dev 2.x core (not SuperDoc 1.47); Folio patches saves itself | accepted |
+| [0010](0010-docx-patch-on-save.md) | Folio Docs saves by patching the original part by part, and checks every file before writing it | accepted |
+| [0011](0011-doc-via-office-oxide.md) | Old .doc files open read-only through office_oxide, built to WebAssembly from source | accepted |
+| [0012](0012-docs-printing-and-spelling.md) | Folio Docs prints its own pages; PDF through the print dialog; no spell check yet | accepted |
 | [0009](0009-sheets-xlsx-bridge.md) | Folio Sheets: Univer for the grid; our own TypeScript bridge patches .xlsx files instead of regenerating them | accepted |
 | [0010](0010-sheets-xls-reader.md) | Folio Sheets reads .xls (Excel 97-2003) with its own TypeScript BIFF8 reader | accepted |
 | [0011](0011-sheets-charts.md) | Folio Sheets draws charts with ECharts as Univer drawings, and saves real Excel charts | accepted |

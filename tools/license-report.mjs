@@ -7,7 +7,9 @@
 import { execFileSync, execSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
-const APPS = ['@folio/pdf', '@folio/sheets', '@folio/hello'];
+const APPS = ['@folio/pdf', '@folio/sheets', '@folio/hello', '@folio/docs'];
+/** Rust compiled to WebAssembly outside the Cargo workspace (Folio Docs' .doc converter, ADR 0011). */
+const WASM_CRATES = [{ manifest: 'apps/docs/legacy/Cargo.toml', target: 'wasm32-unknown-unknown' }];
 const BIG = { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 };
 /** Licenses that ask something of whoever shares the app (fine for personal use). */
 const COPYLEFT = /\b(A?GPL|LGPL|MPL|EPL|CDDL|EUPL|OSL|CC-BY-SA)\b/i;
@@ -29,32 +31,38 @@ for (const app of APPS) {
   }
 }
 
-// Rust: crates reachable from the apps through normal (shipped) dependencies, on Windows.
-const metadata = JSON.parse(
-  execFileSync(
-    'cargo',
-    ['metadata', '--format-version', '1', '--offline', '--filter-platform', 'x86_64-pc-windows-msvc'],
-    BIG,
-  ),
-);
-const packages = new Map(metadata.packages.map((p) => [p.id, p]));
-const nodes = new Map(metadata.resolve.nodes.map((n) => [n.id, n]));
-const members = new Set(metadata.workspace_members);
-const shipped = new Set();
-const queue = [...members];
-while (queue.length) {
-  const node = nodes.get(queue.pop());
-  for (const dep of node?.deps ?? []) {
-    if (!dep.dep_kinds.some((kind) => kind.kind === null) || shipped.has(dep.pkg)) continue;
-    shipped.add(dep.pkg);
-    queue.push(dep.pkg);
+// Rust: crates reachable from the apps through normal (shipped) dependencies, on Windows, plus the
+// crates compiled to WebAssembly outside the workspace.
+function shippedCrates(extraArgs, platform) {
+  const metadata = JSON.parse(
+    execFileSync('cargo', ['metadata', '--format-version', '1', '--offline', '--filter-platform', platform, ...extraArgs], BIG),
+  );
+  const packages = new Map(metadata.packages.map((p) => [p.id, p]));
+  const nodes = new Map(metadata.resolve.nodes.map((n) => [n.id, n]));
+  const members = new Set(metadata.workspace_members);
+  const shipped = new Set();
+  const queue = [...members];
+  while (queue.length) {
+    const node = nodes.get(queue.pop());
+    for (const dep of node?.deps ?? []) {
+      if (!dep.dep_kinds.some((kind) => kind.kind === null) || shipped.has(dep.pkg)) continue;
+      shipped.add(dep.pkg);
+      queue.push(dep.pkg);
+    }
   }
+  return [...shipped]
+    .filter((id) => !members.has(id))
+    .map((id) => packages.get(id))
+    .map((p) => ({ name: p.name, version: p.version, license: p.license ?? (p.license_file ? 'see its license file' : '') }));
 }
-const rust = [...shipped]
-  .filter((id) => !members.has(id))
-  .map((id) => packages.get(id))
-  .map((p) => ({ name: p.name, version: p.version, license: p.license ?? (p.license_file ? 'see its license file' : '') }))
-  .sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
+const crates = new Map();
+for (const crate of [
+  ...shippedCrates([], 'x86_64-pc-windows-msvc'),
+  ...WASM_CRATES.flatMap((w) => shippedCrates(['--manifest-path', w.manifest], w.target)),
+]) {
+  crates.set(`${crate.name}@${crate.version}`, crate);
+}
+const rust = [...crates.values()].sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
 
 const npmList = [...npm.values()].sort((a, b) => a.name.localeCompare(b.name) || a.version.localeCompare(b.version));
 const unlicensed = [...npmList, ...rust].filter((p) => !p.license || /^(unknown|unlicensed)$/i.test(p.license));
@@ -70,10 +78,15 @@ const lines = [
   '',
   `Made by \`node tools/license-report.mjs\` on ${new Date().toISOString().slice(0, 10)}. It lists what the apps ship:`,
   `${npmList.length} npm packages installed for production (some are only partly bundled, or not at all) and`,
-  `${rust.length} Rust crates compiled into the apps. Build tools and test-only packages are left out.`,
+  `${rust.length} Rust crates compiled into the apps (including Folio Docs' .doc converter, compiled to WebAssembly).`,
+  'Build tools and test-only packages are left out.',
   '',
   '`pdfium.wasm` (from `@embedpdf/pdfium`, MIT) is Google PDFium compiled to WebAssembly. PDFium is',
   'BSD-3-Clause, and its notice ships in that package as `LICENSE.pdfium`.',
+  '',
+  "Folio Docs ships two more WebAssembly files: `harfbuzz.wasm` (from `harfbuzzjs`, MIT) is the HarfBuzz text",
+  "shaper, under HarfBuzz's own MIT-style licence; `folio_doc_legacy_bg.wasm` is office_oxide (MIT OR Apache-2.0)",
+  'and the Rust crates listed below, built from source by `tools/build-doc-converter.mjs` (docs/adr/0011).',
   '',
   '## Summary',
   '',

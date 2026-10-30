@@ -794,6 +794,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "folio-docs"
+version = "0.1.0"
+dependencies = [
+ "folio-core",
+ "tauri",
+ "tauri-build",
+]
+
+[[package]]
 name = "folio-hello"
 version = "0.1.0"
 dependencies = [

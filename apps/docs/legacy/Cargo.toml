@@ -1,0 +1,26 @@
+# Converts old Word 97-2003 documents (.doc) to .docx in memory, with office_oxide, compiled to
+# WebAssembly for Folio Docs. Not part of the main Cargo workspace: it only builds for
+# wasm32-unknown-unknown. Rebuild with `node tools/build-doc-converter.mjs` (see docs/adr/0011).
+[package]
+name = "folio-doc-legacy"
+version = "0.1.0"
+edition = "2024"
+publish = false
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+office_oxide = { version = "=0.1.15", default-features = false }
+wasm-bindgen = "=0.2.129"
+
+[workspace]
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true
