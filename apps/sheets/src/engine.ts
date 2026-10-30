@@ -31,6 +31,7 @@ import {
   LogLevel,
   Univer,
   UniverInstanceType,
+  UserManagerService,
   type Workbook,
   mergeLocales,
 } from '@univerjs/core';
@@ -80,6 +81,7 @@ import { UniverThreadCommentUIPlugin } from '@univerjs/thread-comment-ui';
 import ThreadCommentUIEnUS from '@univerjs/thread-comment-ui/locale/en-US';
 import { ComponentManager, UniverUIPlugin } from '@univerjs/ui';
 import { CHART_COMPONENT, FolioChart } from './charts/FolioChart';
+import { FOLIO_USER_ID } from './xlsx/annotations';
 import UIEnUS from '@univerjs/ui/locale/en-US';
 
 /**
@@ -107,6 +109,14 @@ export class LocalPicturesOnly implements URLImages {
 
 /** Functions that would reach outside the PC; removed from the formula engine. */
 export const BLOCKED_FUNCTIONS = ['IMAGE'];
+
+/** A plain person glyph for the comments panel (inline, so nothing is fetched). */
+const AVATAR =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="16" fill="#8a8886"/>' +
+      '<circle cx="16" cy="12" r="5.5" fill="#fff"/><path d="M6 27c1.6-5.4 5.6-8 10-8s8.4 2.6 10 8" fill="#fff"/></svg>',
+  );
 
 const LOCALES = {
   [LocaleType.EN_US]: mergeLocales(
@@ -139,9 +149,15 @@ export function createEngine(container: HTMLElement, data: IWorkbookData, option
     darkMode: options.dark,
     logLevel: LogLevel.ERROR,
   });
+  // Comments added here are Folio's (see FOLIO_USER_ID). Set before any plugin starts: Univer
+  // Sheets resets its permissions when the user changes later, and before the workbook exists
+  // that left every cell edit ignored.
+  univer.__getInjector().get(UserManagerService).setCurrentUser({ userID: FOLIO_USER_ID, name: 'Folio', avatar: AVATAR });
   univer.registerPlugin(UniverRenderEnginePlugin);
   univer.registerPlugin(UniverFormulaEnginePlugin);
-  univer.registerPlugin(UniverUIPlugin, { container, header: true, toolbar: false, footer: true, contextMenu: true });
+  // Comments by people from the file have no avatar; without a fallback the comments panel asked
+  // for a file named "undefined".
+  univer.registerPlugin(UniverUIPlugin, { container, header: true, toolbar: false, footer: true, contextMenu: true, avatarFallback: AVATAR });
   univer.registerPlugin(UniverDocsPlugin);
   univer.registerPlugin(UniverDocsUIPlugin);
   univer.registerPlugin(UniverSheetsPlugin);

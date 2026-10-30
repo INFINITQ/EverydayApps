@@ -49,7 +49,7 @@ import {
 } from '@fluentui/react-icons';
 import { type ReactElement, useSyncExternalStore } from 'react';
 import type { SheetsSession } from './session';
-import { CHART_TYPES, CMD, NUMBER_FORMATS } from './sheetCommands';
+import { CHART_TYPES, CMD, CONDITIONAL_RULES, NUMBER_FORMATS } from './sheetCommands';
 
 const TEXT_COLORS = ['#000000', '#C00000', '#FF0000', '#FFC000', '#00B050', '#0070C0', '#7030A0', '#808080'];
 const FILL_COLORS = ['#FFFF00', '#FFC7CE', '#C6EFCE', '#FFEB9C', '#DDEBF7', '#FCE4D6', '#EDEDED', '#FFFFFF'];
@@ -252,7 +252,7 @@ export function SheetsToolbar({ session }: { session: SheetsSession }) {
       </Menu>
       <ToolbarDivider />
       <Tip label="Conditional formatting">
-        <ToolbarButton icon={<HighlightRegular />} onClick={() => run(CMD.conditionalPanel)} />
+        <ToolbarButton icon={<HighlightRegular />} onClick={() => run(CMD.conditionalPanel, CONDITIONAL_RULES)} />
       </Tip>
       <Tip label="Data validation">
         <ToolbarButton icon={<TaskListSquareLtrRegular />} onClick={() => run(CMD.validationPanel)} />
@@ -283,7 +283,7 @@ export function SheetsToolbar({ session }: { session: SheetsSession }) {
             ['Format painter', () => run(CMD.formatPainter)],
             ['Insert a sheet', () => run(CMD.insertSheet)],
             ['Rename sheet', () => run(CMD.renameSheet)],
-            ['Delete sheet', () => run(CMD.removeSheet)],
+            ['Delete sheet', () => void session.removeSheet()],
           ])}
         </MenuPopover>
       </Menu>

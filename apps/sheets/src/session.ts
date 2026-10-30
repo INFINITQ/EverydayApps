@@ -15,6 +15,7 @@ import {
   ThemeService,
   UndoCommand,
 } from '@univerjs/core';
+import { FormulaCalculationSessionService } from '@univerjs/engine-formula';
 import { DeviceInputEventType } from '@univerjs/engine-render';
 import { SheetsSelectionsService } from '@univerjs/sheets';
 import { IEditorBridgeService, SetCellEditVisibleOperation } from '@univerjs/sheets-ui';
@@ -228,12 +229,21 @@ export class SheetsSession {
     return this.engine.injector.get(IResourceLoaderService).saveUnit<IWorkbookData>(this.unitId) as IWorkbookData;
   }
 
-  /** Commits a cell that's still being typed in, so saving includes it. */
+  /**
+   * Commits a cell that's still being typed in, then waits for the formulas it affects to be
+   * recalculated, so saving includes both (a save right after typing kept old totals).
+   */
   async settle(): Promise<void> {
     const editor = this.engine.injector.get(IEditorBridgeService);
     if (editor.isVisible().visible) {
       await this.run(SetCellEditVisibleOperation.id, { visible: false, eventType: DeviceInputEventType.PointerDown, unitId: this.unitId });
     }
+    // Resolves once the latest calculation's results are in the workbook, or shortly after the
+    // edit if it started none. A very long calculation doesn't hold the save back for ever.
+    await this.engine.injector
+      .get(FormulaCalculationSessionService)
+      .waitForLatestApplied(10_000)
+      .catch(() => undefined);
   }
 
   /** The workbook as `ext` bytes, patched into the original file where there is one. */
@@ -244,6 +254,11 @@ export class SheetsSession {
     // CSV and old .xls files become new workbooks.
     const blank = readWorkbook(BLANK_WORKBOOK(), this.name, current.sheetOrder.slice(0, 1));
     return writeWorkbook(blank.book, blank.data, current);
+  }
+
+  /** Deletes the sheet being shown, after Univer asks (its command needs to know which one). */
+  removeSheet(): Promise<boolean> {
+    return this.run(CMD.removeSheet, { unitId: this.unitId, subUnitId: this.engine.workbook.getActiveSheet().getSheetId() });
   }
 
   /** Inserts as many rows or columns as are selected, before or after the selection (like Excel). */

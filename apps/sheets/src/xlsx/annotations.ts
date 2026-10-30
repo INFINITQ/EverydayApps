@@ -15,6 +15,14 @@ const EMU_PER_PIXEL = 9525;
 
 // ---- Comments ----------------------------------------------------------------------------
 
+/**
+ * Folio's user in Univer, the author of comments added in Folio. Univer's offline permission
+ * service reads a user's role from the start of the id, and only an "Owner" (or "Editor") may
+ * edit the workbook, so the id keeps that prefix. Files get FOLIO_NAME as the author instead.
+ */
+export const FOLIO_USER_ID = 'Owner_Folio';
+const FOLIO_NAME = 'Folio';
+
 export type CommentBody = { dataStream: string };
 export type ThreadComment = {
   id: string;
@@ -110,7 +118,8 @@ export function readComments(pkg: Package, sheetPart: string, sheetId: string, u
           threadId: id,
           ref: el.attr('ref') ?? 'A1',
           dT: now,
-          personId: author || 'Folio',
+          // Notes Folio wrote, or with no author, are yours: Univer lets only their author edit them.
+          personId: author && author !== FOLIO_NAME ? author : FOLIO_USER_ID,
           ...(author ? { authorName: author } : {}),
           text: body(runsText(el.child('text'))),
           unitId,
@@ -145,12 +154,14 @@ export function writeComments(
     if (i < 0) i = authors.push(name) - 1;
     return i;
   };
+  // Comments added in Folio carry Folio's user id and no name; the file gets the name.
+  const nameOf = (c: ThreadComment) => c.authorName || (c.personId === FOLIO_USER_ID ? FOLIO_NAME : c.personId);
   const items = notes.map((c) => {
     // Replies have nowhere to go in a note: they're added below the comment, with their author.
-    const replies = (c.children ?? []).map((r) => `\n${r.authorName || r.personId || ''}: ${commentText(r)}`).join('');
+    const replies = (c.children ?? []).map((r) => `\n${nameOf(r) || ''}: ${commentText(r)}`).join('');
     const text = commentText(c) + replies;
     const space = /^\s|\s$|\n/.test(text) ? ' xml:space="preserve"' : '';
-    return `<comment ref="${escapeAttr(c.ref)}" authorId="${authorOf(c.authorName || c.personId || 'Folio')}"><text><r><t${space}>${escapeText(text)}</t></r></text></comment>`;
+    return `<comment ref="${escapeAttr(c.ref)}" authorId="${authorOf(nameOf(c) || FOLIO_NAME)}"><text><r><t${space}>${escapeText(text)}</t></r></text></comment>`;
   });
 
   let commentsPart = source.commentsPart;
