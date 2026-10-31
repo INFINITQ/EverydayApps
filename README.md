@@ -12,6 +12,20 @@ Private, offline apps for PDF, Word, Excel and PowerPoint files on Windows 11.
 Every app is a small native Windows program (Tauri 2 + WebView2) with a Windows 11 look
 (Fluent UI, Mica, your accent color). Documents never leave your PC.
 
+## Opening files by double-clicking
+
+Each installer registers its app for its file types, and types no other app had claimed open in
+it straight away. Where you once chose another app (Microsoft Edge for PDFs, say), Windows keeps
+your choice: only you can change it, not an app. The app's start screen tells you when that's
+the case. To switch:
+
+- Select **Set as default…** on the start screen (or press Alt+Q and search for "default").
+  Settings opens at the app's page: select each file type and pick the Folio app.
+- Or right-click a file in File Explorer, select **Open with** > **Choose another app**, pick the
+  Folio app and select **Always**.
+
+See [ADR 0013](docs/adr/0013-default-apps.md).
+
 ## Folio PDF
 
 - **Read:** continuous pages, one or two pages side by side, thumbnails, bookmarks, attached

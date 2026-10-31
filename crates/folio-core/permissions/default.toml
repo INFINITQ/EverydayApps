@@ -14,6 +14,8 @@ permissions = [
   "allow-save-into-folder",
   "allow-release-folder",
   "allow-open-link",
+  "allow-default-apps",
+  "allow-open-default-apps",
   "allow-set-fullscreen",
   "allow-presenter-screen",
   "allow-take-pending",

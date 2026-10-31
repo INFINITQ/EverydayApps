@@ -34,11 +34,13 @@ function removeDataDir(dir: string) {
 /**
  * `extraEnv` can answer the Open and Save dialogs for tests (debug builds only):
  * FOLIO_TEST_OPEN lists the files Open "picks", FOLIO_TEST_SAVE_DIR is the folder Save uses.
+ * `args` go on the command line, as a file's path does when it's double-clicked in Explorer.
  */
 export async function launchApp(
   exe: string,
   port = 9341,
   extraEnv: Record<string, string> = {},
+  args: string[] = [],
 ): Promise<RunningApp> {
   const dataDir = mkdtempSync(join(tmpdir(), 'folio-data-'));
   const env = {
@@ -48,7 +50,7 @@ export async function launchApp(
     FOLIO_TEST_DATA_DIR: dataDir,
     WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port}`,
   };
-  const child: ChildProcess = spawn(exe, [], { env, stdio: 'ignore' });
+  const child: ChildProcess = spawn(exe, args, { env, stdio: 'ignore' });
   let browser: Browser | undefined;
   for (let attempt = 0; attempt < 80 && !browser; attempt++) {
     try {

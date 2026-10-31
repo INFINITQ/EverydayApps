@@ -7,6 +7,7 @@ use tauri::{AppHandle, Emitter, Runtime, State, WebviewWindow, Wry};
 
 use crate::accent::SystemColors;
 use crate::backups::Backups;
+use crate::defaults::{self, TypeDefault};
 use crate::folders::{FolderRef, Folders};
 use crate::grants::{FileRef, Grants, Stamp};
 use crate::open::Pending;
@@ -183,6 +184,25 @@ pub async fn release_folder(folders: State<'_, Folders>, token: String) -> Resul
 #[tauri::command]
 pub async fn open_link(url: String) -> Result<()> {
     crate::links::open(&url)
+}
+
+/// What a double-click on each of the app's file types opens, main type first (defaults.rs).
+#[tauri::command]
+pub async fn default_apps(spec: State<'_, AppSpec>) -> Result<Vec<TypeDefault>> {
+    let extensions = spec.file_types.iter().flat_map(|t| t.extensions.iter().map(|e| (*e).to_owned())).collect();
+    tauri::async_runtime::spawn_blocking(move || defaults::status(extensions))
+        .await
+        .map_err(|e| Error::Windows(format!("couldn't check the default apps: {e}")))
+}
+
+/// Opens the app's page in Settings > Apps > Default apps, where the user chooses (defaults.rs).
+#[tauri::command]
+pub async fn open_default_apps(app: AppHandle<Wry>, spec: State<'_, AppSpec>) -> Result<()> {
+    // The installer registers the app under its product name (config/installer-hooks.nsh).
+    let name = app.config().product_name.clone().unwrap_or_else(|| spec.name.to_owned());
+    tauri::async_runtime::spawn_blocking(move || defaults::open_settings(&name))
+        .await
+        .map_err(|e| Error::Windows(format!("Settings didn't open: {e}")))?
 }
 
 /// Full screen on or off. A hidden test run (debug builds only) leaves its window alone:

@@ -15,6 +15,8 @@ Everything a Folio app window needs from the shared core. Debug-only commands ar
 - `allow-save-into-folder`
 - `allow-release-folder`
 - `allow-open-link`
+- `allow-default-apps`
+- `allow-open-default-apps`
 - `allow-set-fullscreen`
 - `allow-presenter-screen`
 - `allow-take-pending`
@@ -183,6 +185,32 @@ Denies the debug_crash_renderer command without any pre-configured scope.
 <tr>
 <td>
 
+`folio-core:allow-default-apps`
+
+</td>
+<td>
+
+Enables the default_apps command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`folio-core:deny-default-apps`
+
+</td>
+<td>
+
+Denies the default_apps command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 `folio-core:allow-network-lock`
 
 </td>
@@ -202,6 +230,32 @@ Enables the network_lock command without any pre-configured scope.
 <td>
 
 Denies the network_lock command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`folio-core:allow-open-default-apps`
+
+</td>
+<td>
+
+Enables the open_default_apps command without any pre-configured scope.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+`folio-core:deny-open-default-apps`
+
+</td>
+<td>
+
+Denies the open_default_apps command without any pre-configured scope.
 
 </td>
 </tr>

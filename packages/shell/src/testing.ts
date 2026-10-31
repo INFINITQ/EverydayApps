@@ -2,7 +2,7 @@
 // kinds as the Rust side (conflict when a file changed since it was read, and so on).
 
 import type { Backend } from './backend';
-import type { FileRef, FolioError, Settings, Snapshot } from './types';
+import type { FileRef, FolioError, Settings, Snapshot, TypeDefault } from './types';
 
 const encode = (text: string) => new TextEncoder().encode(text);
 const nameOf = (path: string) => path.split('\\').pop() ?? path;
@@ -21,6 +21,7 @@ export function fakeBackend(initial: Record<string, string> = {}, readOnly: stri
   const folders = new Map<string, string>();
   let saveFailure: FolioError | null = null;
   let secondScreen = false;
+  let defaultApps: TypeDefault[] = [];
 
   const grant = (path: string): FileRef => {
     const token = `t${++counter}`;
@@ -107,6 +108,10 @@ export function fakeBackend(initial: Record<string, string> = {}, readOnly: stri
     openLink: async (url) => {
       calls.push(`openLink:${url}`);
     },
+    defaultApps: async () => defaultApps,
+    openDefaultApps: async () => {
+      calls.push('openDefaultApps');
+    },
     releaseFolder: async (token) => {
       calls.push(`releaseFolder:${token}`);
       folders.delete(token);
@@ -174,5 +179,7 @@ export function fakeBackend(initial: Record<string, string> = {}, readOnly: stri
     failNextSave: (error: FolioError) => void (saveFailure = error),
     /** Whether a second monitor is connected (for a slideshow's audience window). */
     setSecondScreen: (connected: boolean) => void (secondScreen = connected),
+    /** What a double-click on each of the app's file types opens. */
+    setDefaultApps: (status: TypeDefault[]) => void (defaultApps = status),
   };
 }

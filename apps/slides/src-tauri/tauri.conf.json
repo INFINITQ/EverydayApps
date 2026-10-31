@@ -66,7 +66,8 @@
         "type": "skip"
       },
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerHooks": "installer-hooks.nsh"
       }
     }
   }

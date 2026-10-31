@@ -12,7 +12,8 @@ let dir: string;
 
 test.beforeEach(async () => {
   dir = mkdtempSync(join(tmpdir(), 'folio-e2e-'));
-  app = await launchApp(EXE);
+  // Links and Settings pages the app would open are written here instead.
+  app = await launchApp(EXE, 9341, { FOLIO_TEST_LINKS: join(dir, 'links.log') });
 });
 
 test.afterEach(async () => {
@@ -138,4 +139,37 @@ test('reports the network lock honestly, and runs on the private WebView2 when i
     spawnSync('powershell', ['-NoProfile', '-Command', rule]).stdout.toString().trim() === 'yes';
   expect(lock.firewallRule).toBe(ruleInPlace);
   expect(lock.active).toBe(ruleInPlace);
+});
+
+test('opens the file it was started with, as when it is double-clicked in Explorer', async () => {
+  const file = join(dir, 'double-clicked.txt');
+  writeFileSync(file, 'opened from Explorer');
+  const started = await launchApp(EXE, 9348, {}, [file]);
+  try {
+    await expect(started.page.getByRole('tab', { name: /double-clicked\.txt/ })).toBeVisible();
+    await expect(started.page.getByRole('textbox', { name: 'Text' })).toHaveValue(
+      'opened from Explorer',
+    );
+  } finally {
+    await started.close();
+  }
+});
+
+test('offers to become the default app, and opens its page in Settings', async () => {
+  const { page } = app;
+  // A debug build is never the app Windows opens files with.
+  const offer = page.getByText(/Folio Hello isn't your default app for \.txt files\./);
+  await expect(offer).toBeVisible();
+
+  await page.getByRole('button', { name: 'Set as default…' }).click();
+  await expect
+    .poll(() =>
+      existsSync(join(dir, 'links.log')) ? readFileSync(join(dir, 'links.log'), 'utf8') : '',
+    )
+    .toContain('ms-settings:defaultapps?registeredAppUser=Folio%20Hello');
+
+  await page.getByRole('button', { name: "Don't show again" }).click();
+  await expect(offer).toBeHidden();
+  const settings = JSON.parse(readFileSync(join(app.dataDir, 'settings.json'), 'utf8'));
+  expect(settings).toMatchObject({ defaultAppOffer: 'dismissed' });
 });

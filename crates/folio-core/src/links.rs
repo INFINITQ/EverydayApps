@@ -2,11 +2,7 @@
 //! UI. Only `http`, `https` and `mailto` links: never files, programs or other protocols. Folio
 //! itself makes no connection; Windows hands the address to the default browser or mail app.
 
-use windows::Win32::UI::Shell::ShellExecuteW;
-use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
-use windows::core::{HSTRING, w};
-
-use crate::{Error, Result};
+use crate::{Error, Result, explorer};
 
 /// A link that's safe to hand to Windows: a web or mail address, nothing else.
 pub fn check(url: &str) -> Result<()> {
@@ -22,29 +18,10 @@ pub fn check(url: &str) -> Result<()> {
     if valid { Ok(()) } else { Err(Error::Invalid("Folio only opens web (http, https) and email links.".into())) }
 }
 
+/// Opens a checked link. End-to-end tests record it instead (see `explorer::launch`).
 pub fn open(url: &str) -> Result<()> {
     check(url)?;
-    if let Some(log) = test_log() {
-        // Debug builds only: end-to-end tests record the link instead of starting a browser.
-        use std::io::Write;
-        let mut file = std::fs::OpenOptions::new().create(true).append(true).open(log)?;
-        writeln!(file, "{url}")?;
-        return Ok(());
-    }
-    // SAFETY: plain Win32 call with valid, NUL-terminated strings.
-    let result = unsafe { ShellExecuteW(None, w!("open"), &HSTRING::from(url), None, None, SW_SHOWNORMAL) };
-    // Values above 32 mean success.
-    if result.0 as isize > 32 { Ok(()) } else { Err(Error::Windows("Windows couldn't open the link.".into())) }
-}
-
-#[cfg(debug_assertions)]
-fn test_log() -> Option<std::ffi::OsString> {
-    std::env::var_os("FOLIO_TEST_LINKS").filter(|value| !value.is_empty())
-}
-
-#[cfg(not(debug_assertions))]
-fn test_log() -> Option<std::ffi::OsString> {
-    None
+    if explorer::launch(url)? { Ok(()) } else { Err(Error::Windows("Windows couldn't open the link.".into())) }
 }
 
 #[cfg(test)]

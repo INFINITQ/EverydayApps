@@ -13,4 +13,5 @@ export {
   type OpenFilter,
   type RecentItem,
   type Snapshot,
+  type TypeDefault,
 } from './types';

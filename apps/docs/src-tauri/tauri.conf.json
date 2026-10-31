@@ -63,7 +63,7 @@
     ],
     "windows": {
       "webviewInstallMode": { "type": "skip" },
-      "nsis": { "installMode": "currentUser" }
+      "nsis": { "installMode": "currentUser", "installerHooks": "installer-hooks.nsh" }
     }
   }
 }

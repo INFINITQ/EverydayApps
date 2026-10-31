@@ -276,3 +276,40 @@ describe('commands', () => {
     expect(findClashes(shell.commands())).toEqual([]);
   });
 });
+
+describe('the default app', () => {
+  it('is offered when a double-click opens another app, until the user says no', async () => {
+    const { fake, shell } = setup();
+    fake.setDefaultApps([
+      { ext: 'txt', isDefault: false, app: 'Notepad' },
+      { ext: 'log', isDefault: true, app: null },
+    ]);
+    await shell.checkDefaultApp();
+    expect(shell.state.defaultApp).toEqual({ ext: 'txt', app: 'Notepad' });
+
+    await shell.openDefaultApps();
+    expect(fake.calls).toContain('openDefaultApps');
+
+    await shell.dismissDefaultApp();
+    expect(shell.state.defaultApp).toBeNull();
+    expect(shell.state.settings).toMatchObject({ defaultAppOffer: 'dismissed' });
+    await shell.checkDefaultApp();
+    expect(shell.state.defaultApp).toBeNull();
+  });
+
+  it('is not offered once the app opens its main file type, whatever opens the others', async () => {
+    const { fake, shell } = setup();
+    fake.setDefaultApps([
+      { ext: 'txt', isDefault: true, app: null },
+      { ext: 'csv', isDefault: false, app: 'Visual Studio Code' },
+    ]);
+    await shell.checkDefaultApp();
+    expect(shell.state.defaultApp).toBeNull();
+  });
+
+  it('can always be set from the command palette', async () => {
+    const { fake, shell } = setup();
+    await shell.commands().find((c) => c.id === 'app.defaultApp')!.run();
+    expect(fake.calls).toContain('openDefaultApps');
+  });
+});

@@ -9,6 +9,7 @@ import {
   MessageBar,
   MessageBarActions,
   MessageBarBody,
+  Tooltip,
 } from '@fluentui/react-components';
 import { DismissRegular } from '@fluentui/react-icons';
 import {
@@ -23,7 +24,7 @@ import {
 } from '@folio/ui';
 import { Component, type ErrorInfo, type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useStore } from 'zustand';
-import { type Doc, type Shell, isDirty } from './shell';
+import { type Doc, type Shell, type ShellState, isDirty } from './shell';
 import { installShortcuts } from './shortcuts';
 
 const FALLBACK_SYSTEM: SystemColors = {
@@ -48,6 +49,11 @@ export function ShellApp({ shell, tagline, icon }: { shell: Shell; tagline: stri
       if (event.key === 'Escape' && shell.state.fullscreen) void shell.setFullscreen(false);
     };
     window.addEventListener('keydown', leaveFullscreen);
+    // Back from Settings: the default-app offer goes away once it's done.
+    const recheckDefaultApp = () => {
+      if (shell.state.defaultApp) void shell.checkDefaultApp();
+    };
+    window.addEventListener('focus', recheckDefaultApp);
     void shell.start(window.__FOLIO_BOOT__?.settings ?? {});
     requestAnimationFrame(() => void shell.backend.appReady());
     return () => {
@@ -55,6 +61,7 @@ export function ShellApp({ shell, tagline, icon }: { shell: Shell; tagline: stri
       stopDrag();
       stopKeys();
       window.removeEventListener('keydown', leaveFullscreen);
+      window.removeEventListener('focus', recheckDefaultApp);
       shell.stop();
     };
   }, [shell]);
@@ -108,6 +115,7 @@ export function ShellApp({ shell, tagline, icon }: { shell: Shell; tagline: stri
               recovered={state.recovered}
               onRestore={(doc) => void shell.restore(doc)}
               onDiscard={(doc) => void shell.discardRecovered(doc)}
+              notice={state.defaultApp && <DefaultAppOffer shell={shell} offer={state.defaultApp} />}
             />
           )}
           {state.docs.map((doc) => (
@@ -128,6 +136,30 @@ export function ShellApp({ shell, tagline, icon }: { shell: Shell; tagline: stri
       <QuestionDialog shell={shell} />
       <Notices shell={shell} />
     </FolioProvider>
+  );
+}
+
+/**
+ * The start screen's offer to become the default app for the main file type. Windows leaves the
+ * choice to the user, so the button opens the app's page in Settings (docs/adr/0013).
+ */
+function DefaultAppOffer({ shell, offer }: { shell: Shell; offer: NonNullable<ShellState['defaultApp']> }) {
+  return (
+    <MessageBar intent="info">
+      <MessageBarBody>
+        {shell.appName} isn&apos;t your default app for .{offer.ext} files.
+        {offer.app && ` Double-clicking one opens ${offer.app}.`}
+      </MessageBarBody>
+      <MessageBarActions
+        containerAction={
+          <Tooltip content="Don't show again" relationship="label">
+            <Button appearance="transparent" icon={<DismissRegular />} onClick={() => void shell.dismissDefaultApp()} />
+          </Tooltip>
+        }
+      >
+        <Button onClick={() => void shell.openDefaultApps()}>Set as default…</Button>
+      </MessageBarActions>
+    </MessageBar>
   );
 }
 
