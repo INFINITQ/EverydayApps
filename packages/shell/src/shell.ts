@@ -39,6 +39,11 @@ export type ShellState = {
   version: number;
   /** Full-screen reading: the window fills the screen and the title and status bars hide. */
   fullscreen: boolean;
+  /**
+   * Set while a double-click on the app's main file type opens another app (`app`), or none:
+   * the start screen offers to change that.
+   */
+  defaultApp: { ext: string; app: string | null } | null;
 };
 
 type SaveMode = 'save' | 'saveAs' | 'saveCopy';
@@ -49,6 +54,9 @@ export const isDirty = (doc: Doc) => doc.stateId !== doc.savedStateId;
 /** Recovery snapshots: at most every 30 s per document, and only once typing pauses for 2 s. */
 export const SNAPSHOT_EVERY_MS = 30_000;
 export const SNAPSHOT_AFTER_IDLE_MS = 2_000;
+
+/** Settings key: 'dismissed' once the user turned down the start screen's default-app offer. */
+export const DEFAULT_APP_OFFER = 'defaultAppOffer';
 
 let counter = 0;
 const newId = () => `doc-${Date.now().toString(36)}-${(counter++).toString(36)}`;
@@ -79,6 +87,7 @@ export class Shell {
       activeId: null,
       paletteOpen: false,
       fullscreen: false,
+      defaultApp: null,
       question: null,
       notices: [],
       recent: [],
@@ -99,6 +108,7 @@ export class Shell {
     this.stops.push(this.backend.onOpenFiles(() => void this.receivePending()));
     this.stops.push(this.backend.onSettings((settings) => this.set({ settings })));
     this.stops.push(this.backend.onCloseRequested(() => this.closeAll()));
+    void this.checkDefaultApp();
     await Promise.all([this.refreshRecent(), this.refreshRecovered()]);
     await this.receivePending();
     this.timer = setInterval(() => void this.snapshotDirty(), 5_000);
@@ -122,6 +132,37 @@ export class Shell {
     } catch {
       // Older core without the command: nothing to report.
     }
+  }
+
+  /**
+   * Offers, on the start screen, to make this the default app for its main file type when a
+   * double-click opens another app. Only the user can choose that, in Windows' own settings
+   * (docs/adr/0013-default-apps.md).
+   */
+  async checkDefaultApp(): Promise<void> {
+    if (this.state.settings[DEFAULT_APP_OFFER] === 'dismissed') {
+      this.set({ defaultApp: null });
+      return;
+    }
+    const [main] = await this.backend.defaultApps().catch(() => []);
+    this.set({ defaultApp: main && !main.isDefault ? { ext: main.ext, app: main.app } : null });
+  }
+
+  /** Opens the app's page in Settings > Apps > Default apps, where the user picks it. */
+  async openDefaultApps(): Promise<void> {
+    try {
+      await this.backend.openDefaultApps();
+      this.notify(`In Settings, choose ${this.appName} for each file type you want it to open.`);
+    } catch (error) {
+      this.fail(error, "Settings couldn't be opened.");
+    }
+  }
+
+  /** "Don't show again" on the start screen's default-app offer. */
+  async dismissDefaultApp(): Promise<void> {
+    this.set({ defaultApp: null });
+    const settings = await this.backend.setSettings({ [DEFAULT_APP_OFFER]: 'dismissed' }).catch(() => null);
+    if (settings) this.set({ settings });
   }
 
   stop(): void {
@@ -657,6 +698,12 @@ export class Shell {
       { id: 'view.theme.system', title: 'Theme: follow Windows', group: 'View', run: () => this.setTheme('system') },
       { id: 'view.theme.light', title: 'Theme: light', group: 'View', run: () => this.setTheme('light') },
       { id: 'view.theme.dark', title: 'Theme: dark', group: 'View', run: () => this.setTheme('dark') },
+      {
+        id: 'app.defaultApp',
+        title: `Set ${this.appName} as the default app…`,
+        group: 'File',
+        run: () => this.openDefaultApps(),
+      },
       {
         id: 'privacy.networkLock',
         title: 'Network lock status',

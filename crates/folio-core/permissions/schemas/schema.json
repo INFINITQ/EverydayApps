@@ -355,6 +355,18 @@
           "markdownDescription": "Denies the debug_crash_renderer command without any pre-configured scope."
         },
         {
+          "description": "Enables the default_apps command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-default-apps",
+          "markdownDescription": "Enables the default_apps command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the default_apps command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-default-apps",
+          "markdownDescription": "Denies the default_apps command without any pre-configured scope."
+        },
+        {
           "description": "Enables the network_lock command without any pre-configured scope.",
           "type": "string",
           "const": "allow-network-lock",
@@ -365,6 +377,18 @@
           "type": "string",
           "const": "deny-network-lock",
           "markdownDescription": "Denies the network_lock command without any pre-configured scope."
+        },
+        {
+          "description": "Enables the open_default_apps command without any pre-configured scope.",
+          "type": "string",
+          "const": "allow-open-default-apps",
+          "markdownDescription": "Enables the open_default_apps command without any pre-configured scope."
+        },
+        {
+          "description": "Denies the open_default_apps command without any pre-configured scope.",
+          "type": "string",
+          "const": "deny-open-default-apps",
+          "markdownDescription": "Denies the open_default_apps command without any pre-configured scope."
         },
         {
           "description": "Enables the open_link command without any pre-configured scope.",
@@ -739,10 +763,10 @@
           "markdownDescription": "Denies the view_state_set command without any pre-configured scope."
         },
         {
-          "description": "Everything a Folio app window needs from the shared core. Debug-only commands are not included.\n#### This default permission set includes:\n\n- `allow-app-ready`\n- `allow-system-info`\n- `allow-pick-open`\n- `allow-pick-save`\n- `allow-read`\n- `allow-save`\n- `allow-release`\n- `allow-pick-folder`\n- `allow-save-into-folder`\n- `allow-release-folder`\n- `allow-open-link`\n- `allow-set-fullscreen`\n- `allow-presenter-screen`\n- `allow-take-pending`\n- `allow-backups-usage`\n- `allow-backups-clear`\n- `allow-settings-get`\n- `allow-settings-set`\n- `allow-recent-list`\n- `allow-recent-open`\n- `allow-recent-remove`\n- `allow-recent-clear`\n- `allow-view-state-get`\n- `allow-view-state-set`\n- `allow-recovery-put`\n- `allow-recovery-list`\n- `allow-recovery-read`\n- `allow-recovery-drop`\n- `allow-recovery-origin`\n- `allow-secure-put`\n- `allow-secure-get`\n- `allow-secure-delete`\n- `allow-secure-keys`\n- `allow-system`\n- `allow-network-lock`\n- `allow-caption-maximize-rect`",
+          "description": "Everything a Folio app window needs from the shared core. Debug-only commands are not included.\n#### This default permission set includes:\n\n- `allow-app-ready`\n- `allow-system-info`\n- `allow-pick-open`\n- `allow-pick-save`\n- `allow-read`\n- `allow-save`\n- `allow-release`\n- `allow-pick-folder`\n- `allow-save-into-folder`\n- `allow-release-folder`\n- `allow-open-link`\n- `allow-default-apps`\n- `allow-open-default-apps`\n- `allow-set-fullscreen`\n- `allow-presenter-screen`\n- `allow-take-pending`\n- `allow-backups-usage`\n- `allow-backups-clear`\n- `allow-settings-get`\n- `allow-settings-set`\n- `allow-recent-list`\n- `allow-recent-open`\n- `allow-recent-remove`\n- `allow-recent-clear`\n- `allow-view-state-get`\n- `allow-view-state-set`\n- `allow-recovery-put`\n- `allow-recovery-list`\n- `allow-recovery-read`\n- `allow-recovery-drop`\n- `allow-recovery-origin`\n- `allow-secure-put`\n- `allow-secure-get`\n- `allow-secure-delete`\n- `allow-secure-keys`\n- `allow-system`\n- `allow-network-lock`\n- `allow-caption-maximize-rect`",
           "type": "string",
           "const": "default",
-          "markdownDescription": "Everything a Folio app window needs from the shared core. Debug-only commands are not included.\n#### This default permission set includes:\n\n- `allow-app-ready`\n- `allow-system-info`\n- `allow-pick-open`\n- `allow-pick-save`\n- `allow-read`\n- `allow-save`\n- `allow-release`\n- `allow-pick-folder`\n- `allow-save-into-folder`\n- `allow-release-folder`\n- `allow-open-link`\n- `allow-set-fullscreen`\n- `allow-presenter-screen`\n- `allow-take-pending`\n- `allow-backups-usage`\n- `allow-backups-clear`\n- `allow-settings-get`\n- `allow-settings-set`\n- `allow-recent-list`\n- `allow-recent-open`\n- `allow-recent-remove`\n- `allow-recent-clear`\n- `allow-view-state-get`\n- `allow-view-state-set`\n- `allow-recovery-put`\n- `allow-recovery-list`\n- `allow-recovery-read`\n- `allow-recovery-drop`\n- `allow-recovery-origin`\n- `allow-secure-put`\n- `allow-secure-get`\n- `allow-secure-delete`\n- `allow-secure-keys`\n- `allow-system`\n- `allow-network-lock`\n- `allow-caption-maximize-rect`"
+          "markdownDescription": "Everything a Folio app window needs from the shared core. Debug-only commands are not included.\n#### This default permission set includes:\n\n- `allow-app-ready`\n- `allow-system-info`\n- `allow-pick-open`\n- `allow-pick-save`\n- `allow-read`\n- `allow-save`\n- `allow-release`\n- `allow-pick-folder`\n- `allow-save-into-folder`\n- `allow-release-folder`\n- `allow-open-link`\n- `allow-default-apps`\n- `allow-open-default-apps`\n- `allow-set-fullscreen`\n- `allow-presenter-screen`\n- `allow-take-pending`\n- `allow-backups-usage`\n- `allow-backups-clear`\n- `allow-settings-get`\n- `allow-settings-set`\n- `allow-recent-list`\n- `allow-recent-open`\n- `allow-recent-remove`\n- `allow-recent-clear`\n- `allow-view-state-get`\n- `allow-view-state-set`\n- `allow-recovery-put`\n- `allow-recovery-list`\n- `allow-recovery-read`\n- `allow-recovery-drop`\n- `allow-recovery-origin`\n- `allow-secure-put`\n- `allow-secure-get`\n- `allow-secure-delete`\n- `allow-secure-keys`\n- `allow-system`\n- `allow-network-lock`\n- `allow-caption-maximize-rect`"
         }
       ]
     }

@@ -12,6 +12,8 @@ const COMMANDS: &[&str] = &[
     "save_into_folder",
     "release_folder",
     "open_link",
+    "default_apps",
+    "open_default_apps",
     "set_fullscreen",
     "presenter_screen",
     "take_pending",

@@ -16,6 +16,7 @@ import type {
   Snapshot,
   Stamp,
   SystemColors,
+  TypeDefault,
 } from './types';
 
 export interface Backend {
@@ -32,6 +33,10 @@ export interface Backend {
   releaseFolder(token: string): Promise<void>;
   /** Opens a web or email link in the default browser or mail app (Rust checks it). */
   openLink(url: string): Promise<void>;
+  /** What a double-click on each of the app's file types opens, main type first. */
+  defaultApps(): Promise<TypeDefault[]>;
+  /** Opens the app's page in Settings > Apps > Default apps, where the user can choose it. */
+  openDefaultApps(): Promise<void>;
   takePending(): Promise<FileRef[]>;
   onOpenFiles(listener: () => void): () => void;
 
@@ -100,6 +105,8 @@ export function tauriBackend(): Backend {
       }),
     releaseFolder: (token) => invoke(folio('release_folder'), { token }),
     openLink: (url) => invoke(folio('open_link'), { url }),
+    defaultApps: () => invoke(folio('default_apps')),
+    openDefaultApps: () => invoke(folio('open_default_apps')),
     takePending: () => invoke(folio('take_pending')),
     onOpenFiles: (listener) => subscribe('folio://open-files', () => listener()),
 

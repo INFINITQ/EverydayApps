@@ -52,6 +52,16 @@ export function isFolioError(value: unknown): value is FolioError {
 
 export type Settings = { theme?: 'system' | 'light' | 'dark'; [key: string]: unknown };
 
+/** What a double-click on one of the app's file types opens (crates/folio-core/src/defaults.rs). */
+export type TypeDefault = {
+  /** Without the dot: "pdf". */
+  ext: string;
+  /** True when it opens this app. */
+  isDefault: boolean;
+  /** The app it opens instead, as Windows names it; null when it opens this app or Windows would ask. */
+  app: string | null;
+};
+
 /** Folio's private, firewalled WebView2 (docs/adr/0005). `active` = both parts in place. */
 export type NetworkLock = {
   privateRuntime: boolean;

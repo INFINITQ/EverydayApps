@@ -24,8 +24,10 @@ mod accent;
 mod backups;
 mod caption;
 mod commands;
+mod defaults;
 mod dialogs;
 mod error;
+mod explorer;
 mod files;
 mod folders;
 mod grants;
@@ -151,6 +153,8 @@ fn plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
             commands::save_into_folder,
             commands::release_folder,
             commands::open_link,
+            commands::default_apps,
+            commands::open_default_apps,
             commands::set_fullscreen,
             commands::presenter_screen,
             commands::take_pending,

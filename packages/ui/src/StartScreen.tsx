@@ -28,6 +28,7 @@ export function StartScreen({
   recovered,
   onRestore,
   onDiscard,
+  notice,
 }: {
   appName: string;
   tagline: string;
@@ -39,6 +40,8 @@ export function StartScreen({
   recovered: RecoveredFile[];
   onRestore(doc: string): void;
   onDiscard(doc: string): void;
+  /** Shown under the Open button, e.g. the offer to become the default app. */
+  notice?: ReactNode;
 }) {
   return (
     <main className="folio-start">
@@ -57,6 +60,8 @@ export function StartScreen({
           </Button>
           <span>or drop a file anywhere in this window</span>
         </div>
+
+        {notice}
 
         {recovered.length > 0 && (
           <section className="folio-card" aria-labelledby="folio-recovered">
